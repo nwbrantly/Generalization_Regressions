@@ -1,18 +1,12 @@
-# Build and Release Folders
-bin-debug/
-bin-release/
-[Oo]bj/
-[Bb]in/
+*.asv
 
-# Other files and folders
-.settings/
+*.m~
 
-# Executables
-*.swf
-*.air
-*.ipa
-*.apk
+fun/ext/plot2svg-master/
 
-# Project files, i.e. `.project`, `.actionScriptProperties` and `.flexProperties`
-# should NOT be excluded as they contain compiler settings and other important
-# information for Eclipse / Flash Builder.
+*.DS_Store 
+gui/.DS_Store
+
+/data*
+/RegressionAnalysis/RegModelResults*
+*.png
