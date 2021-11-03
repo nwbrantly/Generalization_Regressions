@@ -117,11 +117,11 @@ function runRegression_Generalization(Data, normalizeData, isGroupData, dataId, 
     Y2=Data{5};
     fprintf('\n\n')
     disp('Transition 1')
-    [B,SE,PVAL,INMODEL,STATS,NEXTSTEP,HISTORY]=stepwisefit(X,Y1,'PRemove',0.05)
+    [B,SE,PVAL,INMODEL,STATS]=stepwisefit(X,Y1,'PRemove',0.05)
     
     fprintf('\n\n')
     disp('Transition 2')
-    [B2,SE2,PVAL2,INMODEL2,STATS2,NEXTSTEP2,HISTORY2]=stepwisefit(X,Y2, 'PRemove',0.05)
+    [B2,SE2,PVAL2,INMODEL2,STATS2]=stepwisefit(X,Y2, 'PRemove',0.05)
     
     if saveResAndFigure
         if not(isfolder(resDir))
