@@ -18,20 +18,20 @@
 clear; close all; clc;
 
 % set script parameters, SHOULD CHANGE/CHECK THIS EVERY TIME.
-groupID = 'Pilot2';
+groupID = 'ATS';
 saveResAndFigure = false;
 plotAllEpoch = true;
 plotIndSubjects = true;
-plotGroup = true;
+plotGroup = false;
 kinenatics=true;
 
 scriptDir = fileparts(matlab.desktop.editor.getActiveFilename);
 if kinenatics==1
-    files = dir ([scriptDir '/data_Pilot/' groupID '*params.mat']);
+    files = dir ([scriptDir '/data/' groupID '*params.mat']);
     
 else
     
-    files = dir ([scriptDir '/data_reprocess2021/' groupID '*params2021.mat']);
+   % files = dir ([scriptDir '/data_reprocess2021/' groupID '*params2021.mat']);
 end
 n_subjects = size(files,1);
 subID = cell(1, n_subjects);
@@ -86,8 +86,8 @@ newLabelPrefix = regexprep(newLabelPrefix,'_s','s');
 
 %% Removal of muscle with porblems during data collection 
 % Remove RF and HIP 
-if contains(groupID,'Pilot2')
-    badMuscleNames = {'sRFs','fRFs','sHIPs','fHIPs'};
+if contains(groupID,'ATR')
+    badMuscleNames = {'sGLUs','fGLUs',};
     badMuscleIdx=[];
     for bm = badMuscleNames
         badMuscleIdx = [badMuscleIdx, find(ismember(newLabelPrefix,bm))];
@@ -112,7 +112,7 @@ if plotAllEpoch
         ph=tight_subplot(1,length(ep)+1,[.03 .005],.04,.04);
         flip=true;
         
-        
+        ep=defineEpochs_regressionYA('nanmedian');
         adaptDataSubject.plotCheckerboards(newLabelPrefix,refEp,fh,ph(1,1),[],flip); %plot TM base reference
         %         adaptDataSubject.plotCheckerboards(newLabelPrefix,ep(3,:),fh,ph(1,2),[],flip); %plot TR base reference
         adaptDataSubject.plotCheckerboards(newLabelPrefix,ep(1:8,:),fh,ph(1,2:9),refEp,flip);%plot all epochs normalized by the mid baseline
@@ -150,26 +150,34 @@ end
 clc;
 close all
 usefft = 0; %Turn on to use the transpose of the EMG(+) as the estimated for EMG(-)
-normalizeData = 0; %Vector lenght normalization 
+normalizeData = 0; %Vector lenght normalization
 
-%type of regression that we want to run 
+%type of regression that we want to run
 regModelVersion='default';
+
 % regModelVersion='Adaptive_EnvTransition';
 
-% In case that we have multiple cases. Let see if this needs to be updated 
+% In case that we have multiple cases. Let see if this needs to be updated
 splitCount=1;
 
-%For group data try to use the median to be consistnace with Pablo's 
+%For group data try to use the median to be consistnace with Pablo's
 summaryflag='nanmean';
 %  summaryflag='nanmedian';
 
-% Defining the epochs of interest 
+% Defining the epochs of interest
 ep=defineEpochs_regressionYA(summaryflag);
 
-%Getting the names for specific epocjhs 
+%Getting the names for specific epocjhs
 refEpAdaptLate = defineReferenceEpoch('Adaptation',ep);
 refEpPost1Late= defineReferenceEpoch('Post1_{Late}',ep);
 refEp= defineReferenceEpoch('TM base',ep); %fast tied 1 if short split 1, slow tied if 2nd split
+
+Rsquared1_Adj=[];
+Rsquared1_Ord=[];
+
+Coefficients_trans1=[];
+Coefficients_trans2=[];
+
 %% plot checkerboard and run regression per subject
 if plotIndSubjects
     %         close all;
@@ -223,10 +231,21 @@ if plotIndSubjects
         % not normalized first, then normalized, arugmnets order: (Data, normalizeData, isGroupData, dataId, resDir, saveResAndFigure, version, usefft)
         fprintf('\n')
         splitCount
-        runRegression_Generalization(Data, false, false, [subID{i} regModelVersion 'split_' num2str(splitCount)], resDir, saveResAndFigure, regModelVersion, usefft)
+        [trans1,trans2]= runRegression_Generalization(Data, false, false, [subID{i} regModelVersion 'split_' num2str(splitCount)], resDir, saveResAndFigure, regModelVersion, usefft)
         runRegression_Generalization(Data, true, false, [subID{i} regModelVersion 'split_' num2str(splitCount)], resDir, saveResAndFigure, regModelVersion, usefft)
         
+        
+        Rsquared1_Adj(i,1)=trans1.Rsquared.Adjusted;
+        Rsquared1_Ord(i,1)=trans1.Rsquared.Ordinary;
+        
+        Rsquared2_Adj(i,1)=trans2.Rsquared.Adjusted;
+        Rsquared2_Ord(i,1)=trans2.Rsquared.Ordinary;
+        
+        Coefficients_trans1(:,i)=trans1.Coefficients.Estimate;
+        Coefficients_trans2(:,i)=trans2.Coefficients.Estimate;
     end
+    
+    save('IndivRegressionParams.mat','Rsquared1_Adj','Rsquared1_Ord','Rsquared2_Adj','Rsquared2_Ord','Coefficients_trans1','Coefficients_trans2')
 end
 %% plot checkerboards and run regression per group
 if length(subID) > 1 || plotGroup
@@ -241,7 +260,7 @@ if length(subID) > 1 || plotGroup
             [~,~,labels,Data{1},dataRef2]= normalizedTMFullAbrupt.plotCheckerboards(newLabelPrefix,ep(10,:),fh,ph(1,1),refEp,flip,summaryflag); %  EMG_split(-) - TM base
             title('EMG(+)-TM_{base}')
         else
-            [~,~,labels,Data{1},dataRef2]= normalizedTMFullAbrupt.plotCheckerboards(newLabelPrefix,ep(10,:),fh,ph(1,1),refEp,flip,summaryflag); %  EMG_split(-) - TM base
+            [~,~,labels,Data{1},dataRef2]= normalizedTMFullAbrupt.plotCheckerboards(newLabelPrefix,ep(11,:),fh,ph(1,1),refEp,flip,summaryflag); %  EMG_split(-) - TM base
         end
         
         [~,~,~,Data{2},~] = normalizedTMFullAbrupt.plotCheckerboards(newLabelPrefix,refEp,fh,ph(1,2),ep(10,:),flip,summaryflag); %TM base - EMG_on(+)
@@ -280,15 +299,57 @@ if length(subID) > 1 || plotGroup
             format compact % format loose %(default)
             % not normalized first, then normalized, arugmnets order: (Data, normalizeData, isGroupData, dataId, resDir, saveResAndFigure, version, usefft)
             
-            runRegression_Generalization(Data, false, true, [groupID regModelVersion 'split_' num2str(splitCount) 'flip_' num2str(flip)], resDir, saveResAndFigure, regModelVersion, usefft)
-            runRegression_Generalization(Data, true, true, [groupID regModelVersion 'split_' num2str(splitCount) 'flip_' num2str(flip)], resDir, saveResAndFigure, regModelVersion, usefft)
+           [trans1,trans2]=runRegression_Generalization(Data, false, true, [groupID regModelVersion 'split_' num2str(splitCount) 'flip_' num2str(flip)], resDir, saveResAndFigure, regModelVersion, usefft)
+           runRegression_Generalization(Data, true, true, [groupID regModelVersion 'split_' num2str(splitCount) 'flip_' num2str(flip)], resDir, saveResAndFigure, regModelVersion, usefft)
         else
             asymCos = findCosBtwAsymOfEpochs(Data, size(newLabelPrefix,2))
         end
     end
+    
+%     Rsquared1_Adj(1)=trans1.Rsquared.Adjusted;
+%     Rsquared1_Ord(1)=trans1.Rsquared.Ordinary;
+%     
+%     Rsquared2_Adj(1)=trans2.Rsquared.Adjusted;
+%     Rsquared2_Ord(1)=trans2.Rsquared.Ordinary;
+%     
+%     Coefficients_trans1(:,1)=trans1.Coefficients.Estimate;
+%     Coefficients_trans2(:,1)=trans2.Coefficients.Estimate;
+%     
+%     save('GroupRegressionParams.mat','Rsquared1_Adj','Rsquared1_Ord','Rsquared2_Adj','Rsquared2_Ord','Coefficients_trans1','Coefficients_trans2')
+       
 end
 % end
+%% EMG aftereffects
 
+refEpPost1Early= defineReferenceEpoch('Post1_{Early}',ep);
+if contains(groupID,'ATR')
+    refEp= defineReferenceEpoch('TM base',ep); %fast tied 1 if short split 1, slow tied if 2nd split
+elseif contains(groupID,'ATS')
+    refEp= defineReferenceEpoch('OGbase',ep);
+end
+  fh=figure('Units','Normalized','OuterPosition',[0 0 1 1]);
+        ph=tight_subplot(1,n_subjects,[.03 .005],.04,.04);
+flip = [1];
+load('IndivRegressionParamsYA.mat')
+
+if plotIndSubjects
+    for i = 1:n_subjects
+        adaptDataSubject = normalizedTMFullAbrupt.adaptData{1, i};
+        
+      
+        
+        [~,~,~,Data{i},~] = adaptDataSubject.plotCheckerboards(newLabelPrefix,refEpPost1Early,fh,ph(1,i),refEp,flip); %|EMG_earlyPost1 -  EMG_Baseline
+         vec_norm = norm(Data{i});
+        if contains(groupID,'ATR')
+        title({[adaptDataSubject.subData.ID] ['Norm=', num2str(norm(Data{i}))] ['\beta_{adapt}=', num2str(Coefficients_trans1(1,i))]});
+        else
+             title({[adaptDataSubject.subData.ID] ['Norm=', num2str(norm(Data{i}))] ['\beta_{adapt}=', num2str(0.239)]});
+        end 
+     
+    end
+end
+set(gcf,'color','w');
+%    vec_norm = vecnorm(Data{1});
 %% plot subsets of epochs: AE with context specific baseline correction
 %AE only pertains to session 1 and long protocols.
 % refEpOG = defineReferenceEpoch('OGbase',ep);
