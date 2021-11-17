@@ -1,4 +1,4 @@
-function runRegression_Generalization(Data, normalizeData, isGroupData, dataId, resDir, saveResAndFigure, version, usefft, regressorNames) 
+function [fitTrans1NoConst,fitTrans2NoConst]=runRegression_Generalization(Data, normalizeData, isGroupData, dataId, resDir, saveResAndFigure, version, usefft, regressorNames) 
 % perform regression anlysis V2 (see grant one note: Regression discussion (two transitions)
 % printout the regression results and save the results to destination
 % folders (if saveResAndFigure flag is on)
