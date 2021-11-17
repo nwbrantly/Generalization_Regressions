@@ -18,16 +18,16 @@
 clear; close all; clc;
 
 % set script parameters, SHOULD CHANGE/CHECK THIS EVERY TIME.
-groupID = 'Pilot2';
+groupID = 'C';
 saveResAndFigure = false;
 plotAllEpoch = true;
-plotIndSubjects = false;
+plotIndSubjects = true;
 plotGroup = true;
 kinenatics=true;
 
 scriptDir = fileparts(matlab.desktop.editor.getActiveFilename);
 if kinenatics==1
-    files = dir ([scriptDir '/data_Pilot/' groupID '*params.mat']);
+    files = dir ([scriptDir '/data_Kinematics/' groupID '*params.mat']);
     
 else
     
@@ -55,7 +55,7 @@ regModelVersion =  'default'; %'default'
 
 %% load and prep data
 normalizedTMFullAbrupt=adaptationData.createGroupAdaptData(sub);
-normalizedTMFullAbrupt.removeBadStrides;
+normalizedTMFullAbrupt=normalizedTMFullAbrupt.removeBadStrides;
 
 ss =normalizedTMFullAbrupt.adaptData{1}.data.getLabelsThatMatch('^Norm');
 s2 = regexprep(ss,'^Norm','dsjrs');
@@ -221,11 +221,18 @@ ep=defineEpochs_regression(summaryflag);
 refEpAdaptLate = defineReferenceEpoch('Adaptation',ep);
 refEpPost1Late= defineReferenceEpoch('Post1_{Late}',ep);
 refEp= defineReferenceEpoch('TM base',ep); %fast tied 1 if short split 1, slow tied if 2nd split
+
+Rsquared1_Adj=[];
+Rsquared1_Ord=[];
+
+Coefficients_trans1=[];
+Coefficients_trans2=[];
+
 %% plot checkerboard and run regression per subject
 if plotIndSubjects
     %         close all;
     for i = 1:n_subjects
-        
+        disp(['Subject=', num2str(i)])
         adaptDataSubject = normalizedTMFullAbrupt.adaptData{1, i};
         
         fh=figure('Units','Normalized','OuterPosition',[0 0 1 1]);
@@ -240,7 +247,7 @@ if plotIndSubjects
             [~,~,labels,Data{1},dataRef2]=adaptDataSubject.plotCheckerboards(newLabelPrefix,ep(10,:),fh,ph(1,1),refEp,flip); %  EMG_split(-) - TM base
         end
         %all labels should be the same, no need to save again.
-        [~,~,~,Data{2},~] = adaptDataSubject.plotCheckerboards(newLabelPrefix,refEp,fh,ph(1,2),ep(11,:),flip); %TM base - EMG_on(+)
+        [~,~,~,Data{2},~] = adaptDataSubject.plotCheckerboards(newLabelPrefix,refEp,fh,ph(1,2),ep(10,:),flip); %TM base - EMG_on(+)
         title('TM_{base}-EMG(+)')
         [~,~,~,Data{3},~] = adaptDataSubject.plotCheckerboards(newLabelPrefix,ep(1,:),fh,ph(1,3),refEp,flip); %  OG base - TR base, env switching
         title('OG_{base}-TM_{base}')
@@ -274,10 +281,21 @@ if plotIndSubjects
         % not normalized first, then normalized, arugmnets order: (Data, normalizeData, isGroupData, dataId, resDir, saveResAndFigure, version, usefft)
         fprintf('\n')
         splitCount
-        runRegression_Generalization(Data, false, false, [subID{i} regModelVersion 'split_' num2str(splitCount)], resDir, saveResAndFigure, regModelVersion, usefft)
+        [trans1,trans2]=runRegression_Generalization(Data, false, false, [subID{i} regModelVersion 'split_' num2str(splitCount)], resDir, saveResAndFigure, regModelVersion, usefft)
         runRegression_Generalization(Data, true, false, [subID{i} regModelVersion 'split_' num2str(splitCount)], resDir, saveResAndFigure, regModelVersion, usefft)
-        
+Rsquared1_Adj(i,1)=trans1.Rsquared.Adjusted;
+Rsquared1_Ord(i,1)=trans1.Rsquared.Ordinary;
+
+Rsquared2_Adj(i,1)=trans2.Rsquared.Adjusted;
+Rsquared2_Ord(i,1)=trans2.Rsquared.Ordinary;
+
+Coefficients_trans1(:,i)=trans1.Coefficients.Estimate;
+Coefficients_trans2(:,i)=trans2.Coefficients.Estimate;
+   
     end
+
+    
+    
 end
 %% plot checkerboards and run regression per group
 if length(subID) > 1 || plotGroup
@@ -364,12 +382,21 @@ if length(subID) > 1 || plotGroup
             % run regression and save results
             format compact % format loose %(default)
             % not normalized first, then normalized, arugmnets order: (Data, normalizeData, isGroupData, dataId, resDir, saveResAndFigure, version, usefft)
-            runRegression_Generalization(Data, false, true, [groupID regModelVersion 'split_' num2str(splitCount) 'flip_' num2str(flip)], resDir, saveResAndFigure, regModelVersion, usefft)
+            [trans1,trans2]=runRegression_Generalization(Data, false, true, [groupID regModelVersion 'split_' num2str(splitCount) 'flip_' num2str(flip)], resDir, saveResAndFigure, regModelVersion, usefft)
             runRegression_Generalization(Data, true, true, [groupID regModelVersion 'split_' num2str(splitCount) 'flip_' num2str(flip)], resDir, saveResAndFigure, regModelVersion, usefft)
         else
             asymCos = findCosBtwAsymOfEpochs(Data, size(newLabelPrefix,2))
         end
     end
+    
+    Rsquared1_Adj(1)=trans1.Rsquared.Adjusted;
+    Rsquared1_Ord(1)=trans1.Rsquared.Ordinary;
+    
+    Rsquared2_Adj(1)=trans2.Rsquared.Adjusted;
+    Rsquared2_Ord(1)=trans2.Rsquared.Ordinary;
+    
+    Coefficients_trans1(:,1)=trans1.Coefficients.Estimate;
+    Coefficients_trans2(:,1)=trans2.Coefficients.Estimate;
 end
 % end
 
