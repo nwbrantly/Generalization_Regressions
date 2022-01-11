@@ -22,7 +22,7 @@ late=1;
 strides=40;
 conds={'OG base','TM fast','TM slow'...
     'TM base','Adaptation',...
-    'TM post','OG post'};
+    'Post 1','Post 2'};
 fh=plotEMGtraces(expData,conds,muscle,late,strides,normalize,normCond);
 
 
@@ -31,7 +31,7 @@ late=0;
 strides=30;
 conds={'TM base','Pos short',...
     'Neg Short','Adaptation',...
-    'TM post','OG post'};
+    'Post 1','Post 2'};
 fh=plotEMGtraces(expData,conds,muscle,late,strides,normalize,normCond);
 
 %% Early conditions 
