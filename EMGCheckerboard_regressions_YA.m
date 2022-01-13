@@ -18,11 +18,11 @@
 clear; close all; clc;
 
 % set script parameters, SHOULD CHANGE/CHECK THIS EVERY TIME.
-groupID = 'ATS';
-saveResAndFigure = false;
+groupID = 'ATR';
+saveResAndFigure = true;
 plotAllEpoch = true;
 plotIndSubjects = true;
-plotGroup = false;
+plotGroup = true;
 kinenatics=true;
 
 scriptDir = fileparts(matlab.desktop.editor.getActiveFilename);
@@ -31,7 +31,7 @@ if kinenatics==1
     
 else
     
-   % files = dir ([scriptDir '/data_reprocess2021/' groupID '*params2021.mat']);
+    % files = dir ([scriptDir '/data_reprocess2021/' groupID '*params2021.mat']);
 end
 n_subjects = size(files,1);
 subID = cell(1, n_subjects);
@@ -54,12 +54,8 @@ regModelVersion =  'default'; %'default'
 % end
 
 %% load and prep data
-normalizedTMFullAbrupt=adaptationData.createGroupAdaptData(sub); %loading the data 
-normalizedTMFullAbrupt=normalizedTMFullAbrupt.removeBadStrides; %Removing bad strides 
-
-ss =normalizedTMFullAbrupt.adaptData{1}.data.getLabelsThatMatch('^Norm'); 
-s2 = regexprep(ss,'^Norm','dsjrs');
-normalizedTMFullAbrupt=normalizedTMFullAbrupt.renameParams(ss,s2);
+GroupData=adaptationData.createGroupAdaptData(sub); %loading the data
+GroupData=GroupData.removeBadStrides; %Removing bad strides
 
 muscleOrder={'TA', 'PER', 'SOL', 'LG', 'MG', 'BF', 'SEMB', 'SEMT', 'VM', 'VL', 'RF', 'TFL', 'GLU', 'HIP'};
 
@@ -70,59 +66,71 @@ ep=defineEpochs_regressionYA('nanmean');
 refEp = defineReferenceEpoch('TM base',ep);
 refEpLate = defineReferenceEpoch('Adaptation',ep);
 refEpSlow = defineReferenceEpoch('TM slow',ep);
-refEp2 = defineReferenceEpoch('OGbase',ep);
+refEp2 = defineReferenceEpoch('OG base',ep);
 
 newLabelPrefix = defineMuscleList(muscleOrder);
-normalizedTMFullAbrupt = normalizedTMFullAbrupt.normalizeToBaselineEpoch(newLabelPrefix,refEp2); %Normalized by TM base (aka mid baseline)
-normalizedTMFullAbrupt.removeBadStrides;
+normalizedGroupData = GroupData.normalizeToBaselineEpoch(newLabelPrefix,refEp2); %Normalized by TM base (aka mid baseline)
 
-ll=normalizedTMFullAbrupt.adaptData{1}.data.getLabelsThatMatch('^Norm');
+ll=normalizedGroupData.adaptData{1}.data.getLabelsThatMatch('^Norm');
 
 
-l2=regexprep(regexprep(ll,'^Norm',''),'_s','s');
-normalizedTMFullAbrupt=normalizedTMFullAbrupt.renameParams(ll,l2);
+l2=regexprep(regexprep(ll,'^Norm',''),'_s','');
+normalizedGroupData=normalizedGroupData.renameParams(ll,l2);
 
-newLabelPrefix = regexprep(newLabelPrefix,'_s','s');
+newLabelPrefix = regexprep(newLabelPrefix,'_s','');
 
-%% Removal of muscle with porblems during data collection 
-% Remove RF and HIP 
+%% Removal of muscle with porblems during data collection
+% Remove RF and HIP
 if contains(groupID,'ATR')
     badMuscleNames = {'sGLUs','fGLUs',};
-    badMuscleIdx=[];
-    for bm = badMuscleNames
-        badMuscleIdx = [badMuscleIdx, find(ismember(newLabelPrefix,bm))];
-    end
-    newLabelPrefix = newLabelPrefix(setdiff(1:end, badMuscleIdx))
+elseif contains(groupID,'ATS02')
+    badMuscleNames = {'sRFs','fRFs','sHIPs','fHIPs'};
+elseif contains(groupID,'ATS')
+    badMuscleNames = {'sRFs','fRFs'};
 end
+badMuscleIdx=[];
+for bm = badMuscleNames
+    badMuscleIdx = [badMuscleIdx, find(ismember(newLabelPrefix,bm))];
+end
+newLabelPrefix = newLabelPrefix(setdiff(1:end, badMuscleIdx))
 %% Plot epochs
+if plotGroup
+    %     ep=defineEpochs_regressionYA('nanmedian');
+    summaryflag='nanmedian';
+else
+    summaryflag=[];
+end
 if plotAllEpoch
-    for i = 1%:n_subjects
+    for i = 1:n_subjects
         
         if plotGroup
-            adaptDataSubject = normalizedTMFullAbrupt;
+            adaptDataSubject = normalizedGroupData;
             figureSaveId = groupID;
         else
-            adaptDataSubject = normalizedTMFullAbrupt.adaptData{1, i};
+            adaptDataSubject = normalizedGroupData.adaptData{1, i};
             figureSaveId = subID{i};
         end
         
-        adaptDataSubject = normalizedTMFullAbrupt.adaptData{1, i};
+        %         adaptDataSubject = normalizedGroupData.adaptData{1, i};
         
         fh=figure('Units','Normalized','OuterPosition',[0 0 1 1]);
-        ph=tight_subplot(1,length(ep)+1,[.03 .005],.04,.04);
+        ph=tight_subplot(1,length(ep)-1,[.03 .005],.04,.04);
         flip=true;
         
-        ep=defineEpochs_regressionYA('nanmedian');
-        adaptDataSubject.plotCheckerboards(newLabelPrefix,refEp,fh,ph(1,1),[],flip); %plot TM base reference
-        %         adaptDataSubject.plotCheckerboards(newLabelPrefix,ep(3,:),fh,ph(1,2),[],flip); %plot TR base reference
-        adaptDataSubject.plotCheckerboards(newLabelPrefix,ep(1:8,:),fh,ph(1,2:9),refEp,flip);%plot all epochs normalized by the mid baseline
-        adaptDataSubject.plotCheckerboards(newLabelPrefix,ep(9,:),fh,ph(1,10),refEpLate,flip);%plot the early Post - late Ada block
-        title('Post1_{late}-Adapt_{SS}')
-        adaptDataSubject.plotCheckerboards(newLabelPrefix,ep(10,:),fh,ph(1,11),refEp,flip);%plot all remaining epochs normalized by the fast baseline
-        title('ShortPos_{early}-TMbase_{late}')
         
-        adaptDataSubject.plotCheckerboards(newLabelPrefix,ep(11,:),fh,ph(1,12),refEp,flip);%plot all remaining epochs normalized by the fast baseline
-        title('NegPos_{early}-TMbase_{late}')
+        %         adaptDataSubject.plotCheckerboards(newLabelPrefix,refEp,fh,ph(1,1),[],flip); %plot TM base reference
+        %         adaptDataSubject.plotCheckerboards(newLabelPrefix,ep(3,:),fh,ph(1,2),[],flip); %plot TR base reference
+        refEp = [];
+        adaptDataSubject.plotCheckerboards(newLabelPrefix,ep(1:8,:),fh,ph(1,1:8),refEp,flip,summaryflag);%plot all epochs normalized by the mid baseline
+        adaptDataSubject.plotCheckerboards(newLabelPrefix,ep(10:17,:),fh,ph(1,9:length(ep)-1),refEp,flip,summaryflag);%plot all epochs normalized by the mid baseline
+        
+        %         adaptDataSubject.plotCheckerboards(newLabelPrefix,ep(9,:),fh,ph(1,10),refEpLate,flip);%plot the early Post - late Ada block
+        %         title('Post1_{late}-Adapt_{SS}')
+        %         adaptDataSubject.plotCheckerboards(newLabelPrefix,ep(10,:),fh,ph(1,11),refEp,flip);%plot all remaining epochs normalized by the fast baseline
+        %         title('ShortPos_{early}')
+        %
+        %         adaptDataSubject.plotCheckerboards(newLabelPrefix,ep(11,:),fh,ph(1,12),refEp,flip);%plot all remaining epochs normalized by the fast baseline
+        %         title('NegPos_{early}')
         
         
         set(ph(:,1),'CLim',[-1 1]*1);
@@ -154,13 +162,14 @@ normalizeData = 0; %Vector lenght normalization
 
 %type of regression that we want to run
 regModelVersion='default';
-
+% regModelVersion='Adaptive_Feedback'
 % regModelVersion='Adaptive_EnvTransition';
 
 % In case that we have multiple cases. Let see if this needs to be updated
 splitCount=1;
 
 %For group data try to use the median to be consistnace with Pablo's
+
 summaryflag='nanmean';
 %  summaryflag='nanmedian';
 
@@ -168,9 +177,30 @@ summaryflag='nanmean';
 ep=defineEpochs_regressionYA(summaryflag);
 
 %Getting the names for specific epocjhs
-refEpAdaptLate = defineReferenceEpoch('Adaptation',ep);
-refEpPost1Late= defineReferenceEpoch('Post1_{Late}',ep);
-refEp= defineReferenceEpoch('TM base',ep); %fast tied 1 if short split 1, slow tied if 2nd split
+% refEpAdaptLate = defineReferenceEpoch('Adaptation',ep);
+% refEpPost1Late= defineReferenceEpoch('Post1_{Late}',ep);
+
+OGbase=defineReferenceEpoch('OG base',ep);
+TMbase= defineReferenceEpoch('TM base',ep); %fast tied 1 if short split 1, slow tied if 2nd split
+TMbeforePos= defineReferenceEpoch('TM_{beforePos}',ep);
+PosShort= defineReferenceEpoch('PosShort_{early}',ep);
+TMbeforeNeg=defineReferenceEpoch('TM_{beforeNeg}',ep);
+NegShort=defineReferenceEpoch('NegShort_{early}',ep);
+Pos1_Early=defineReferenceEpoch('Post1_{Early}',ep);
+Adaptation=defineReferenceEpoch('Adaptation',ep);
+Pos1_Late=defineReferenceEpoch('Post1_{Late}',ep);
+Pos2_Early=defineReferenceEpoch('Post2_{Early}',ep);
+
+
+if (contains(groupID, 'ATR'))
+    AfterPos= defineReferenceEpoch('TM_{afterPos}',ep);
+    AfterNeg=defineReferenceEpoch('TM_{afterNeg}',ep);
+    
+elseif (contains(groupID, 'ATS'))
+    AfterPos= defineReferenceEpoch('OG_{afterPos}',ep);
+    AfterNeg=defineReferenceEpoch('OG_{afterNeg}',ep);
+end
+
 
 Rsquared1_Adj=[];
 Rsquared1_Ord=[];
@@ -183,32 +213,38 @@ if plotIndSubjects
     %         close all;
     for i = 1:n_subjects
         
-        adaptDataSubject = normalizedTMFullAbrupt.adaptData{1, i};
         
-        fh=figure('Units','Normalized','OuterPosition',[0 0 1 1]);
-        ph=tight_subplot(1,5,[.03 .005],.04,.04);
+        
+        adaptDataSubject = normalizedGroupData.adaptData{1, i};
+        
+        fh=figure('Units','Normalized','OuterPosition',[0 0 1 1],'NumberTitle', 'off', 'Name',subID{i});
+        ph=tight_subplot(1,6,[.03 .005],.04,.04);
         flip=true;
         
         Data = {}; %in order: adapt, dataEnvSwitch, dataTaskSwitch, dataTrans1, dataTrans2
+        
         if usefft
-            [~,~,labels,Data{1},dataRef2]=adaptDataSubject.plotCheckerboards(newLabelPrefix,ep(10,:),fh,ph(1,1),refEp,flip); %  EMG_split(-) - TM base
+            [~,~,labels,Data{1},dataRef2]=adaptDataSubject.plotCheckerboards(newLabelPrefix,PosShort,fh,ph(1,1),TMbeforePos,flip); %  EMG_split(-) - TM base
             title('EMG(+)-TM_{base}')
         else
-            [~,~,labels,Data{1},dataRef2]=adaptDataSubject.plotCheckerboards(newLabelPrefix,ep(11,:),fh,ph(1,1),refEp,flip); %  EMG_split(-) - TM base
-            title('EMG(-)-TM_{base}')
+            [~,~,labels,Data{1},dataRef2]=adaptDataSubject.plotCheckerboards(newLabelPrefix,NegShort,fh,ph(1,1),TMbeforeNeg,flip); %  EMG_split(-) - TM base
+            title('EMG(-)-TM_{before(-)}')
         end
+        
         %all labels should be the same, no need to save again.
-        [~,~,~,Data{2},~] = adaptDataSubject.plotCheckerboards(newLabelPrefix,refEp,fh,ph(1,2),ep(10,:),flip); %TM base - EMG_on(+)
-        title('TM_{base}-EMG(+)')
-        [~,~,~,Data{3},~] = adaptDataSubject.plotCheckerboards(newLabelPrefix,ep(1,:),fh,ph(1,3),refEp,flip); %  OG base - TM base, env switching
+        [~,~,~,Data{2},~] = adaptDataSubject.plotCheckerboards(newLabelPrefix,TMbeforePos,fh,ph(1,2),PosShort,flip); %TM base - EMG_on(+)
+        title('TM_{before(+)}-EMG(+)')
+        [~,~,~,Data{3},~] = adaptDataSubject.plotCheckerboards(newLabelPrefix,OGbase,fh,ph(1,3),TMbase,flip); %  OG base - TM base, env switching
         title('OG_{base}-TM_{base}')
-        [~,~,~,Data{4},~] = adaptDataSubject.plotCheckerboards(newLabelPrefix,ep(5,:),fh,ph(1,4),refEpAdaptLate,flip); %TM post - Adaptation_{SS}, transition 1
+        [~,~,~,Data{4},~] = adaptDataSubject.plotCheckerboards(newLabelPrefix,Pos1_Early,fh,ph(1,4),Adaptation,flip); %TM post - Adaptation_{SS}, transition 1
         title('Post1_{e}-Adapt_{SS}')
-        [~,~,~,Data{5},~] = adaptDataSubject.plotCheckerboards(newLabelPrefix,ep(7,:),fh,ph(1,5),refEpPost1Late,flip); %OGpost_early - TMpost_late, transition 2
-        title('Post2_{e}-Post1{l}')
-
+        [~,~,~,Data{5},~] = adaptDataSubject.plotCheckerboards(newLabelPrefix,Pos2_Early,fh,ph(1,5),Pos1_Late,flip); %OGpost_early - TMpost_late, transition 2
+        title('Post2_{e}-Post1_{l}')
+        [~,~,~,Data{6},~] = adaptDataSubject.plotCheckerboards(newLabelPrefix,PosShort,fh,ph(1,6),AfterPos,flip);
+        title('EMG(+)_{e}-After_{e}')
+        
+        
         set(ph(:,1),'CLim',[-1 1]*1);
-        %     set(ph(:,2:end),'YTickLabels',{},'CLim',[-1 1]*2);
         set(ph(:,2:end),'YTickLabels',{},'CLim',[-1 1]*1);
         set(ph,'FontSize',8)
         pos=get(ph(1,end),'Position');
@@ -217,7 +253,7 @@ if plotIndSubjects
         set(ph(1,end),'Position',pos);
         set(gcf,'color','w');
         
-        resDir = [scriptDir '/RegressionAnalysis/RegModelResults_V14/'];
+        resDir = [scriptDir '/RegressionAnalysis/RegModelResults_ATR01-04/'];
         if (saveResAndFigure)
             if not(isfolder(resDir))
                 mkdir(resDir)
@@ -231,50 +267,55 @@ if plotIndSubjects
         % not normalized first, then normalized, arugmnets order: (Data, normalizeData, isGroupData, dataId, resDir, saveResAndFigure, version, usefft)
         fprintf('\n')
         splitCount
-        [trans1,trans2]= runRegression_Generalization(Data, false, false, [subID{i} regModelVersion 'split_' num2str(splitCount)], resDir, saveResAndFigure, regModelVersion, usefft)
+       runRegression_Generalization(Data, false, false, [subID{i} regModelVersion 'split_' num2str(splitCount)], resDir, saveResAndFigure, regModelVersion, usefft)
         runRegression_Generalization(Data, true, false, [subID{i} regModelVersion 'split_' num2str(splitCount)], resDir, saveResAndFigure, regModelVersion, usefft)
         
+        asymCos = findCosBtwAsymOfEpochs(Data, size(newLabelPrefix,2))
         
-        Rsquared1_Adj(i,1)=trans1.Rsquared.Adjusted;
-        Rsquared1_Ord(i,1)=trans1.Rsquared.Ordinary;
-        
-        Rsquared2_Adj(i,1)=trans2.Rsquared.Adjusted;
-        Rsquared2_Ord(i,1)=trans2.Rsquared.Ordinary;
-        
-        Coefficients_trans1(:,i)=trans1.Coefficients.Estimate;
-        Coefficients_trans2(:,i)=trans2.Coefficients.Estimate;
+%           save(['IndivRegressionParams_',subID{i},'.mat'],'trans1','trans2','trans3')
+%         Rsquared1_Adj(i,1)=trans1.Rsquared.Adjusted;
+%         Rsquared1_Ord(i,1)=trans1.Rsquared.Ordinary;
+%         
+%         Rsquared2_Adj(i,1)=trans2.Rsquared.Adjusted;
+%         Rsquared2_Ord(i,1)=trans2.Rsquared.Ordinary;
+%         
+%         Coefficients_trans1(:,i)=trans1.Coefficients.Estimate;
+%         Coefficients_trans2(:,i)=trans2.Coefficients.Estimate;
     end
     
-    save('IndivRegressionParams.mat','Rsquared1_Adj','Rsquared1_Ord','Rsquared2_Adj','Rsquared2_Ord','Coefficients_trans1','Coefficients_trans2')
+  
 end
 %% plot checkerboards and run regression per group
 if length(subID) > 1 || plotGroup
     for flip = [1]
         summaryflag='nanmedian';
-        
+        %         ep=defineEpochs_regressionYA('nanmean');
         fh=figure('Units','Normalized','OuterPosition',[0 0 1 1]);
-        ph=tight_subplot(1,5,[.03 .005],.04,.04);
+        ph=tight_subplot(1,6,[.03 .005],.04,.04);
         
         Data = {}; %in order: adapt, dataEnvSwitch, dataTaskSwitch, dataTrans1, dataTrans2
         if usefft
-            [~,~,labels,Data{1},dataRef2]= normalizedTMFullAbrupt.plotCheckerboards(newLabelPrefix,ep(10,:),fh,ph(1,1),refEp,flip,summaryflag); %  EMG_split(-) - TM base
+            [~,~,labels,Data{1},dataRef2]= normalizedGroupData.plotCheckerboards(newLabelPrefix,PosShort,fh,ph(1,1),TMbeforePos,flip,summaryflag); %  EMG_split(-) - TM base
             title('EMG(+)-TM_{base}')
         else
-            [~,~,labels,Data{1},dataRef2]= normalizedTMFullAbrupt.plotCheckerboards(newLabelPrefix,ep(11,:),fh,ph(1,1),refEp,flip,summaryflag); %  EMG_split(-) - TM base
+            [~,~,labels,Data{1},dataRef2]= normalizedGroupData.plotCheckerboards(newLabelPrefix,NegShort,fh,ph(1,1),TMbeforeNeg,flip,summaryflag); %  EMG_split(-) - TM base
+            title('EMG(-)-TM_{before(-)}')
         end
         
-        [~,~,~,Data{2},~] = normalizedTMFullAbrupt.plotCheckerboards(newLabelPrefix,refEp,fh,ph(1,2),ep(10,:),flip,summaryflag); %TM base - EMG_on(+)
-        title('TM_{base}-EMG(+)')
+        [~,~,~,Data{2},~] = normalizedGroupData.plotCheckerboards(newLabelPrefix,TMbeforePos,fh,ph(1,2),PosShort,flip,summaryflag); %TM base - EMG_on(+)
+        title('TM_{before(+)}-EMG(+)')
         
-        [~,~,~,Data{3},~] = normalizedTMFullAbrupt.plotCheckerboards(newLabelPrefix,ep(1,:),fh,ph(1,3),refEp,flip,summaryflag); %  OG base - TR base, env switching
+        [~,~,~,Data{3},~] = normalizedGroupData.plotCheckerboards(newLabelPrefix,OGbase,fh,ph(1,3),TMbase,flip,summaryflag); %  OG base - TR base, env switching
         title('OG_{base}-TM_{base}')
         
-        [~,~,~,Data{4},~] = normalizedTMFullAbrupt.plotCheckerboards(newLabelPrefix,ep(5,:),fh,ph(1,4),refEpAdaptLate,flip,summaryflag); %Post1 - Adaptation_{SS}, transition 1
+        [~,~,~,Data{4},~] = normalizedGroupData.plotCheckerboards(newLabelPrefix,Pos1_Early,fh,ph(1,4),Adaptation,flip,summaryflag); %Post1 - Adaptation_{SS}, transition 1
         title('Post1_{e}-Adapt_{SS}')
         
-        [~,~,~,Data{5},~] = normalizedTMFullAbrupt.plotCheckerboards(newLabelPrefix,ep(7,:),fh,ph(1,5),refEpPost1Late,flip,summaryflag); %Post2 early - Post 1 late, transition 2
+        [~,~,~,Data{5},~] = normalizedGroupData.plotCheckerboards(newLabelPrefix,Pos2_Early,fh,ph(1,5),Pos1_Late,flip,summaryflag); %Post2 early - Post 1 late, transition 2
         title('Post2_{e}-Post1{l}')
-
+        
+        [~,~,~,Data{6},~] = normalizedGroupData.plotCheckerboards(newLabelPrefix,PosShort,fh,ph(1,6),AfterPos,flip,summaryflag); %Post2 early - Post 1 late, transition 2
+        title('EMG(+)_{e}-After_{e}')
         
         set(ph(:,1),'CLim',[-1 1]);
         set(ph(:,2:end),'YTickLabels',{},'CLim',[-1 1]);
@@ -285,7 +326,7 @@ if length(subID) > 1 || plotGroup
         set(ph(1,end),'Position',pos);
         set(gcf,'color','w');
         
-        resDir = [scriptDir '/RegressionAnalysis/RegModelResults_V14/GroupResults/'];
+        resDir = [scriptDir '/RegressionAnalysis/RegModelResults_ATR01-4/GroupResults/'];
         if (saveResAndFigure)
             if not(isfolder(resDir))
                 mkdir(resDir)
@@ -299,24 +340,27 @@ if length(subID) > 1 || plotGroup
             format compact % format loose %(default)
             % not normalized first, then normalized, arugmnets order: (Data, normalizeData, isGroupData, dataId, resDir, saveResAndFigure, version, usefft)
             
-           [trans1,trans2]=runRegression_Generalization(Data, false, true, [groupID regModelVersion 'split_' num2str(splitCount) 'flip_' num2str(flip)], resDir, saveResAndFigure, regModelVersion, usefft)
-           runRegression_Generalization(Data, true, true, [groupID regModelVersion 'split_' num2str(splitCount) 'flip_' num2str(flip)], resDir, saveResAndFigure, regModelVersion, usefft)
+            runRegression_Generalization(Data, false, true, [groupID regModelVersion 'split_' num2str(splitCount) 'flip_' num2str(flip)], resDir, saveResAndFigure, regModelVersion, usefft)
+            runRegression_Generalization(Data, true, true, [groupID regModelVersion 'split_' num2str(splitCount) 'flip_' num2str(flip)], resDir, saveResAndFigure, regModelVersion, usefft)
         else
             asymCos = findCosBtwAsymOfEpochs(Data, size(newLabelPrefix,2))
         end
     end
     
-%     Rsquared1_Adj(1)=trans1.Rsquared.Adjusted;
-%     Rsquared1_Ord(1)=trans1.Rsquared.Ordinary;
-%     
-%     Rsquared2_Adj(1)=trans2.Rsquared.Adjusted;
-%     Rsquared2_Ord(1)=trans2.Rsquared.Ordinary;
-%     
-%     Coefficients_trans1(:,1)=trans1.Coefficients.Estimate;
-%     Coefficients_trans2(:,1)=trans2.Coefficients.Estimate;
-%     
-%     save('GroupRegressionParams.mat','Rsquared1_Adj','Rsquared1_Ord','Rsquared2_Adj','Rsquared2_Ord','Coefficients_trans1','Coefficients_trans2')
-       
+    %     Rsquared1_Adj(1)=trans1.Rsquared.Adjusted;
+    %     Rsquared1_Ord(1)=trans1.Rsquared.Ordinary;
+    %
+    %     Rsquared2_Adj(1)=trans2.Rsquared.Adjusted;
+    %     Rsquared2_Ord(1)=trans2.Rsquared.Ordinary;
+    %
+    %     Coefficients_trans1(:,1)=trans1.Coefficients.Estimate;
+    %     Coefficients_trans2(:,1)=trans2.Coefficients.Estimate;
+    
+    %     save('GroupRegressionParamsNorm_ATR.mat','Rsquared1_Adj','Rsquared1_Ord','Rsquared2_Adj','Rsquared2_Ord','Coefficients_trans1','Coefficients_trans2')
+    
+    
+%     save(['GroupRegression00_',groupID,'.mat'],'trans1','trans2','trans3')
+    
 end
 % end
 %% EMG aftereffects
@@ -325,33 +369,142 @@ refEpPost1Early= defineReferenceEpoch('Post1_{Early}',ep);
 if contains(groupID,'ATR')
     refEp= defineReferenceEpoch('TM base',ep); %fast tied 1 if short split 1, slow tied if 2nd split
 elseif contains(groupID,'ATS')
-    refEp= defineReferenceEpoch('OGbase',ep);
+    refEp= defineReferenceEpoch('OG base',ep);
 end
-  fh=figure('Units','Normalized','OuterPosition',[0 0 1 1]);
-        ph=tight_subplot(1,n_subjects,[.03 .005],.04,.04);
+fh=figure('Units','Normalized','OuterPosition',[0 0 1 1]);
+ph=tight_subplot(1,n_subjects+1,[.03 .005],.04,.04);
 flip = [1];
-load('IndivRegressionParamsYA.mat')
+load(['IndivRegressionParams_',groupID,'.mat'])
 
 if plotIndSubjects
     for i = 1:n_subjects
-        adaptDataSubject = normalizedTMFullAbrupt.adaptData{1, i};
+        adaptDataSubject = normalizedGroupData.adaptData{1, i};
         
-      
+        
         
         [~,~,~,Data{i},~] = adaptDataSubject.plotCheckerboards(newLabelPrefix,refEpPost1Early,fh,ph(1,i),refEp,flip); %|EMG_earlyPost1 -  EMG_Baseline
-         vec_norm = norm(Data{i});
+        vec_norm = norm(Data{i});
         if contains(groupID,'ATR')
-        title({[adaptDataSubject.subData.ID] ['Norm=', num2str(norm(Data{i}))] ['\beta_{adapt}=', num2str(Coefficients_trans1(1,i))]});
+            title({[adaptDataSubject.subData.ID] ['Norm=', num2str(norm(Data{i})), '| \beta_{adapt}=', num2str(Coefficients_trans1(1,i))]});
         else
-             title({[adaptDataSubject.subData.ID] ['Norm=', num2str(norm(Data{i}))] ['\beta_{adapt}=', num2str(0.239)]});
-        end 
-     
+            title({[adaptDataSubject.subData.ID] ['Norm=', num2str(norm(Data{i})),'| \beta_{adapt}=', num2str(Coefficients_trans1(1,i))]});
+        end
+        
+    end
+    summFlag='nanmedian';
+    [~,~,~,Data{i+1},~] = normalizedGroupData.plotCheckerboards(newLabelPrefix,refEpPost1Early,fh,ph(1,n_subjects+1),refEp,flip,summFlag); %|EMG_earlyPost1 -  EMG_Baseline
+    %     vec_norm = norm(Data{i+1});
+    summFlag='nanmedian';
+    eval(['fun=@(x) ' summFlag '(x,4);']);
+    Data{i+1}=fun(Data{i+1});
+    vec_norm = norm(Data{i+1});
+    load(['GroupRegression01_',groupID,'.mat'])
+    if contains(groupID,'ATR')
+        title({['Group'] ['Norm=', num2str(norm(Data{i+1})),'| \beta_{adapt}=', num2str(trans1.Coefficients.Estimate(1))]});
+    else
+        title({['Group'] ['Norm=', num2str(norm(Data{i+1})),'| \beta_{adapt}=', num2str(trans1.Coefficients.Estimate(1))]});
     end
 end
+set(ph(:,1),'CLim',[-1 1]*1);
+set(ph(:,2:end),'YTickLabels',{},'CLim',[-1 1]*1);
+set(ph,'FontSize',8)
+pos=get(ph(1,end),'Position');
+axes(ph(1,end))
+colorbar
+set(ph(1,end),'Position',pos);
 set(gcf,'color','w');
+
+
+%% Comparing baseline late to Post 1 and Post 2 late
+
+OGbase=defineReferenceEpoch('OG base',ep);
+TMbase= defineReferenceEpoch('TM base',ep);
+Pos1_Late=defineReferenceEpoch('Post1_{Late}',ep);
+Pos2_Late=defineReferenceEpoch('Post2_{Late}',ep);
+
+if plotIndSubjects
+    for i = 1:n_subjects
+        adaptDataSubject = normalizedGroupData.adaptData{1, i};
+        
+        fh=figure('Units','Normalized','OuterPosition',[0 0 1 1],'NumberTitle', 'off', 'Name',subID{i});
+        ph=tight_subplot(1,4,[.03 .005],.04,.04);
+        flip=true;
+        
+        [~,~,~,Data{1},~] = adaptDataSubject.plotCheckerboards(newLabelPrefix,OGbase,fh,ph(1,1),[],flip);
+        vec_norm = norm(Data{1});
+        title({[OGbase.Condition{1}] ['Norm=', num2str(norm(Data{1}))]});
+        [~,~,~,Data{2},~] = adaptDataSubject.plotCheckerboards(newLabelPrefix,TMbase,fh,ph(1,2),[],flip);
+        vec_norm = norm(Data{2});
+        title({[TMbase.Condition{1}] ['Norm=', num2str(norm(Data{2}))]});
+        [~,~,~,Data{3},~] = adaptDataSubject.plotCheckerboards(newLabelPrefix,Pos1_Late,fh,ph(1,3),[],flip);
+        vec_norm = norm(Data{3});
+        title({[Pos1_Late.Condition{1}] ['Norm=', num2str(norm(Data{3}))]});
+        [~,~,~,Data{4},~] = adaptDataSubject.plotCheckerboards(newLabelPrefix,Pos2_Late,fh,ph(1,4),[],flip);
+        vec_norm = norm(Data{4});
+        title({[Pos2_Late.Condition{1}] ['Norm=', num2str(norm(Data{4}))]});
+        
+        set(ph(:,1),'CLim',[-1 1]*1);
+        set(ph(:,2:end),'YTickLabels',{},'CLim',[-1 1]*1);
+        set(ph,'FontSize',8)
+        pos=get(ph(1,end),'Position');
+        axes(ph(1,end))
+        colorbar
+        set(ph(1,end),'Position',pos);
+        set(gcf,'color','w');
+        
+        
+        
+        
+    end
+    
+    
+end
+
+if plotGroup
+    
+    fh=figure('Units','Normalized','OuterPosition',[0 0 1 1]);
+    ph=tight_subplot(1,4,[.03 .005],.04,.04);
+    flip=true;
+    summFlag='nanmedian';
+    eval(['fun=@(x) ' summFlag '(x,4);']);
+    
+    [~,~,~,Data{1},~] = normalizedGroupData.plotCheckerboards(newLabelPrefix,OGbase,fh,ph(1,1),[],flip,summFlag);
+    Data{1}=fun(Data{1});
+    title({[OGbase.Condition{1}] ['Norm=', num2str(norm(Data{1}))]});
+    
+    [~,~,~,Data{2},~] = normalizedGroupData.plotCheckerboards(newLabelPrefix,TMbase,fh,ph(1,2),[],flip,summFlag);
+    Data{2}=fun(Data{2});
+    title({[TMbase.Condition{1}] ['Norm=', num2str(norm(Data{2}))]});
+    
+    [~,~,~,Data{3},~] = normalizedGroupData.plotCheckerboards(newLabelPrefix,Pos1_Late,fh,ph(1,3),[],flip,summFlag);
+    Data{3}=fun(Data{3});
+    title({[Pos1_Late.Condition{1}] ['Norm=', num2str(norm(Data{3}))]});
+    
+    [~,~,~,Data{4},~] = normalizedGroupData.plotCheckerboards(newLabelPrefix,Pos2_Late,fh,ph(1,4),[],flip,summFlag);
+    Data{4}=fun(Data{4});
+    title({[Pos2_Late.Condition{1}] ['Norm=', num2str(norm(Data{4}))]});
+    
+    
+    
+end
+set(ph(:,1),'CLim',[-1 1]*1);
+set(ph(:,2:end),'YTickLabels',{},'CLim',[-1 1]*1);
+set(ph,'FontSize',8)
+pos=get(ph(1,end),'Position');
+axes(ph(1,end))
+colorbar
+set(ph(1,end),'Position',pos);
+set(gcf,'color','w');
+
+
+
+
+
+%%
 %    vec_norm = vecnorm(Data{1});
 %% plot subsets of epochs: AE with context specific baseline correction
 %AE only pertains to session 1 and long protocols.
+
 % refEpOG = defineReferenceEpoch('OGbase',ep);
 % refEpTR = defineReferenceEpoch('TRbase',ep);
 % post1ep = ep(strcmp(ep.Properties.ObsNames,'Post1_{Early}'),:);
@@ -422,9 +575,9 @@ set(gcf,'color','w');
 % post2ep = ep(strcmp(ep.Properties.ObsNames,'Post2_{Early}'),:);
 % post1lateep = ep(strcmp(ep.Properties.ObsNames,'Post1_{Late}'),:);
 % post2lateep = ep(strcmp(ep.Properties.ObsNames,'Post2_{Late}'),:);
-% 
+%
 % Data = cell(1,4);
-% 
+%
 % for flip = [1]%,2] %2 legs separate first (flip = 1) and then asymmetry (flip = 2)
 %     %     the flip asymmetry plots average of summation and the average of
 %     %     asymmetry.
@@ -436,14 +589,14 @@ set(gcf,'color','w');
 %             adaptDataSubject = normalizedTMFullAbrupt.adaptData{1, i};
 %             figureSaveId = subID{i};
 %         end
-%         
+%
 %         fh=figure('Units','Normalized','OuterPosition',[0 0 1 1]);
 %         ph=tight_subplot(1,8)%,[.03 .005],.04,.04);
-%         
+%
 %         % plot after effects only
 %         [~,~,~,Data{1},~]= adaptDataSubject.plotCheckerboards(newLabelPrefix,refEpOG,fh,ph(1,1),[],flip); %plot OG base
 %         [~,~,~,Data{2},~]= adaptDataSubject.plotCheckerboards(newLabelPrefix,refEpTR,fh,ph(1,2),[],flip); %plot OG base with shoe
-%         
+%
 %         %         if (contains(groupID, 'TS'))%correct post 1 with OG no nimbus, post 2 with OG with nimbus, i.e.,TR
 %         %             adaptDataSubject.plotCheckerboards(newLabelPrefix,post1ep,fh,ph(1,3),refEpOG,flip); %post1 is OG
 %         %             adaptDataSubject.plotCheckerboards(newLabelPrefix,post2ep,fh,ph(1,4),refEpTR,flip); %post2 is with Nimbus(TR)
@@ -451,28 +604,28 @@ set(gcf,'color','w');
 %         %             adaptDataSubject.plotCheckerboards(newLabelPrefix,post1ep,fh,ph(1,3),refEpTR,flip);
 %         %             adaptDataSubject.plotCheckerboards(newLabelPrefix,post2ep,fh,ph(1,4),refEpOG,flip);
 %         %         end
-%         
+%
 %         [~,~,~,Data{3},~]= adaptDataSubject.plotCheckerboards(newLabelPrefix,post1ep,fh,ph(1,3),[],flip);
 %         [~,~,~,Data{4},~]= adaptDataSubject.plotCheckerboards(newLabelPrefix,post2ep,fh,ph(1,4),[],flip);
 %         [~,~,~,Data{5},~]=adaptDataSubject.plotCheckerboards(newLabelPrefix,post1lateep,fh,ph(1,5),[],flip);
 %         [~,~,~,Data{6},~]=adaptDataSubject.plotCheckerboards(newLabelPrefix,post2lateep,fh,ph(1,6),[],flip);
-%         
+%
 %         %         if strcmpi(regModelVersion, 'TR')
 %         adaptDataSubject.plotCheckerboards(newLabelPrefix,post1lateep,fh,ph(1,7),refEpTR,flip);
 %         title('Post1_{Late}-TRbase_{late}')
-%         
+%
 %         disp('Cosine(Post1_{Late},TRbase_{late})')
 %         cos= Cosine2Matrix(Data{5},Data{2})
-%         
-%         
-%         
+%
+%
+%
 %         adaptDataSubject.plotCheckerboards(newLabelPrefix,post2lateep,fh,ph(1,8),refEpOG,flip);
 %         title('Post2_{Late}-OGbase_{late}')
-%         
-%         
+%
+%
 %         disp('Cosine(Post2_{Late},OGbase_{late})')
 %         cos= Cosine2Matrix(Data{1},Data{6})
-%         
+%
 %         %         else
 %         %
 %         %             adaptDataSubject.plotCheckerboards(newLabelPrefix,post1lateep,fh,ph(1,7),refEpOG,flip);
@@ -488,15 +641,15 @@ set(gcf,'color','w');
 %         %             cos= Cosine2Matrix(Data{2},Data{6})
 %         %             %             cosine(Data{2},Data{4})
 %         %         end
-%         
-%         
+%
+%
 %         %         adaptDataSubject.plotCheckerboards(newLabelPrefix,post1ep,fh,ph(1,7),ep(4,:),flip);
 %         %         title('trans2');
 %         %         adaptDataSubject.plotCheckerboards(newLabelPrefix,post2ep,fh,ph(1,8),post1lateep,flip);
 %         %         title('trans2');
 %         %         adaptDataSubject.plotCheckerboards(newLabelPrefix,refEpOG,fh,ph(1,9),refEpTR,flip);
 %         %         title('OG-TRbase');
-%         
+%
 %         set(ph(:,1),'CLim',[-1 1]);
 %         set(ph(:,2:end),'YTickLabels',{},'CLim',[-1 1]);
 %         set(ph,'FontSize',8)
@@ -505,11 +658,11 @@ set(gcf,'color','w');
 %         colorbar
 %         set(ph(1,end),'Position',pos);
 %         set(gcf,'color','w');
-%         
+%
 %         currLabelPrefix = newLabelPrefix;
-%         
-%         
-%         
+%
+%
+%
 %         if (saveResAndFigure)
 %             resDir = [scriptDir '/RegressionAnalysis/RegModelResults_V15/'];
 %             if plotGroup
@@ -525,15 +678,15 @@ set(gcf,'color','w');
 %                 saveas(fh, [resDir figureSaveId '_CheckerBoard_AE_NoBase_Asym.png'])
 %             end
 %         end
-%         
+%
 %         if plotGroup
 %             break
 %         end
 %     end
 % end
-% 
-% 
-% 
+%
+%
+%
 %% Compare Off perturbation to OG vs  off pertubation + multiEnvSwitch
 % Compare TRSplitLate - OGPostEarly ~ (TRBase - OGBase) + (TRSplitLate - TRPostEarly)
 % ep = defineEpochVR_OG_UpdateV3('nanmean', subID);
