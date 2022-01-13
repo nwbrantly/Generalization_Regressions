@@ -1,4 +1,4 @@
-%Transition 1 
+                                                                                                              %Transition 1 
 %% R^2 ordinary 
  load('GroupRegressionParams.mat')  
  figure
