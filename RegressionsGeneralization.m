@@ -1,6 +1,6 @@
-function [Data,regressorNames,fh]=RegressionsGeneralization(Labels,session1,session2,plotIndSubjects, plotGroup,NegShort,TMbeforeNeg,PostShort,TMbeforePost,AdaptLate,Post1Early,Post1Late,Post2Early, OGpostPosEarly, OGbase, EnvBase,subIdx)
+function [Data,regressorNames,fh]=RegressionsGeneralization(Labels,session1,session2,plotIndSubjects, plotGroup,NegShort,TMbeforeNeg,PostShort,TMbeforePost,AdaptLate,Post1Early,Post1Late,Post2Early, OGpostPosEarly, OGbase, EnvBase,subIdx,flip)
 
-if nargin<17
+if nargin<17 || isempty(subIdx)
     subIdx=[];
 end
 
@@ -8,7 +8,6 @@ n_subjects=length(session1.ID);
 
 if  plotIndSubjects
     
-%     for i = 1:n_subjects
         disp(['subject=', num2str(subIdx)])
         
         
@@ -20,15 +19,13 @@ if  plotIndSubjects
             adaptDataSubjectSession2 = session1.adaptData{1, subIdx};
         end
         
-        fh=figure('Units','Normalized','OuterPosition',[0 0 1 1]);
+        fh=figure('Units','Normalized','OuterPosition',[0 0 1 1],'NumberTitle', 'off', 'Name',session1.ID{subIdx});
         ph=tight_subplot(1,6,[.03 .005],.04,.04);
         
         
         
         Data = {}; %in order: adapt, dataEnvSwitch, dataTaskSwitch, dataTrans1, dataTrans2
         %all labels should be the same, no need to save again.
-        
-        flip = 1;
         
         
         regressorNames = {'MultiContextAdapt','EnvTransition','MultiContextSwitch','Trans1','Trans2','Trans3'};
@@ -56,8 +53,8 @@ if  plotIndSubjects
         
         
         
-        set(ph(:,1),'CLim',[-1 1]*1.5);
-        set(ph(:,2:end),'YTickLabels',{},'CLim',[-1 1]*1.5);
+        set(ph(:,1),'CLim',[-1 1]*1);
+        set(ph(:,2:end),'YTickLabels',{},'CLim',[-1 1]*1);
         set(ph,'FontSize',8)
         pos=get(ph(1,end),'Position');
         axes(ph(1,end))
@@ -65,7 +62,7 @@ if  plotIndSubjects
         set(ph(1,end),'Position',pos);
         set(gcf,'color','w');
         
-%     end
+
 end
 
 if  plotGroup
@@ -76,7 +73,7 @@ if  plotGroup
         session2Data = session1;
     end
     
-    flip = [1];
+%     flip = [1];
        summaryflag='nanmedian';
 
         fh=figure('Units','Normalized','OuterPosition',[0 0 1 1]);
@@ -115,8 +112,8 @@ if  plotGroup
         title(['Transition 3: Short Split',] ,[ 'Norm=', num2str(norm(reshape(d,[],1)))])
         
  
-        set(ph(:,1),'CLim',[-1 1]*1.5);
-        set(ph(:,2:end),'YTickLabels',{},'CLim',[-1 1]*1.5);
+        set(ph(:,1),'CLim',[-1 1]*1);
+        set(ph(:,2:end),'YTickLabels',{},'CLim',[-1 1]*1);
         set(ph,'FontSize',8)
         pos=get(ph(1,end),'Position');
         axes(ph(1,end))
