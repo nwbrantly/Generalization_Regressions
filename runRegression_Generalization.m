@@ -1,4 +1,4 @@
-function [fitTrans1NoConst,fitTrans2NoConst,fitTrans3NoConst]=runRegression_Generalization(Data, normalizeData, isGroupData, dataId, resDir, saveResAndFigure, version, usefft, regressorNames);
+function [fitTrans1NoConst,fitTrans2NoConst,fitTrans3NoConst,vec_norm]=runRegression_Generalization(Data, normalizeData, isGroupData, dataId, resDir, saveResAndFigure, version, usefft, regressorNames);
 % perform regression anlysis V2 (see grant one note: Regression discussion (two transitions)
 % printout the regression results and save the results to destination
 % folders (if saveResAndFigure flag is on)
@@ -54,8 +54,8 @@ if usefft %do fft - run only once
     Data{1} = fftshift(Data{1},1);
 end
 
-fprintf('\n\n\n')
-normalizeData
+% fprintf('\n\n\n');
+normalizeData;
 if normalizeData
     for i = 1:size(Data,2)
         Data{i} = Data{i}/norm(Data{i});
@@ -68,40 +68,36 @@ if strcmpi(version,'default') %default, 3 regressors version
     trans1Model = [regressorNames{4} '~' regressorNames{1} '+' regressorNames{2} '+' regressorNames{3} '-1'];
     trans2Model = [regressorNames{5} '~' regressorNames{1} '+' regressorNames{2} '+' regressorNames{3} '-1'];
     trans3Model = [regressorNames{6} '~' regressorNames{1} '+' regressorNames{2} '+' regressorNames{3} '-1'];
-    %     elseif strcmpi(version,'tr') %training group
-    %         trans1Model = [regressorNames{4} '~' regressorNames{1} '+' regressorNames{2} '-1'];
-    %         trans2Model = [regressorNames{5} '~' regressorNames{1} '+' regressorNames{3} '-1'];
-    %     elseif strcmpi(version,'ts') %testing group
-    %         trans1Model = [regressorNames{4} '~' regressorNames{1} '+' regressorNames{2} '-1'];
-    %         trans2Model = [regressorNames{5} '~' regressorNames{1} '+' regressorNames{3} '-1'];
+elseif strcmpi(version,'tr') %training group
+    trans1Model = [regressorNames{4} '~' regressorNames{1} '+' regressorNames{2} '-1'];
+    trans2Model = [regressorNames{5} '~' regressorNames{1} '+' regressorNames{3} '-1'];
+elseif strcmpi(version,'ts') %testing group
+    trans1Model = [regressorNames{4} '~' regressorNames{1} '+' regressorNames{2} '-1'];
+    trans2Model = [regressorNames{5} '~' regressorNames{1} '+' regressorNames{3} '-1'];
 elseif  strcmpi(version,'Adaptive_EnvTransition') %testing group
     trans1Model = [regressorNames{4} '~' regressorNames{1} '+' regressorNames{2} '-1'];
-    trans2Model = [regressorNames{5} '~' regressorNames{2} '+' regressorNames{3} '-1'];
-% elseif strcmpi(version,'Adaptive_Feedback') %testing group
-%     trans1Model = [regressorNames{4} '~' regressorNames{1} '+' regressorNames{2} '+' regressorNames{3} '+' regressorNames{6} '-1'];
-%     trans2Model = [regressorNames{5} '~' regressorNames{1} '+' regressorNames{2} '+' regressorNames{3} '+' regressorNames{6} '-1'];
-%     
+    trans2Model = [regressorNames{5} '~' regressorNames{2} '+' regressorNames{3} '-1'];  
 end
 
 %%% Run regression analysis V2
 tableData=table(Data{1},Data{2},Data{3},Data{4},Data{5},Data{6},'VariableNames',regressorNames);
-fitTrans1NoConst=fitlm(tableData,trans1Model)%exclude constant
+fitTrans1NoConst=fitlm(tableData,trans1Model);%exclude constant
 
-Rsquared = fitTrans1NoConst.Rsquared
+Rsquared = fitTrans1NoConst.Rsquared;
 %compute adaptation and switch index
 beta1_index = computeBetaIndex(fitTrans1NoConst);
 
-fprintf('\n\n')
+% fprintf('\n\n')
 
-fitTrans2NoConst=fitlm(tableData,trans2Model)%exclude constant
-Rsquared = fitTrans2NoConst.Rsquared
+fitTrans2NoConst=fitlm(tableData,trans2Model);%exclude constant
+Rsquared = fitTrans2NoConst.Rsquared;
 %compute adaptation and switch index
 beta2_index = computeBetaIndex(fitTrans2NoConst);
 
-fprintf('\n\n')
+% fprintf('\n\n')
 
-fitTrans3NoConst=fitlm(tableData,trans3Model)%exclude constant
-Rsquared = fitTrans3NoConst.Rsquared
+fitTrans3NoConst=fitlm(tableData,trans3Model);%exclude constant
+Rsquared = fitTrans3NoConst.Rsquared;
 %compute adaptation and switch index
 beta3_index = computeBetaIndex(fitTrans3NoConst);
 
@@ -109,11 +105,11 @@ beta3_index = computeBetaIndex(fitTrans3NoConst);
 
 %compute and print out relative vector norm to assess the length
 %difference between regressors
-fprintf('\n\n')
+% fprintf('\n\n')
 vec_norm = vecnorm(fitTrans1NoConst.Variables{:,:});
-relNom = normalize(vec_norm,'norm',1)
+relNom = normalize(vec_norm,'norm',1);
 
-fprintf('\n\n')
+% fprintf('\n\n')
 %Stepwise regression
 if strcmpi(version,'default')
     
@@ -126,12 +122,12 @@ elseif strcmpi(version,'Adaptive_EnvTransition')
 end
 z= [Data{1},Data{2},Data{3},Data{4},Data{5},Data{6}];
 %     corrcoef(X,'Rows','complete')
-disp('Correlation betwen regressor and dependent variables')
-corrcoef(z,'Rows','complete')
+% disp('Correlation betwen regressor and dependent variables')
+corrcoef(z,'Rows','complete');
 
-fprintf('\n\n')
-disp('Colinearity between the regressors')
-    vif(z)
+% fprintf('\n\n');
+% disp('Colinearity between the regressors')
+    vif(z);
 %     collintest(z)
 %     collintest(tableData)
 
@@ -156,12 +152,12 @@ if saveResAndFigure
         mkdir(resDir)
     end
     if ~isGroupData
-        save([resDir dataId 'models_ver' num2str(usefft) num2str(normalizeData)], 'fitTrans1NoConst','fitTrans2NoConst','fitTrans3NoConst','beta1_index','beta2_index','beta3_index','relNom');
+        save([resDir dataId 'models_ver' num2str(usefft) num2str(normalizeData)], 'fitTrans1NoConst','fitTrans2NoConst','fitTrans3NoConst','beta1_index','beta2_index','beta3_index','relNom','vec_norm');
     else
         %version convention: first digit: use first or last stride, 2nd digit:
         %use fft or not, 3rd digit: normalize or not, i.e., ver_101 = use first
         %20 strides, no fft and normalized data
-        save([resDir dataId '_group_models_ver' num2str(usefft) num2str(normalizeData)], 'fitTrans1NoConst','fitTrans2NoConst','fitTrans3NoConst','beta1_index','beta2_index','beta3_index','relNom');
+        save([resDir dataId '_group_models_ver' num2str(usefft) num2str(normalizeData)], 'fitTrans1NoConst','fitTrans2NoConst','fitTrans3NoConst','beta1_index','beta2_index','beta3_index','relNom','vec_norm');
     end
 end
 end
