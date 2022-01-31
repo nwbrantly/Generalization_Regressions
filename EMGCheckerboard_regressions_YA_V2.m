@@ -19,7 +19,7 @@ clear; close all; clc;
 
 % set script parameters, SHOULD CHANGE/CHECK THIS EVERY TIME.
 groupID = 'ATS';
-saveResAndFigure = false;
+saveResAndFigure = true;
 plotAllEpoch = true;
 plotIndSubjects = true;
 plotGroup = true;
@@ -51,7 +51,7 @@ n_subjects = length(subID);
 ep=defineEpochs_regressionYA('nanmean');
 refEp = defineReferenceEpoch('TM base',ep);
 refEpLate = defineReferenceEpoch('Adaptation',ep);
-refEpSlow = defineReferenceEpoch('TM slow',ep);
+% refEpSlow = defineReferenceEpoch('TM slow',ep);
 refEp2 = defineReferenceEpoch('OG base',ep);
 
 newLabelPrefix = defineMuscleList(muscleOrder);
@@ -82,7 +82,7 @@ newLabelPrefix = newLabelPrefix(setdiff(1:end, badMuscleIdx))
 %% Plot epochs
 ep=defineEpochs_regressionYA('nanmean');
 plotGroup=1;
-plotIndSubjects = 1;
+plotIndSubjects = 0;
 if plotGroup
     summaryflag='nanmedian';
         adaptDataSubject = normalizedGroupData;
@@ -207,7 +207,7 @@ end
 %% plot checkerboards and run regression per group
 if length(subID) > 1 || plotGroup
     
-    for  flip = 1:2;
+    for  flip = 2
         [Data,regressorNames]=RegressionsGeneralization(newLabelPrefix,normalizedGroupData,[],0,1,NegShort,TMbeforeNeg,PosShort,TMbeforePos,...
             AdaptLate,Pos1_Early,Pos1_Late,Pos2_Early, AfterPos, OGbase, TMbase,[],flip);
         
@@ -218,8 +218,8 @@ if length(subID) > 1 || plotGroup
             if not(isfolder(resDir))
                 mkdir(resDir)
             end
-            saveas(fh, [resDir groupID '_group_Checkerboard_ver' num2str(usefft) n um2str(normalizeData) regModelVersion 'split_' num2str(splitCount) 'flip_' num2str(flip) '.png'])
-            saveas(fh, [resDir groupID '_group_Checkerboard_ver' num2str(usefft) num2str(normalizeData) regModelVersion 'split_' num2str(splitCount) 'flip_' num2str(flip)], 'epsc')
+%             saveas(fh, [resDir groupID '_group_Checkerboard_ver' num2str(usefft) num2str(normalizeData) regModelVersion 'split_' num2str(splitCount) 'flip_' num2str(flip) '.png'])
+%             saveas(fh, [resDir groupID '_group_Checkerboard_ver' num2str(usefft) num2str(normalizeData) regModelVersion 'split_' num2str(splitCount) 'flip_' num2str(flip)], 'epsc')
         end
         
         if flip ~= 2 %run regression on the full (not asymmetry) data
@@ -242,12 +242,13 @@ if contains(groupID,'ATR')
 elseif contains(groupID,'ATS')
     refEp= defineReferenceEpoch('OG base',ep);
 end
+
 fh=figure('Units','Normalized','OuterPosition',[0 0 1 1]);
 ph=tight_subplot(1,n_subjects+1,[.03 .005],.04,.04);
 flip = [1];
 
-% nw=datestr(now,'yy-mm-dd');
-nw='22-01-20';
+nw=datestr(now,'yy-mm-dd');
+% nw='22-01-20';
 if plotIndSubjects
     for i = 1:n_subjects
         adaptDataSubject = normalizedGroupData.adaptData{1, i};
