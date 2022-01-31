@@ -81,23 +81,23 @@ end
 
 %%% Run regression analysis V2
 tableData=table(Data{1},Data{2},Data{3},Data{4},Data{5},Data{6},'VariableNames',regressorNames);
-fitTrans1NoConst=fitlm(tableData,trans1Model)%exclude constant
+fitTrans1NoConst=fitlm(tableData,trans1Model);%exclude constant
 
-Rsquared = fitTrans1NoConst.Rsquared
+Rsquared = fitTrans1NoConst.Rsquared;
 %compute adaptation and switch index
 beta1_index = computeBetaIndex(fitTrans1NoConst);
 
-fprintf('\n\n')
+% fprintf('\n\n')
 
-fitTrans2NoConst=fitlm(tableData,trans2Model)%exclude constant
-Rsquared = fitTrans2NoConst.Rsquared
+fitTrans2NoConst=fitlm(tableData,trans2Model);%exclude constant
+Rsquared = fitTrans2NoConst.Rsquared;
 %compute adaptation and switch index
 beta2_index = computeBetaIndex(fitTrans2NoConst);
 
-fprintf('\n\n')
+% fprintf('\n\n')
 
-fitTrans3NoConst=fitlm(tableData,trans3Model)%exclude constant
-Rsquared = fitTrans3NoConst.Rsquared
+fitTrans3NoConst=fitlm(tableData,trans3Model);%exclude constant
+Rsquared = fitTrans3NoConst.Rsquared;
 %compute adaptation and switch index
 beta3_index = computeBetaIndex(fitTrans3NoConst);
 
@@ -109,7 +109,7 @@ beta3_index = computeBetaIndex(fitTrans3NoConst);
 vec_norm = vecnorm(fitTrans1NoConst.Variables{:,:});
 relNom = normalize(vec_norm,'norm',1);
 
-fprintf('\n\n')
+% fprintf('\n\n')
 %Stepwise regression
 if strcmpi(version,'default')
     
@@ -122,13 +122,12 @@ elseif strcmpi(version,'Adaptive_EnvTransition')
 end
 z= [Data{1},Data{2},Data{3},Data{4},Data{5},Data{6}];
 %     corrcoef(X,'Rows','complete')
+% disp('Correlation betwen regressor and dependent variables')
+corrcoef(z,'Rows','complete');
 
-disp('Correlation betwen regressor and dependent variables')
-corrcoef(z,'Rows','complete')
-
-fprintf('\n\n');
-disp('Colinearity between the regressors')
-vif(z)
+% fprintf('\n\n');
+% disp('Colinearity between the regressors')
+    vif(z);
 %     collintest(z)
 %     collintest(tableData)
 
