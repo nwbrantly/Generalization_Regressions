@@ -13,14 +13,24 @@ bootstrap=true;
 scriptDir = fileparts(matlab.desktop.editor.getActiveFilename);
 files = dir ([scriptDir '/data/' groupID '*params.mat']);
 
-n_subjects = size(files,1);
+% n_subjects = size(files,1);
+n_subjects = 4;%size(files,1);
+p = randperm(4,4);
+ii=0;
 subID = cell(1, n_subjects);
 sub=cell(1,n_subjects);
-for i = 1:n_subjects
-    sub{i} = files(i).name;
-    subID{i} = sub{i}(1:end-10);
-   
+% for i = 1:n_subjects
+%     sub{i} = files(i).name;
+%     subID{i} = sub{i}(1:end-10);
+%    
+% end
+
+for i =p %1:n_subjects
+    ii=1+ii;
+    sub{ii} = files(i).name;
+    subID{ii} = sub{ii}(1:end-10);
 end
+
 subID
 
 regModelVersion =  'default';
@@ -110,11 +120,10 @@ for s=1:n_subjects
     
 end
 
-        %%
+%%
 
-        DataBoots2={};
 if bootstrap
-    n=3; %number of iterations
+    n=2000; %number of iterations
    f = waitbar(0,'1','Name','Boostrapping Data',...
     'CreateCancelBtn','setappdata(gcbf,''canceling'',1)');
 
@@ -195,4 +204,5 @@ resDir = [scriptDir '/RegressionAnalysis/RegModelResults_', nw,'/BootstrappingRe
 if not(isfolder(resDir))
     mkdir(resDir)
 end
-save([resDir groupID '_group_iterations_' num2str(i) '_numberOfSub_' num2str(n_subjects)], 'Trans1','Trans2','Trans3','Norm_Regressors','Norm_AF')
+% save([resDir groupID '_group_iterations_' num2str(i) '_numberOfSub_' num2str(n_subjects)], 'Trans1','Trans2','Trans3','Norm_Regressors','Norm_AF')
+save([resDir groupID '_group_iterations_' num2str(i) '_numberOfSub_' num2str(n_subjects)], 'Trans1','Trans2','Trans3','Norm_Regressors','Norm_AF','subID')
