@@ -127,7 +127,7 @@ corrcoef(z,'Rows','complete');
 
 % fprintf('\n\n');
 % disp('Colinearity between the regressors')
-    vif(z);
+%     vif(z);
 %     collintest(z)
 %     collintest(tableData)
 
