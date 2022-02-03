@@ -23,7 +23,7 @@ saveResAndFigure = false;
 plotAllEpoch = true;
 plotIndSubjects = true;
 plotGroup = true;
-kinenatics=true;
+kinenatics=false;
 
 scriptDir = fileparts(matlab.desktop.editor.getActiveFilename);
 if kinenatics==1
@@ -89,7 +89,7 @@ end
 fh=figure('Units','Normalized','OuterPosition',[0 0 1 1]);
 ph=tight_subplot(1,n_subjects+1,[.03 .005],.04,.04);
 flip = [2];
-
+norms=[];
 % nw=datestr(now,'yy-mm-dd');
 % nw='22-01-31';
 if plotIndSubjects
@@ -97,6 +97,7 @@ if plotIndSubjects
         adaptDataSubject = normalizedTMFullAbrupt.adaptData{1, i};
         [~,~,~,Data{i},~] = adaptDataSubject.plotCheckerboards(newLabelPrefix,refEpPost1Early,fh,ph(1,i),refEp,flip); %|EMG_earlyPost1 -  EMG_Baseline
         title({[adaptDataSubject.subData.ID] ['Norm=', num2str(norm(reshape(Data{i},[],1)))]});
+        norms(i,1)= norm(reshape(Data{i},[],1));
         
         
     end
@@ -117,8 +118,14 @@ set(ph(1,end),'Position',pos);
 set(gcf,'color','w');
 
 demographics= normalizedTMFullAbrupt.GroupDemographics;
-
-
+age=demographics.AllAge';
+[rho,pval] = corr(age,norms,'Type','Spearman') 
+tbl = table(age,norms,'VariableNames',{'Age','NormAF'})
+model= ['NormAF ~ Age +1'];
+mdl=fitlm(tbl,model)
+mdl.Rsquared
+figure
+plot(mdl)
 
 
 %%
