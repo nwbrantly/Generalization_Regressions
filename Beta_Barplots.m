@@ -3,7 +3,7 @@
     colorOrder=[[0.4940 0.1840 0.5560];[0.9290 0.6940 0.1250]; [0.4660 0.6740 0.1880]];
     
 groupID={'ATR','ATS'};
-
+scriptDir = fileparts(matlab.desktop.editor.getActiveFilename);
  now=datestr(now,'yy-mm-dd');
 for t=1
 
@@ -11,7 +11,7 @@ figure
 for g=1:length(groupID)
 
     if contains(groupID{g},'A')
-        load(['/Users/dulcemariscal/Documents/GitHub/Generalization_Regressions/RegressionAnalysis/RegModelResults_',now,'/GroupResults/',groupID{g},'defaultsplit_1flip_1_group_models_ver00.mat'])
+        load([scriptDir '/RegressionAnalysis/RegModelResults_',now,'/GroupResults/',groupID{g},'defaultsplit_1flip_1_group_models_ver00.mat'])
     else
         load(['/Users/dulcemariscal/Documents/GitHub/R01/RegressionAnalysis/RegModelResults_22-01-20/GroupResults/',groupID{g},'default_split1asym_1_group_models_ver00.mat'])
     end
@@ -56,9 +56,9 @@ b=[];
 for i=1:length(groupID)
     %     load(['GroupRegression00_',groupID{i},'.mat'])
     if contains(groupID{i},'A')
-        load(['/Users/dulcemariscal/Documents/GitHub/Generalization_Regressions/RegressionAnalysis/RegModelResults_22-01-20/GroupResults/',groupID{i},'defaultsplit_1flip_1_group_models_ver00.mat'])
+        load([scriptDir '/RegressionAnalysis/RegModelResults_22-01-20/GroupResults/',groupID{i},'defaultsplit_1flip_1_group_models_ver00.mat'])
     else
-        load(['/Users/dulcemariscal/Documents/GitHub/R01/RegressionAnalysis/RegModelResults_22-01-20/GroupResults/',groupID{i},'default_split1asym_1_group_models_ver00.mat'])
+        load([ scriptDir '/RegressionAnalysis/RegModelResults_22-01-20/GroupResults/',groupID{i},'default_split1asym_1_group_models_ver00.mat'])
         
     end
     
@@ -101,8 +101,8 @@ end
 %% Bootstrapping plot  
 %%
 %Betas 
-
-date= '22-01-20';
+date=datestr(now,'yy-mm-dd');
+% date= '22-01-20';
 
 colorOrder=[[0.4940 0.1840 0.5560];[0.9290 0.6940 0.1250]; [0.4660 0.6740 0.1880]];
 
@@ -111,23 +111,20 @@ groupID={'ATS','ATR'};
 
 betas={'\beta_{adapt}','\beta_{noadapt}','\beta_{env}'};
 for tr=1:3
-     fh=figure('Units','Normalized','OuterPosition',[0 0 1 1],'NumberTitle', 'off', 'Name',['Trans', num2str(tr)]);
+    fh=figure('Units','Normalized','OuterPosition',[0 0 1 1],'NumberTitle', 'off', 'Name',['Trans', num2str(tr)]);
     for b=1:3
         subplot(1,3,b)
         hold on
         for i=1:length(groupID)
             %     load(['GroupRegression00_',groupID{i},'.mat'])
-            if contains(groupID{i},'TS')
-                load(['/Users/dulcemariscal/Documents/GitHub/Generalization_Regressions/RegressionAnalysis/RegModelResults_', date '/BootstrappingResults/',groupID{i},'_group_iterations_500_numberOfSub_4.mat'])
-            else
-                load(['/Users/dulcemariscal/Documents/GitHub/Generalization_Regressions/RegressionAnalysis/RegModelResults_', date '/BootstrappingResults/',groupID{i},'_group_iterations_500_numberOfSub_4.mat'])
-                
-            end
             
+            load([scriptDir '/RegressionAnalysis/RegModelResults_', date, '/BootstrappingResults/',groupID{i},'_group_iterations_2000_numberOfSub_4.mat'])
             
-           eval(['histogram(Trans' num2str(tr) '.betas(:,b))']);
+            eval(['h1 = histogram(abs(Trans' num2str(tr) '.betas(:,b)))']);
+            h1.BinWidth = 0.01;
             
         end
+        
         
         title(betas{b})
         legend(groupID{:})
@@ -234,13 +231,14 @@ hold on
 for i=1:length(groupID)
     %     load(['GroupRegression00_',groupID{i},'.mat'])
     if contains(groupID{i},'TS')
-        load(['/Users/dulcemariscal/Documents/GitHub/Generalization_Regressions/RegressionAnalysis/RegModelResults_', date '/BootstrappingResults/',groupID{i},'_group_iterations_500_numberOfSub_4.mat'])
+        load([scriptDir '/RegressionAnalysis/RegModelResults_', date '/BootstrappingResults/',groupID{i},'_group_iterations_2000_numberOfSub_4.mat'])
     else
-        load(['/Users/dulcemariscal/Documents/GitHub/Generalization_Regressions/RegressionAnalysis/RegModelResults_', date '/BootstrappingResults/',groupID{i},'_group_iterations_500_numberOfSub_4.mat'])
+        load([scriptDir '/RegressionAnalysis/RegModelResults_', date '/BootstrappingResults/',groupID{i},'_group_iterations_2000_numberOfSub_4.mat'])
         
     end
  
-    histogram(Norm_AF)
+   h1 = histogram(Norm_AF)
+    h1.BinWidth = 1;
 
 end
 
@@ -252,19 +250,19 @@ set(gcf,'color','w');
 
 %%
 fh=figure('Units','Normalized','OuterPosition',[0 0 1 1],'NumberTitle', 'off', 'Name','AfterEffects');
-
+b={};
 hold on
 for i=1:length(groupID)
     %     load(['GroupRegression00_',groupID{i},'.mat'])
     if contains(groupID{i},'TS')
-        load(['/Users/dulcemariscal/Documents/GitHub/Generalization_Regressions/RegressionAnalysis/RegModelResults_', date '/BootstrappingResults/',groupID{i},'_group_iterations_500_numberOfSub_4.mat'])
+        load([scriptDir '/RegressionAnalysis/RegModelResults_', date '/BootstrappingResults/',groupID{i},'_group_iterations_2000_numberOfSub_4.mat'])
         colorFace=colorOrder(1,:);
     else
-        load(['/Users/dulcemariscal/Documents/GitHub/Generalization_Regressions/RegressionAnalysis/RegModelResults_', date '/BootstrappingResults/',groupID{i},'_group_iterations_500_numberOfSub_4.mat'])
+        load([scriptDir '/RegressionAnalysis/RegModelResults_', date '/BootstrappingResults/',groupID{i},'_group_iterations_2000_numberOfSub_4.mat'])
         colorFace=colorOrder(2,:);
     end
     
-    b{i}=bar(i,nanmean(Norm_AF),"FaceColor",colorFace);
+    b{i}=bar(i,nanmean(Norm_AF),'FaceColor',colorFace);
     errorbar(i,nanmean(Norm_AF),std(Norm_AF)/sqrt(length(Norm_AF)),'k');
     
 end
@@ -289,9 +287,9 @@ for b=1:6
     for i=1:length(groupID)
         %     load(['GroupRegression00_',groupID{i},'.mat'])
         if contains(groupID{i},'TS')
-            load(['/Users/dulcemariscal/Documents/GitHub/Generalization_Regressions/RegressionAnalysis/RegModelResults_', date '/BootstrappingResults/',groupID{i},'_group_iterations_500_numberOfSub_4.mat'])
+            load([scriptDir '/RegressionAnalysis/RegModelResults_', date '/BootstrappingResults/',groupID{i},'_group_iterations_2000_numberOfSub_4.mat'])
         else
-            load(['/Users/dulcemariscal/Documents/GitHub/Generalization_Regressions/RegressionAnalysis/RegModelResults_', date '/BootstrappingResults/',groupID{i},'_group_iterations_500_numberOfSub_4.mat'])
+            load([scriptDir '/RegressionAnalysis/RegModelResults_', date '/BootstrappingResults/',groupID{i},'_group_iterations_2000_numberOfSub_4.mat'])
             
         end
         
@@ -311,7 +309,7 @@ end
 fh=figure('Units','Normalized','OuterPosition',[0 0 1 1],'NumberTitle', 'off', 'Name','Regressors');
 % regressors={'Adapt','NoAdapt','EnvSwitch','Trans1','Trans2','Trans3'};
 
-reg=0;
+reg=1;
 
 if reg==1
 regressors={'|\DeltaEMG_{adapt}|','|\DeltaEMG_{no-adapt}|','|\DeltaEMG_{env}|'};
@@ -333,10 +331,10 @@ for b=c
     for i=1:length(groupID)
         %     load(['GroupRegression00_',groupID{i},'.mat'])
         if contains(groupID{i},'TS')
-            load(['/Users/dulcemariscal/Documents/GitHub/Generalization_Regressions/RegressionAnalysis/RegModelResults_', date '/BootstrappingResults/',groupID{i},'_group_iterations_500_numberOfSub_4.mat'])
+            load([scriptDir '/RegressionAnalysis/RegModelResults_', date '/BootstrappingResults/',groupID{i},'_group_iterations_2000_numberOfSub_4.mat'])
             colorFace=colorOrder(1,:);
         else
-            load(['/Users/dulcemariscal/Documents/GitHub/Generalization_Regressions/RegressionAnalysis/RegModelResults_', date '/BootstrappingResults/',groupID{i},'_group_iterations_500_numberOfSub_4.mat'])
+            load([ scriptDir '/RegressionAnalysis/RegModelResults_', date '/BootstrappingResults/',groupID{i},'_group_iterations_2000_numberOfSub_4.mat'])
             colorFace=colorOrder(2,:);
         end
         
