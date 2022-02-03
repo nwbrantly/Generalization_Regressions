@@ -1,17 +1,17 @@
 %colors
-    poster_colors;
+%     poster_colors;
     colorOrder=[[0.4940 0.1840 0.5560];[0.9290 0.6940 0.1250]; [0.4660 0.6740 0.1880]];
     
 groupID={'ATR','ATS'};
 
-
+ now=datestr(now,'yy-mm-dd');
 for t=1
 
 figure 
 for g=1:length(groupID)
 
     if contains(groupID{g},'A')
-        load(['/Users/dulcemariscal/Documents/GitHub/Generalization_Regressions/RegressionAnalysis/RegModelResults_22-01-20/GroupResults/',groupID{g},'defaultsplit_1flip_1_group_models_ver00.mat'])
+        load(['/Users/dulcemariscal/Documents/GitHub/Generalization_Regressions/RegressionAnalysis/RegModelResults_',now,'/GroupResults/',groupID{g},'defaultsplit_1flip_1_group_models_ver00.mat'])
     else
         load(['/Users/dulcemariscal/Documents/GitHub/R01/RegressionAnalysis/RegModelResults_22-01-20/GroupResults/',groupID{g},'default_split1asym_1_group_models_ver00.mat'])
     end
@@ -50,7 +50,7 @@ end
 
 %%
 
-groupID={'NTS','NTR','ATS'};
+groupID={'ATS'};
 colorOrder=[[0.4940 0.1840 0.5560];[0.9290 0.6940 0.1250]; [0.4660 0.6740 0.1880]];
 b=[];
 for i=1:length(groupID)
@@ -307,6 +307,7 @@ for b=1:6
     
 end
 
+%%
 fh=figure('Units','Normalized','OuterPosition',[0 0 1 1],'NumberTitle', 'off', 'Name','Regressors');
 % regressors={'Adapt','NoAdapt','EnvSwitch','Trans1','Trans2','Trans3'};
 
