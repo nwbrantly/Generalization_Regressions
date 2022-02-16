@@ -35,7 +35,7 @@ if nargin < 8 || isempty(usefft)
     usefft = false; %default false
 end
 if nargin < 9
-    regressorNames = {'Adapt','Noadapt','ContextSwitch','Trans1','Trans2','Trans3'}; %default names
+    regressorNames = {'Adapt','Noadapt','ContextSwitch','Trans1','Trans2','Trans3','Forward'}; %default names
 end
 
 if ~isGroupData
@@ -68,6 +68,10 @@ if strcmpi(version,'default') %default, 3 regressors version
     trans1Model = [regressorNames{4} '~' regressorNames{1} '+' regressorNames{2} '+' regressorNames{3} '-1'];
     trans2Model = [regressorNames{5} '~' regressorNames{1} '+' regressorNames{2} '+' regressorNames{3} '-1'];
     trans3Model = [regressorNames{6} '~' regressorNames{1} '+' regressorNames{2} '+' regressorNames{3} '-1'];
+elseif strcmpi(version,'default2') %default, 3 regressors version
+    trans1Model = [regressorNames{4} '~' regressorNames{1} '+' regressorNames{2} '+' regressorNames{3} '+' regressorNames{7} '-1'];
+    trans2Model = [regressorNames{5} '~' regressorNames{1} '+' regressorNames{2} '+' regressorNames{3} '+' regressorNames{7} '-1'];
+    trans3Model = [regressorNames{6} '~' regressorNames{1} '+' regressorNames{2} '+' regressorNames{3} '+' regressorNames{7} '-1'];
 elseif strcmpi(version,'tr') %training group
     trans1Model = [regressorNames{4} '~' regressorNames{1} '+' regressorNames{2} '-1'];
     trans2Model = [regressorNames{5} '~' regressorNames{1} '+' regressorNames{3} '-1'];
@@ -80,24 +84,24 @@ elseif  strcmpi(version,'Adaptive_EnvTransition') %testing group
 end
 
 %%% Run regression analysis V2
-tableData=table(Data{1},Data{2},Data{3},Data{4},Data{5},Data{6},'VariableNames',regressorNames);
-fitTrans1NoConst=fitlm(tableData,trans1Model);%exclude constant
+tableData=table(Data{1},Data{2},Data{3},Data{4},Data{5},Data{6},Data{7},'VariableNames',regressorNames);
+fitTrans1NoConst=fitlm(tableData,trans1Model)%exclude constant
 
-Rsquared = fitTrans1NoConst.Rsquared;
+Rsquared = fitTrans1NoConst.Rsquared
 %compute adaptation and switch index
 beta1_index = computeBetaIndex(fitTrans1NoConst);
 
-% fprintf('\n\n')
+fprintf('\n\n')
 
-fitTrans2NoConst=fitlm(tableData,trans2Model);%exclude constant
-Rsquared = fitTrans2NoConst.Rsquared;
+fitTrans2NoConst=fitlm(tableData,trans2Model)%exclude constant
+Rsquared = fitTrans2NoConst.Rsquared
 %compute adaptation and switch index
 beta2_index = computeBetaIndex(fitTrans2NoConst);
 
-% fprintf('\n\n')
+fprintf('\n\n')
 
-fitTrans3NoConst=fitlm(tableData,trans3Model);%exclude constant
-Rsquared = fitTrans3NoConst.Rsquared;
+fitTrans3NoConst=fitlm(tableData,trans3Model)%exclude constant
+Rsquared = fitTrans3NoConst.Rsquared
 %compute adaptation and switch index
 beta3_index = computeBetaIndex(fitTrans3NoConst);
 
