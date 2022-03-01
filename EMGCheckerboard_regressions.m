@@ -23,7 +23,7 @@ saveResAndFigure = false;
 plotAllEpoch = true;
 plotIndSubjects = true;
 plotGroup = true;
-kinenatics=true;
+kinenatics=false;
 
 scriptDir = fileparts(matlab.desktop.editor.getActiveFilename);
 if kinenatics==1
@@ -57,10 +57,6 @@ regModelVersion =  'default'; %'default'
 normalizedTMFullAbrupt=adaptationData.createGroupAdaptData(sub);
 normalizedTMFullAbrupt=normalizedTMFullAbrupt.removeBadStrides;
 
-ss =normalizedTMFullAbrupt.adaptData{1}.data.getLabelsThatMatch('^Norm');
-s2 = regexprep(ss,'^Norm','dsjrs');
-normalizedTMFullAbrupt=normalizedTMFullAbrupt.renameParams(ss,s2);
-
 muscleOrder={'TA', 'PER', 'SOL', 'LG', 'MG', 'BF', 'SEMB', 'SEMT', 'VM', 'VL', 'RF', 'TFL', 'GLU', 'HIP','ADM'};
 
 n_muscles = length(muscleOrder);
@@ -76,16 +72,61 @@ refEp2 = defineReferenceEpoch('OGbase',ep);
 newLabelPrefix = defineMuscleList(muscleOrder);
 
 
-normalizedTMFullAbrupt = normalizedTMFullAbrupt.normalizeToBaselineEpoch(newLabelPrefix,refEp2); %Normalized by TM base (aka mid baseline)
-normalizedTMFullAbrupt.removeBadStrides;
+normalizedTMFullAbrupt = normalizedTMFullAbrupt.normalizeToBaselineEpoch(newLabelPrefix,refEp); %Normalized by TM base (aka mid baseline)
 
 ll=normalizedTMFullAbrupt.adaptData{1}.data.getLabelsThatMatch('^Norm');
-%ll = normalizedTMFullAbrupt.adaptData{1}.data.getLabelsThatMatch('^(s|f)[A-Z]+_s');
-
 l2=regexprep(regexprep(ll,'^Norm',''),'_s','s');
 normalizedTMFullAbrupt=normalizedTMFullAbrupt.renameParams(ll,l2);
-
 newLabelPrefix = regexprep(newLabelPrefix,'_s','s');
+
+%% EMG aftereffects
+
+refEpPost1Early= defineReferenceEpoch('Post1_{Early}',ep);
+if contains(groupID,'C')
+    refEp= defineReferenceEpoch('TM base',ep); %fast tied 1 if short split 1, slow tied if 2nd split
+end
+
+fh=figure('Units','Normalized','OuterPosition',[0 0 1 1]);
+ph=tight_subplot(1,n_subjects+1,[.03 .005],.04,.04);
+flip = [2];
+norms=[];
+% nw=datestr(now,'yy-mm-dd');
+% nw='22-01-31';
+if plotIndSubjects
+    for i = 1:n_subjects
+        adaptDataSubject = normalizedTMFullAbrupt.adaptData{1, i};
+        [~,~,~,Data{i},~] = adaptDataSubject.plotCheckerboards(newLabelPrefix,refEpPost1Early,fh,ph(1,i),refEp,flip); %|EMG_earlyPost1 -  EMG_Baseline
+        title({[adaptDataSubject.subData.ID] ['Norm=', num2str(norm(reshape(Data{i},[],1)))]});
+        norms(i,1)= norm(reshape(Data{i},[],1));
+        
+        
+    end
+    summFlag='nanmedian';
+    [~,~,~,Data{i+1},~] = normalizedTMFullAbrupt.plotCheckerboards(newLabelPrefix,refEpPost1Early,fh,ph(1,n_subjects+1),refEp,flip,summFlag); %|EMG_earlyPost1 -  EMG_Baseline   
+    Data{i+1} = nanmedian(Data{i+1}, 4);
+%     load([scriptDir '/RegressionAnalysis/RegModelResults_',nw ,'/GroupResults/', groupID,'defaultsplit_1flip_1_group_models_ver00.mat'])
+    title({['Group'] ['Norm=', num2str(norm(reshape(Data{i+1},[],1)))]});
+end
+
+set(ph(:,1),'CLim',[-1 1]*1);
+set(ph(:,2:end),'YTickLabels',{},'CLim',[-1 1]*1);
+set(ph,'FontSize',8)
+pos=get(ph(1,end),'Position');
+axes(ph(1,end))
+colorbar
+set(ph(1,end),'Position',pos);
+set(gcf,'color','w');
+
+demographics= normalizedTMFullAbrupt.GroupDemographics;
+age=demographics.AllAge';
+[rho,pval] = corr(age,norms,'Type','Spearman') 
+tbl = table(age,norms,'VariableNames',{'Age','NormAF'})
+model= ['NormAF ~ Age +1'];
+mdl=fitlm(tbl,model)
+mdl.Rsquared
+figure
+plot(mdl)
+
 
 %%
 % Remove fRF from CTS

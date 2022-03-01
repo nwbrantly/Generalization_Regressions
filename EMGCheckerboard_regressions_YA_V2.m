@@ -18,7 +18,7 @@
 clear; close all; clc;
 
 % set script parameters, SHOULD CHANGE/CHECK THIS EVERY TIME.
-groupID = 'ATS';
+groupID = 'ATS12';
 saveResAndFigure = false;
 plotAllEpoch = true;
 plotIndSubjects = true;
@@ -28,15 +28,34 @@ bootstrap=true;
 scriptDir = fileparts(matlab.desktop.editor.getActiveFilename);
 files = dir ([scriptDir '/data/' groupID '*params.mat']);
 
-n_subjects = size(files,1);
-subID = cell(1, n_subjects);
-sub=cell(1,n_subjects);
-for i = 1:n_subjects
-    sub{i} = files(i).name;
-    subID{i} = sub{i}(1:end-10);
-   
+% n_subjects = size(files,1);
+% subID = cell(1, n_subjects);
+% sub=cell(1,n_subjects);
+% for i = 1:n_subjects
+%     sub{i} = files(i).name;
+%     subID{i} = sub{i}(1:end-10);
+%    
+% end
+% subID
+session2_n_subjects = 0;
+sub = {};
+subID = {};
+session2subID = {};
+session2sub = {};
+for i = 1:size(files,1)
+    if contains(files(i).name,'Session2')
+        session2_n_subjects = session2_n_subjects + 1;
+        session2sub{end+1} = files(i).name;
+        session2subID{end+1} = session2sub{end}(1:end-10);
+    else
+        sub{end+1} = files(i).name;
+        subID{end+1} = sub{end}(1:end-10);
+    end
 end
+n_subjects = size(files,1) - session2_n_subjects;
 subID
+session2subID
+
 
 regModelVersion =  'default';
 %% load and prep data
@@ -56,14 +75,24 @@ refEp2 = defineReferenceEpoch('OG base',ep);
 
 newLabelPrefix = defineMuscleList(muscleOrder);
 normalizedGroupData = GroupData.normalizeToBaselineEpoch(newLabelPrefix,refEp2); %Normalized by TM base (aka mid baseline)
-
 ll=normalizedGroupData.adaptData{1}.data.getLabelsThatMatch('^Norm');
-
-
 l2=regexprep(regexprep(ll,'^Norm',''),'_s','');
 normalizedGroupData=normalizedGroupData.renameParams(ll,l2);
-
 newLabelPrefix = regexprep(newLabelPrefix,'_s','');
+
+if ~isempty(session2subID)
+    newLabelPrefix = defineMuscleList(muscleOrder);
+    session2Data= adaptationData.createGroupAdaptData(session2sub);
+    session2Data =session2Data.removeBadStrides;
+    session2Data = session2Data.normalizeToBaselineEpoch(newLabelPrefix,refEp2);
+    ll=session2Data.adaptData{1}.data.getLabelsThatMatch('^Norm');
+    l2=regexprep(regexprep(ll,'^Norm',''),'_s','');
+    session2Data=session2Data.renameParams(ll,l2);
+    newLabelPrefix = regexprep(newLabelPrefix,'_s','');
+else 
+    session2Data=[];
+    %         totalSessions = 1;
+end
 
 %% Removal of muscle with porblems during data collection
 % Do not remove mouscle for group analysis
@@ -158,6 +187,8 @@ Pos1_Early=defineReferenceEpoch('Post1_{Early}',ep);
 AdaptLate=defineReferenceEpoch('Adaptation',ep);
 Pos1_Late=defineReferenceEpoch('Post1_{Late}',ep);
 Pos2_Early=defineReferenceEpoch('Post2_{Early}',ep);
+Pos5_Late=defineReferenceEpoch('PostShort5_{late}',ep);
+OGPos5_Late=defineReferenceEpoch('OG_{after5pos}',ep);
 
 if (contains(groupID, 'ATR'))
     AfterPos= defineReferenceEpoch('TM_{afterPos}',ep);
@@ -173,10 +204,10 @@ end
 if plotIndSubjects
     for i = 1:n_subjects
         
-        for flip=1:2
+        for flip=1
             
-            [Data,regressorNames,fh]=RegressionsGeneralization(newLabelPrefix,normalizedGroupData,[],1,0,NegShort,TMbeforeNeg,PosShort,TMbeforePos,...
-                AdaptLate,Pos1_Early,Pos1_Late,Pos2_Early, AfterPos, OGbase, TMbase, i,flip);
+            [Data,regressorNames,fh]=RegressionsGeneralization(newLabelPrefix,normalizedGroupData,session2Data,1,0,NegShort,TMbeforeNeg,PosShort,TMbeforePos,...
+                AdaptLate,Pos1_Early,Pos1_Late,Pos2_Early, AfterPos, OGbase, TMbase,Pos5_Late,OGPos5_Late, i,flip);
             
             nw=datestr(now,'yy-mm-dd');
             
@@ -195,8 +226,9 @@ if plotIndSubjects
                 % not normalized first, then normalized, arugmnets order: (Data, normalizeData, isGroupData, dataId, resDir, saveResAndFigure, version, usefft)
                 fprintf('\n')
                 splitCount
+                regModelVersion= 'default2';
                 runRegression_Generalization(Data, false, false, [subID{i} regModelVersion 'split_' num2str(splitCount)], resDir, saveResAndFigure, regModelVersion, usefft)
-                runRegression_Generalization(Data, true, false, [subID{i} regModelVersion 'split_' num2str(splitCount)], resDir, saveResAndFigure, regModelVersion, usefft)
+%                 runRegression_Generalization(Data, true, false, [subID{i} regModelVersion 'split_' num2str(splitCount)], resDir, saveResAndFigure, regModelVersion, usefft)
                 
                 asymCos = findCosBtwAsymOfEpochs(Data, size(newLabelPrefix,2))
             end
@@ -208,8 +240,8 @@ end
 if length(subID) > 1 || plotGroup
     
     for  flip = 1:2;
-        [Data,regressorNames]=RegressionsGeneralization(newLabelPrefix,normalizedGroupData,[],0,1,NegShort,TMbeforeNeg,PosShort,TMbeforePos,...
-            AdaptLate,Pos1_Early,Pos1_Late,Pos2_Early, AfterPos, OGbase, TMbase,[],flip);
+        [Data,regressorNames]=RegressionsGeneralization(newLabelPrefix,normalizedGroupData,session2Data,0,1,NegShort,TMbeforeNeg,PosShort,TMbeforePos,...
+            AdaptLate,Pos1_Early,Pos1_Late,Pos2_Early, AfterPos, OGbase, TMbase,Pos5_Late,OGPos5_Late,[],flip);
         
         
         nw=datestr(now,'yy-mm-dd');
@@ -218,8 +250,8 @@ if length(subID) > 1 || plotGroup
             if not(isfolder(resDir))
                 mkdir(resDir)
             end
-            saveas(fh, [resDir groupID '_group_Checkerboard_ver' num2str(usefft) n um2str(normalizeData) regModelVersion 'split_' num2str(splitCount) 'flip_' num2str(flip) '.png'])
-            saveas(fh, [resDir groupID '_group_Checkerboard_ver' num2str(usefft) num2str(normalizeData) regModelVersion 'split_' num2str(splitCount) 'flip_' num2str(flip)], 'epsc')
+%             saveas(fh, [resDir groupID '_group_Checkerboard_ver' num2str(usefft) n um2str(normalizeData) regModelVersion 'split_' num2str(splitCount) 'flip_' num2str(flip) '.png'])
+%             saveas(fh, [resDir groupID '_group_Checkerboard_ver' num2str(usefft) num2str(normalizeData) regModelVersion 'split_' num2str(splitCount) 'flip_' num2str(flip)], 'epsc')
         end
         
         if flip ~= 2 %run regression on the full (not asymmetry) data
