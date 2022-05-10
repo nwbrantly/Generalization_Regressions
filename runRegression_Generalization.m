@@ -72,6 +72,10 @@ elseif strcmpi(version,'default2') %default, 3 regressors version
     trans1Model = [regressorNames{4} '~' regressorNames{1} '+' regressorNames{2} '+' regressorNames{3} '+' regressorNames{7} '-1'];
     trans2Model = [regressorNames{5} '~' regressorNames{1} '+' regressorNames{2} '+' regressorNames{3} '+' regressorNames{7} '-1'];
     trans3Model = [regressorNames{6} '~' regressorNames{1} '+' regressorNames{2} '+' regressorNames{3} '+' regressorNames{7} '-1'];
+elseif strcmpi(version,'default3') %default, 3 regressors version
+    trans1Model = [regressorNames{4} '~' regressorNames{1} '+' regressorNames{2} '+'  regressorNames{7} '-1'];
+    trans2Model = [regressorNames{5} '~' regressorNames{1} '+' regressorNames{2} '+'  regressorNames{7} '-1'];
+    trans3Model = [regressorNames{6} '~' regressorNames{1} '+' regressorNames{2} '+'  regressorNames{7} '-1'];
 elseif strcmpi(version,'tr') %training group
     trans1Model = [regressorNames{4} '~' regressorNames{1} '+' regressorNames{2} '-1'];
     trans2Model = [regressorNames{5} '~' regressorNames{1} '+' regressorNames{3} '-1'];
