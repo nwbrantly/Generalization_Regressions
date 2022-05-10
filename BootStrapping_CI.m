@@ -3,7 +3,7 @@
 clear; close all; clc;
 
 % set script parameters, SHOULD CHANGE/CHECK THIS EVERY TIME.
-groupID = 'ATR';
+groupID = 'PATS';
 saveResAndFigure = false;
 plotAllEpoch = true;
 plotIndSubjects = true;
@@ -14,9 +14,10 @@ scriptDir = fileparts(matlab.desktop.editor.getActiveFilename);
 files = dir ([scriptDir '/data/' groupID '*params.mat']);
 
 % n_subjects = size(files,1);
-n_subjects = 4;%size(files,1);
-p = randperm(4,4);
+n_subjects = size(files,1);
+% p = randperm(4,4);
 ii=0;
+
 subID = cell(1, n_subjects);
 sub=cell(1,n_subjects);
 % for i = 1:n_subjects
@@ -25,7 +26,7 @@ sub=cell(1,n_subjects);
 %    
 % end
 
-for i =p %1:n_subjects
+for i =1:n_subjects
     ii=1+ii;
     sub{ii} = files(i).name;
     subID{ii} = sub{ii}(1:end-10);
@@ -36,7 +37,7 @@ subID
 regModelVersion =  'default';
 %% load and prep data
 
-muscleOrder={'TA', 'PER', 'SOL', 'LG', 'MG', 'BF', 'SEMB', 'SEMT', 'VM', 'VL', 'RF', 'TFL', 'GLU', 'HIP'};
+muscleOrder={'TA', 'PER', 'SOL', 'LG', 'MG', 'BF', 'SEMB', 'SEMT', 'VM', 'VL', 'RF', 'TFL', 'HIP', 'GLU'};
 n_muscles = length(muscleOrder);
 
 ep=defineEpochs_regressionYA('nanmean');
@@ -71,6 +72,7 @@ TMbeforeNeg=defineReferenceEpoch('TM_{beforeNeg}',ep);
 NegShort=defineReferenceEpoch('NegShort_{early}',ep);
 Pos1_Early=defineReferenceEpoch('Post1_{Early}',ep);
 AdaptLate=defineReferenceEpoch('Adaptation',ep);
+Adaptearly=defineReferenceEpoch('Adaptation_{early}',ep);
 Pos1_Late=defineReferenceEpoch('Post1_{Late}',ep);
 Pos2_Early=defineReferenceEpoch('Post2_{Early}',ep);
 
@@ -110,7 +112,13 @@ normalizedGroupData=normalizedGroupData.renameParams(ll,l2);
 newLabelPrefix = regexprep(newLabelPrefix,'_s','');
 flip=1;
 Data=cell(n_subjects,7);
-for s=1:n_subjects
+summFlag='nanmedian';
+% [data,~,~,groupData] = normalizedGroupData.getCheckerboardsData(newLabelPrefix,PosShort,TMbeforePos,2,summFlag);
+% normalizedGroupData.plotCheckerboards(newLabelPrefix,AdaptLate,[],[],[],2,summFlag);
+% normalizedGroupData.plotCheckerboards(newLabelPrefix,Adaptearly,[],[],[],2,summFlag);
+
+ 
+  for s=1:n_subjects
 
     [Data(s,1:6),regressorNames]=getRegressionsData(newLabelPrefix,normalizedGroupData,[],1,0,NegShort,TMbeforeNeg,PosShort,...
     TMbeforePos,AdaptLate,Pos1_Early,Pos1_Late,Pos2_Early, AfterPos, OGbase, TMbase,s,flip);
@@ -118,7 +126,19 @@ for s=1:n_subjects
     
     Data{s,7} = adaptDataSubject.getCheckerboardsData(newLabelPrefix,refEpPost1Early,refEp,flip); %|EMG_earlyPost1 -  EMG_Baseline|
     
-end
+  end
+
+%% Shuffeling the data - per muscle
+  for r=1:7
+      p = randperm(28);
+      disp(['r=' num2str(r)])
+      for s=1:4
+                 
+          Data{s,r}= Data{s,r}(:,p);
+          
+          
+      end
+  end
 
 %%
 
@@ -198,11 +218,11 @@ end
 
 delete(f)
 
-nw='22-01-20';
+% nw='22-01-20';
 resDir = [scriptDir '/RegressionAnalysis/RegModelResults_', nw,'/BootstrappingResults/'];
  
 if not(isfolder(resDir))
     mkdir(resDir)
 end
 % save([resDir groupID '_group_iterations_' num2str(i) '_numberOfSub_' num2str(n_subjects)], 'Trans1','Trans2','Trans3','Norm_Regressors','Norm_AF')
-save([resDir groupID '_group_iterations_' num2str(i) '_numberOfSub_' num2str(n_subjects)], 'Trans1','Trans2','Trans3','Norm_Regressors','Norm_AF','subID')
+save([resDir groupID '_ShuffleDataBySubjectV3_group_iterations_' num2str(i) '_numberOfSub_' num2str(n_subjects)], 'Trans1','Trans2','Trans3','Norm_Regressors','Norm_AF','subID')
