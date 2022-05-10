@@ -9,8 +9,8 @@ function in= AddingConditions(in, oldConditionName, newConditions, splitBeginOrE
         newDecription = 'Beginning of adaptation';
     end
   
-    in.plotAvgTimeCourse(in,{'netContributionNorm2','singleStanceSpeedFastAbsANK','singleStanceSpeedSlowAbsANK'})
-    title('Before Changing Conditions');
+%     in.plotAvgTimeCourse(in,{'netContributionNorm2','singleStanceSpeedFastAbsANK','singleStanceSpeedSlowAbsANK'})
+%     title('Before Changing Conditions');
     
     % find the index for the label singleStanceSpeedFastAbsANK
     idxfast=compareListsNested({'singleStanceSpeedFastAbsANK'},in.data.labels)==1;
@@ -25,8 +25,8 @@ function in= AddingConditions(in, oldConditionName, newConditions, splitBeginOrE
 
     % find the index with speed difference or speed at 1 but also within the
     % current condition of interes
-    idxSplit=find(abs(difference)>300 & in.data.Data(:,columnIdxForTrialNum) == trialNum);
-    diffMask = (abs(difference)>300 & in.data.Data(:,columnIdxForTrialNum) == trialNum)'; %find all cases where diff in speed > 200
+    idxSplit=find(abs(difference)>100 & in.data.Data(:,columnIdxForTrialNum) == trialNum);
+    diffMask = (abs(difference)>100 & in.data.Data(:,columnIdxForTrialNum) == trialNum)'; %find all cases where diff in speed > 200
     thresholdStrides = 4; %if happens continuously for 4 strides: speed changed instead of noise in speed
     thresholdFramesMask = ones(1, thresholdStrides);
     % pad 0 to diffMask in case started difference at frame 1, the 2nd argument is the pattern
