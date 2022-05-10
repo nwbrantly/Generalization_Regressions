@@ -5,6 +5,7 @@
 groupID={'ATR','ATS'};
 scriptDir = fileparts(matlab.desktop.editor.getActiveFilename);
  now=datestr(now,'yy-mm-dd');
+%  now='22-02-03';
 for t=1
 
 figure 
@@ -102,12 +103,12 @@ end
 %%
 %Betas 
 date=datestr(now,'yy-mm-dd');
-% date= '22-01-20';
+% date= '22-02-03';
 
 colorOrder=[[0.4940 0.1840 0.5560];[0.9290 0.6940 0.1250]; [0.4660 0.6740 0.1880]];
 
 
-groupID={'ATS','ATR'};
+groupID={'ATR'};
 
 betas={'\beta_{adapt}','\beta_{noadapt}','\beta_{env}'};
 for tr=1:3
@@ -134,7 +135,7 @@ for tr=1:3
         number=(Tmax-Tmin)/10;
         
         h(1).BinWidth = number;
-        h(2).BinWidth = number;
+%         h(2).BinWidth = number;
         
         title(betas{b})
         legend(groupID{:})
@@ -146,22 +147,36 @@ end
 
 %%
 %R^2
-groupID={'ATS','ATR'};
+groupID={'ATR','ATR','ATR','ATR'};
 
 betas={'R^{2}_{Ord}','R^{2}_{Adj}'};
 
-for tr=1:3
+for tr=1
     figure('Units','Normalized','OuterPosition',[0 0 1 1],'NumberTitle', 'off', 'Name',['Trans', num2str(tr)]);
     for r=1:2
         subplot(1,2,r)
         hold on
         for i=1:length(groupID)
-            
-            load([ scriptDir  '/RegressionAnalysis/RegModelResults_', date '/BootstrappingResults/',groupID{i},'_group_iterations_2000_numberOfSub_4.mat'])
-            
+            if contains(groupID{i},'TS')
+                load([ scriptDir  '/RegressionAnalysis/RegModelResults_', date '/BootstrappingResults/',groupID{i},'_group_iterations_2000_numberOfSub_11.mat'])
+            else
+                if i==1
+                    load([ scriptDir  '/RegressionAnalysis/RegModelResults_', date '/BootstrappingResults/',groupID{i},'_group_iterations_2000_numberOfSub_4.mat'])
+                elseif i==2
+                    load([ scriptDir  '/RegressionAnalysis/RegModelResults_', date '/BootstrappingResults/',groupID{i},'_ShuffleDataBySubject_group_iterations_2000_numberOfSub_4.mat'])
+                elseif i==3
+                    load([ scriptDir  '/RegressionAnalysis/RegModelResults_', date '/BootstrappingResults/',groupID{i},'_ShuffleDataBySubjectV3_group_iterations_2000_numberOfSub_4.mat'])
+                elseif i==4
+                    load([ scriptDir  '/RegressionAnalysis/RegModelResults_', date '/BootstrappingResults/',groupID{i},'_ShuffleDataBySubjectV2_group_iterations_2000_numberOfSub_4.mat'])
+                    
+                end
+            end
             
             if r==1
                 eval(['h(i) =histogram(Trans' num2str(tr) '.Rsquared_Ord);']);
+%                 eval(['pd = fitdist(Trans' num2str(tr) '.Rsquared_Ord, "Normal");']);
+%                 eval(['y = pdf(pd,min(Trans' num2str(tr) '.Rsquared_Ord):max(Trans' num2str(tr) '.Rsquared_Ord));']);
+%                 eval([' plot(Trans' num2str(tr) '.Rsquared_Ord, y);']);
             else
                 eval(['h(i) =histogram(Trans' num2str(tr) '.Rsquared_Adj);']);
             end
@@ -179,8 +194,11 @@ for tr=1:3
         h(2).BinWidth = number;
         
         title(betas{r})
-        legend(groupID{:})
-        ylabel('R^{2}')
+%         legend(groupID{:})
+        legend('Data','ShufflebySubject','ShuffleByRegressors','ShuffleBoth')
+        xlabel('R^{2}')
+        ylabel('Frequency')
+        set(gca,'FontSize',18)
         set(gcf,'color','w');
         
     end
