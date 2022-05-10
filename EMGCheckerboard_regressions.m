@@ -15,7 +15,7 @@
 % the version number to avoid overwrite.
 
 %% Load data and Plot checkerboard for all conditions.
-clear; close all; clc;
+% clear; close all; clc;
 
 % set script parameters, SHOULD CHANGE/CHECK THIS EVERY TIME.
 groupID = 'C';
@@ -31,7 +31,7 @@ if kinenatics==1
     
 else
     
-    files = dir ([scriptDir '/data_reprocess2021/' groupID '*params2021.mat']);
+    files = dir ([scriptDir '/data_reprocess2021/' groupID '*params.mat']);
 end
 n_subjects = size(files,1);
 subID = cell(1, n_subjects);
@@ -55,7 +55,7 @@ regModelVersion =  'default'; %'default'
 
 %% load and prep data
 normalizedTMFullAbrupt=adaptationData.createGroupAdaptData(sub);
-normalizedTMFullAbrupt=normalizedTMFullAbrupt.removeBadStrides;
+% normalizedTMFullAbrupt=normalizedTMFullAbrupt.removeBadStrides;
 
 muscleOrder={'TA', 'PER', 'SOL', 'LG', 'MG', 'BF', 'SEMB', 'SEMT', 'VM', 'VL', 'RF', 'TFL', 'GLU', 'HIP','ADM'};
 
@@ -63,12 +63,12 @@ n_muscles = length(muscleOrder);
 
 n_subjects = length(subID);
 
-ep=defineEpochs_regression('nanmean');
+ep=defineEpochs_regression('nanmedian');
 refEp = defineReferenceEpoch('TM base',ep);
-refEpLate = defineReferenceEpoch('Adaptation',ep);
-refEpSlow = defineReferenceEpoch('TM slow',ep);
-refEp2 = defineReferenceEpoch('OGbase',ep);
-
+% refEpLate = defineReferenceEpoch('Adaptation',ep);
+% refEpSlow = defineReferenceEpoch('TM slow',ep);
+% refEp2 = defineReferenceEpoch('OG base',ep);
+% refEp=getBaseEpoch;
 newLabelPrefix = defineMuscleList(muscleOrder);
 
 
@@ -82,14 +82,19 @@ newLabelPrefix = regexprep(newLabelPrefix,'_s','s');
 %% EMG aftereffects
 
 refEpPost1Early= defineReferenceEpoch('Post1_{Early}',ep);
-if contains(groupID,'C')
-    refEp= defineReferenceEpoch('TM base',ep); %fast tied 1 if short split 1, slow tied if 2nd split
-end
-
+Base= defineReferenceEpoch('TM base',ep);
+% if contains(groupID,'C')
+%     refEp= defineReferenceEpoch('TM base',ep); %fast tied 1 if short split 1, slow tied if 2nd split
+% end
+params={'netContributionNorm2'};
 fh=figure('Units','Normalized','OuterPosition',[0 0 1 1]);
 ph=tight_subplot(1,n_subjects+1,[.03 .005],.04,.04);
-flip = [2];
+flip = [1];
 norms=[];
+norms2=[];
+Data=[];
+sla_P=[];
+sla_B=[];
 % nw=datestr(now,'yy-mm-dd');
 % nw='22-01-31';
 if plotIndSubjects
@@ -97,15 +102,19 @@ if plotIndSubjects
         adaptDataSubject = normalizedTMFullAbrupt.adaptData{1, i};
         [~,~,~,Data{i},~] = adaptDataSubject.plotCheckerboards(newLabelPrefix,refEpPost1Early,fh,ph(1,i),refEp,flip); %|EMG_earlyPost1 -  EMG_Baseline
         title({[adaptDataSubject.subData.ID] ['Norm=', num2str(norm(reshape(Data{i},[],1)))]});
+        
+           sla_P(i,1)=getEpochData(adaptDataSubject,refEpPost1Early,params,0);
+           sla_B(i,1)=getEpochData(adaptDataSubject,Base,params,0);
         norms(i,1)= norm(reshape(Data{i},[],1));
+        norms2(i,1)=auxNorm(reshape(Data{i},[],1));
         
         
     end
-    summFlag='nanmedian';
-    [~,~,~,Data{i+1},~] = normalizedTMFullAbrupt.plotCheckerboards(newLabelPrefix,refEpPost1Early,fh,ph(1,n_subjects+1),refEp,flip,summFlag); %|EMG_earlyPost1 -  EMG_Baseline   
-    Data{i+1} = nanmedian(Data{i+1}, 4);
-%     load([scriptDir '/RegressionAnalysis/RegModelResults_',nw ,'/GroupResults/', groupID,'defaultsplit_1flip_1_group_models_ver00.mat'])
-    title({['Group'] ['Norm=', num2str(norm(reshape(Data{i+1},[],1)))]});
+%     summFlag='nanmedian';
+%     [~,~,~,Data{i+1},~] = normalizedTMFullAbrupt.plotCheckerboards(newLabelPrefix,refEpPost1Early,fh,ph(1,n_subjects+1),refEp,flip,summFlag); %|EMG_earlyPost1 -  EMG_Baseline   
+%     Data{i+1} = nanmedian(Data{i+1}, 4);
+% %     load([scriptDir '/RegressionAnalysis/RegModelResults_',nw ,'/GroupResults/', groupID,'defaultsplit_1flip_1_group_models_ver00.mat'])
+%     title({['Group'] ['Norm=', num2str(norm(reshape(Data{i+1},[],1)))]});
 end
 
 set(ph(:,1),'CLim',[-1 1]*1);
@@ -119,13 +128,32 @@ set(gcf,'color','w');
 
 demographics= normalizedTMFullAbrupt.GroupDemographics;
 age=demographics.AllAge';
+% age(12)=52;
+% age(14)=52;
 [rho,pval] = corr(age,norms,'Type','Spearman') 
-tbl = table(age,norms,'VariableNames',{'Age','NormAF'})
+
+
+%     [rs,ps]=corr(XX,YY,'type','spearman');
+       m=polyfit(age,norms,1);
+
+%%
+sla=sla_P-sla_B;
+tbl = table(age,norms,sla,'VariableNames',{'Age','NormAF','SLA'})
 model= ['NormAF ~ Age +1'];
 mdl=fitlm(tbl,model)
 mdl.Rsquared
 figure
 plot(mdl)
+[rho,pval] = corr(age,norms,'Type','Spearman') 
+
+model2= ['SLA ~ Age -1'];
+mdl2=fitlm(tbl,model2)
+mdl.Rsquared
+figure
+plot(mdl2)
+[rho,pval] = corr(age,sla,'Type','Spearman') 
+%%
+
 
 
 %%
