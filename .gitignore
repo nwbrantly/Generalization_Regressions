@@ -3,7 +3,8 @@
 *.m~
 *.mat
 *.ai
-*.eps
+*.
+*.fig
 
 fun/ext/plot2svg-master/
 
