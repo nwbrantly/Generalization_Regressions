@@ -2,6 +2,8 @@
 
 *.m~
 *.mat
+*.ai
+*.eps
 
 fun/ext/plot2svg-master/
 
