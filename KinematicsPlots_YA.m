@@ -44,7 +44,7 @@ Nimbus=[];
 if nimbus==1
     conditions={'OG base','TR base','Adaptation','Post 1'};
     
-    load('CTRgroupDataWO_CTR6.mat')
+    load('CTRgroupData.mat')
     groups{1}=group;
     control{1}=group;
     load('CTSgroupData.mat')
@@ -99,7 +99,7 @@ end
 %     'Tied Neg 7','Split Neg 8','Tied Neg 9','Split Neg 10','TM mid 8'};
 
 % params={'netContributionNorm2'};
-
+%%
 params={'UnBiasNormEMG'};
 % params={'NormEMG'};
 % params={'UnBiasNormEMGasym'};
@@ -111,16 +111,16 @@ params={'UnBiasNormEMG'};
 poster_colors;
 colorOrder=[p_red; p_orange; p_fade_green; p_fade_blue; p_plum; p_green; p_blue; p_fade_red; p_lime; p_yellow; [0 0 0];[0 1 1]];
     
-binwidth=5; %Window of the running average
+binwidth=1; %Window of the running average
 trialMarkerFlag=0; %1 if you want to separete the time course by trial 0 to separece by condition 
 indivFlag=0; %0 to plot group mean 1 to plot indiv subjects
 indivSubs=[]; %Use when you want to plot a specidfic subject in a group 
 % colorOrder=[];%[p_red; p_orange; p_plum;p_fade_green]; %Let the function take care of this at least you wanted in a specific set of color then by my guess and add the list here
 biofeedback= 0; % At least that you are providing with biofeedback to the subject
-removeBiasFlag=1; %if you want to remove bias 
+removeBiasFlag=0; %if you want to remove bias 
 %%Groups names 
 % labels=[];
-filterFlag=[0 1]; 
+filterFlag=[0 0]; 
 figure 
 p=subplot(2,1,1);
 plotHandles=p;
@@ -213,7 +213,7 @@ exemptFirst=[ 1 1 ];
 % exemptLast=[ 5 5 0 5 0 5]; %Number of strides you want to ignore at the end of the condition
 exemptLast=[0 5];
 summaryMethod={'nanmean'}; %Method to analyze bar plots 
-summaryMethod={'nanmedian'}; %Method to analyze bar plots 
+% summaryMethod={'nanmedian'}; %Method to analyze bar plots 
 shortName=[];
 
 [epochs] = defineEpochs(epochNames,conditions,strideNo,exemptFirst,exemptLast,summaryMethod,shortName);
@@ -249,8 +249,8 @@ medianFlag=[];
 %%
 
 OA=0;
-nimbus=1;
-AT=0;
+nimbus=0;
+AT=1;
 groups=[];
 Nimbus=[];
 if nimbus==1
