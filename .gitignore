@@ -1,6 +1,7 @@
 *.asv
 
 *.m~
+*.mat
 
 fun/ext/plot2svg-master/
 
