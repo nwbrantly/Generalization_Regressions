@@ -1,28 +1,8 @@
 % Script to separate the conditions 
 %% Load params file 
-subID='PATR03'
+subID='PATR06'
 load([subID, 'params.mat'])
 
-%% 
-adaptData = AddingConditions(adaptData, 'Multiple pos short splits', 'Split Pos 1', true, 'Tied to Split');
-
-
-% adaptData = AddingConditions(adaptData, 'Pos short ramp', 'Tied post ramp', false, 'Split to tied');
-%%
-
-for t=1:30
-    if rem(t, 2) == 0
-        adaptData = AddingConditions(adaptData, ['Tied Pos ' num2str(t-1)], ['Split Pos ' num2str(t)], true, ['Tied to Split', num2str(t)]);
-        
-    else
-        if t==1
-            adaptData = AddingConditions(adaptData, ['Split Pos ' num2str(t)], ['Tied Pos ' num2str(t)], false, ['Split to Tied', num2str(t)]);
-        else
-            adaptData = AddingConditions(adaptData, ['Split Pos ' num2str(t-1)], ['Tied Pos ' num2str(t)], false, ['Split to Tied', num2str(t)]);
-        end
-    end
-end
-save([subID, 'params.mat'],'adaptData')
 %%
 
 %Adaptation 
@@ -65,4 +45,25 @@ save([subID, 'params.mat'],'adaptData')
 %Neg Short  to tied
 load([subID, 'params.mat'])
 adaptData = AddingConditions(adaptData, 'Pos short ramp', 'Tied post ramp', false, 'Tied to Split');
+save([subID, 'params.mat'],'adaptData')
+
+%% 
+adaptData = AddingConditions(adaptData, 'Multiple pos short splits', 'Split Pos 1', true, 'Tied to Split');
+
+
+% adaptData = AddingConditions(adaptData, 'Pos short ramp', 'Tied post ramp', false, 'Split to tied');
+%%
+
+for t= 1:30 
+    if rem(t, 2) == 0
+        adaptData = AddingConditions(adaptData, ['Tied Pos ' num2str(t-1)], ['Split Pos ' num2str(t)], true, ['Tied to Split', num2str(t)]);
+        
+    else
+        if t==1
+            adaptData = AddingConditions(adaptData, ['Split Pos ' num2str(t)], ['Tied Pos ' num2str(t)], false, ['Split to Tied', num2str(t)]);
+        else
+            adaptData = AddingConditions(adaptData, ['Split Pos ' num2str(t-1)], ['Tied Pos ' num2str(t)], false, ['Split to Tied', num2str(t)]);
+        end
+    end
+end
 save([subID, 'params.mat'],'adaptData')
