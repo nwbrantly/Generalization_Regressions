@@ -60,7 +60,7 @@ epochOfInterest={'Adaptation_{early}','Adaptation','Post1_{Early}','NegShort_{ea
 % fh=figure('Units','Normalized','OuterPosition',[0 0 1 1]);
 % ph=tight_subplot(1,length(ep),[.03 .005],.04,.04);
 
-fs=10;
+fs=8;
 flip=1;
 if flip==1
 n=2;
@@ -78,7 +78,53 @@ fh=figure('Units','Normalized','OuterPosition',[0 0 1 1]);
 ph=tight_subplot(1,length(ep),[.03 .005],.04,.04);
 normalizedGroupData.plotCheckerboards(newLabelPrefix,ep,fh,ph,refEpTM,flip,summFlag);
 set(ph(:,1:end),'YTickLabels',{},'CLim',[-1 1]*1,'FontSize',fs);
+%%
+refEpTM;
+%Early  
+Early={'PostShort_{early}','PosShort_{late}','PosRamp','Adaptation_{early}'};
+fh=figure('Units','Normalized','OuterPosition',[0 0 1 1]);
+ph=tight_subplot(1,length(Early),[.03 .005],.04,.04);
 
+for i=1:length(Early)
+    ep2=defineReferenceEpoch(Early{i},ep);
+    normalizedGroupData.plotCheckerboards(newLabelPrefix,ep2,fh,ph(1,i),refEpTM,flip,summFlag);
+end
+set(ph(:,1:end),'YTickLabels',{},'CLim',[-1 1]*1,'FontSize',fs);
+
+%baselines
+Baselines={'TMfast','TMslow','TMmid1','TMbase','OGbase','Post1_{late}','Post2_{late}','TMmid2_{early}','OG2_{early}'};
+fh=figure('Units','Normalized','OuterPosition',[0 0 1 1]);
+ph=tight_subplot(1,length(Baselines),[.03 .005],.04,.04);
+
+for i=1:length(Baselines)
+    ep2=defineReferenceEpoch(Baselines{i},ep);
+    normalizedGroupData.plotCheckerboards(newLabelPrefix,ep2,fh,ph(1,i),refEpTM,flip,summFlag);
+end
+set(ph(:,1:end),'YTickLabels',{},'CLim',[-1 1]*1,'FontSize',fs);
+
+%Fitting
+FittingEp={'OGbase','TMbase','Adaptation_{early}','Adaptation_{mid}','Adaptation_{late}','Post1_{early}','Optimal'};
+fh=figure('Units','Normalized','OuterPosition',[0 0 1 1]);
+ph=tight_subplot(1,length(FittingEp),[.03 .005],.04,.04);
+
+for i=1:length(FittingEp)
+    ep2=defineReferenceEpoch(FittingEp{i},ep);
+    normalizedGroupData.plotCheckerboards(newLabelPrefix,ep2,fh,ph(1,i),refEpTM,flip,summFlag);
+end
+set(ph(:,1:end),'YTickLabels',{},'CLim',[-1 1]*1,'FontSize',fs);
+
+%negative
+shorts={'PostShort_{early}','PosShort_{late}','PosRamp','NegShort_{early}','NegShort_{late}','Post1_{early}'};
+fh=figure('Units','Normalized','OuterPosition',[0 0 1 1]);
+ph=tight_subplot(1,length(shorts),[.03 .005],.04,.04);
+
+for i=1:length(shorts)
+    ep2=defineReferenceEpoch(shorts{i},ep);
+    normalizedGroupData.plotCheckerboards(newLabelPrefix,ep2,fh,ph(1,i),refEpTM,flip,summFlag);
+end
+set(ph(:,1:end),'YTickLabels',{},'CLim',[-1 1]*1,'FontSize',fs);
+
+% [~,~,~,Data{1}]=normalizedGroupData.getCheckerboardsData(newLabelPrefix,ep2,[],2,summFlag);
   
 %%
 % resDir = [cd '/LTI models/']
