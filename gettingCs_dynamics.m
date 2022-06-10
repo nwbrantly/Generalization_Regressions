@@ -3,7 +3,7 @@
 % clear; close all; clc;
 
 % set script parameters, SHOULD CHANGE/CHECK THIS EVERY TIME.
-groupID = 'PATS';
+groupID = 'PATR';
 saveResAndFigure = false;
 plotAllEpoch = true;
 plotIndSubjects = true;
@@ -84,27 +84,14 @@ Data=cell(7,1);
 Data2=cell(5,1);
 group=cell(5,1);
 summFlag='nanmedian';
-% [data,~,~,groupData] = normalizedGroupData.getCheckerboardsData(newLabelPrefix,PosShort,TMbeforePos,2,summFlag);
-
-
-% epochOfInterest={'TM base','Adaptation_{early}','Adaptation','Post1_{Early}','NegShort_{early}'};
-% epochOfInterest={'Post1_{Early}','NegShort_{early}'};
 %%
 % epochOfInterest={'Adaptation_{early}','Adaptation','Post1_{Early}','PosShort_{early}','Ramp','Optimal'};
-epochOfInterest={'PosShort_{early}','Ramp','Optimal'};
+epochOfInterest={'TM base','PosShort_{early}','PosShort_{late}','Ramp','Optimal'};
 fh=figure('Units','Normalized','OuterPosition',[0 0 1 1]);
 ph=tight_subplot(1,length(epochOfInterest),[.03 .005],.04,.04);
 
 flip=2;
 
-for l=1:length(epochOfInterest)
-ep2=defineReferenceEpoch(epochOfInterest{l},ep);
-% [~,~,~,Data{l}]=
-normalizedGroupData.plotCheckerboards(newLabelPrefix,ep2,fh,ph(1,l),[],flip,summFlag);
-[~,~,~,Data{l}]=normalizedGroupData.getCheckerboardsData(newLabelPrefix,ep2,[],flip,summFlag);
-
-end 
-%%
 if flip==1
 n=2;
 method='IndvLegs';
@@ -113,30 +100,19 @@ else
    method='Asym';
 end
 
-AdaptationEarly=Data{1}(:,end:-1:1);
-C1=reshape(AdaptationEarly,12*n_muscles*n,1);
-AdaptationLate=Data{2}(:,end:-1:1);
-C2=reshape(AdaptationLate,12*n_muscles*n,1);
-if length(epochOfInterest)==3
-    NegShort=Data{3}(:,end:-1:1);
-    C3=reshape(NegShort,12*n_muscles*n,1);
-    C=[C1 C2 C3];
-    
-elseif length(epochOfInterest)==4
-    NegShort=Data{3}(:,end:-1:1);
-    C3=reshape(NegShort,12*n_muscles*n,1);
-     Post1=Data{4}(:,end:-1:1);
-    C4=reshape(Post1,12*n_muscles*n,1);
-    C=[C1 C2 C3 C4];
-else
-    C=[C1 C2];
-end
-
+C=[];
+for l=1:length(epochOfInterest)
+ep2=defineReferenceEpoch(epochOfInterest{l},ep);
+% [~,~,~,Data{l}]=
+normalizedGroupData.plotCheckerboards(newLabelPrefix,ep2,fh,ph(1,l),[],flip,summFlag);
+[~,~,~,Data{l}]=normalizedGroupData.getCheckerboardsData(newLabelPrefix,ep2,[],flip,summFlag);
+C=[C reshape(Data{l}(:,end:-1:1),12*n_muscles*n,1)];
+end 
   
 %%
 resDir = [cd '/LTI models/'];
 % resDir = [cd];
-save([resDir '/'  groupID,'_',num2str(n_subjects),'_',method,'C',num2str(length(epochOfInterest)) ,'_EarlyLateAdaptation'], 'C')
+save([resDir '/'  groupID,'_',num2str(n_subjects),'_',method,'C',num2str(length(epochOfInterest)) ,'_ShortPertubations'], 'C','epochOfInterest')
 
 %%
 %% Color definition 
