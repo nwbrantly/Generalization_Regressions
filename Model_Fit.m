@@ -1,7 +1,7 @@
 %%
-% addpath(genpath('../../../EMG-LTI-SSM/'))
-% addpath(genpath('../../../matlab-linsys/'))
-% addpath(genpath('../../../robustCov/'))
+addpath(genpath('../../../EMG-LTI-SSM/'))
+addpath(genpath('../../../matlab-linsys/'))
+addpath(genpath('../../../robustCov/'))
 %%
 % clear all;clc;close all
 %% Load real data:
@@ -27,24 +27,22 @@
 % flatIdx=s<.005; %Variables are split roughly in half at this threshold
 
 
-%% Free model - Linear regression - Asymmetry
-load ATR_4_AsymC_WO_HIP7
+%% Free model - Linear regression - Asymmetry with baseline
+% load PATS_3_AsymC4_ShortPertubations
+load PATR_4_AsymC5_ShortPertubations
 
 % figure 
-% fname='dynamicsData_PATR.h5';
-% fname='dynamicsData_PATS.h5';
-%  fname= 'dynamicsData_C_s12V2.h5';
-% fname='dynamicsData_ATR_V4.h5';
-fname='dynamicsData_ATR_NO_HIP.h5';
+
+fname='dynamicsData_PATR_subjects_4.h5';
 EMGdata=h5read(fname,'/EMGdata');
  
 binwith=5;
-[Y,Yasym,Ycom,U,Ubreaks]=groupDataToMatrixForm(1:size(EMGdata,3),0,fname);
+[Y,Yasym,~,U]=groupDataToMatrixForm(1:size(EMGdata,3),0,fname);
 Uf=[U;ones(size(U))];
 % C=[C1 C3];
 % C=Cnew;
-bias=0;% nanmean(Yasym(5:30,:));
-C=[C(:,1) C(:,2) C(:,5)];
+bias=0;%nanmean(Yasym(5:30,:));
+C=[C(:,1) C(:,4) C(:,5)];
 C=C-bias';
 Yasym=Yasym-bias;
 model.C=C;
@@ -53,52 +51,97 @@ Cinv=pinv(model.C)';
 X2asym = Yasym*Cinv; %x= y/C
 Y2asym= C * X2asym' ; %yhat = C 
 
+Xasym=[X2asym(1:40,:); nan(1,3);X2asym(41:490,:);nan(1,3);X2asym(490:end,:)];
+
 figure
-subplot(2,1,1)
+subplot(3,1,1)
 hold on
-scatter(1:length(movmean(X2asym(:,1),binwith)), movmean(X2asym(:,1),binwith),10,'k','filled')
-plot( movmean(X2asym(:,1),binwith))
-% pp=patch([50 600 600 50],[-0.5 -0.5 1.6 1.6],.7*ones(1,3),'FaceAlpha',.2,'EdgeColor','none');
-% uistack(pp,'bottom')
+scatter(1:length(movmean(Xasym(:,1),binwith)), movmean(Xasym(:,1),binwith),10,'k','filled')
+plot( movmean(Xasym(:,1),binwith))
+pp=patch([40 490 490 40],[-0.5 -0.5 1 1],.7*ones(1,3),'FaceAlpha',.2,'EdgeColor','none');
+legend('Baseline','AutoUpdate','off')
+uistack(pp,'bottom')
+yline(0)
 
-
-% title('C_1 = Early Adaptation')
-% yline(0)
-
-subplot(2,1,2)
-scatter(1:length(movmean(X2asym(:,1),binwith)),movmean(X2asym(:,2),binwith),10,'k','filled')
+% figure
+subplot(3,1,2)
 hold on
-plot(movmean(X2asym(:,2),binwith))
+scatter(1:length(movmean(Xasym(:,2),binwith)), movmean(Xasym(:,2),binwith),10,'k','filled')
+plot( movmean(Xasym(:,2),binwith))
+pp=patch([40 490 490 40],[-0.5 -0.5 1 1],.7*ones(1,3),'FaceAlpha',.2,'EdgeColor','none');
+legend('Reactive','AutoUpdate','off')
+uistack(pp,'bottom')
+yline(0)
+
+subplot(3,1,3)
+scatter(1:length(movmean(Xasym(:,3),binwith)),movmean(Xasym(:,3),binwith),10,'k','filled')
 hold on
-legend('reactive','adaptive','AutoUpdate','off')
-% pp=patch([50 939 939 50],[-0.5 -0.5 1.6 1.6],.7*ones(1,3),'FaceAlpha',.2,'EdgeColor','none');
-% pp=patch([50 600 600 50],[-0.5 -0.5 1.6 1.6],.7*ones(1,3),'FaceAlpha',.2,'EdgeColor','none');
-% uistack(pp,'bottom')
+plot(movmean(Xasym(:,3),binwith))
+hold on
+legend('Contextual','AutoUpdate','off')
+pp=patch([40 490 490 40],[-0.5 -0.5 1 1],.7*ones(1,3),'FaceAlpha',.2,'EdgeColor','none');
+uistack(pp,'bottom')
 axis tight
-% yline(0)
-% yline(1)
-% title('C_2 = Late Adaptation')
+yline(0)
 
 set(gcf,'color','w')
 
-% subplot(2,1,2)
-% RMSEasym= sqrt(mean((Yasym-Y2asym').^2,2));
-% plot(movmean(RMSEasym,binwith))
-% ylabel('RMES')
-% % pp=patch([50 939 939 50],[0 0 1 1],.7*ones(1,3),'FaceAlpha',.2,'EdgeColor','none');
-% pp=patch([50 600 600 50],[-0.5 -0.5 1.6 1.6],.7*ones(1,3),'FaceAlpha',.2,'EdgeColor','none');
-% uistack(pp,'bottom')
-% axis tight
-% end
-legacy_vizSingleModelMLMC_FreeModel(model,Yasym',Uf)
-% legacy_vizSingleModel_FreeModel_ShortAdaptation(model,Yasym',Uf)
+legacy_vizSingleModel_FreeModel_ShortAdaptation(model,Yasym',Uf)
+%% Free model - Linear regression - Asymmetry 
+% load PATS_3_AsymC4_ShortPertubations
+load PATR_4_AsymC4_ShortPertubations
+
+% figure 
+
+fname='dynamicsData_PATR_subjects_4.h5';
+EMGdata=h5read(fname,'/EMGdata');
+ 
+binwith=5;
+[Y,Yasym,~,U]=groupDataToMatrixForm(1:size(EMGdata,3),0,fname);
+Uf=[U;ones(size(U))];
+% C=[C1 C3];
+% C=Cnew;
+bias=0;%nanmean(Yasym(5:30,:));
+C=[C(:,3) C(:,4)];
+C=C-bias';
+Yasym=Yasym-bias;
+model.C=C;
+% Y=datSet.out;
+Cinv=pinv(model.C)';
+X2asym = Yasym*Cinv; %x= y/C
+% Y2asym= C * X2asym' ; %yhat = C 
+
+Xasym=[X2asym(1:40,:); nan(1,2);X2asym(41:490,:);nan(1,2);X2asym(490:end,:)];
+figure
+subplot(2,1,1)
+hold on
+scatter(1:length(movmean(Xasym(:,1),binwith)), movmean(Xasym(:,1),binwith),10,'k','filled')
+plot( movmean(Xasym(:,1),binwith))
+pp=patch([40 490 490 40],[-0.5 -0.5 1 1],.7*ones(1,3),'FaceAlpha',.2,'EdgeColor','none');
+legend('Reactive','AutoUpdate','off')
+uistack(pp,'bottom')
+yline(0)
+
+% figure
+subplot(2,1,2)
+hold on
+scatter(1:length(movmean(Xasym(:,2),binwith)), movmean(Xasym(:,2),binwith),10,'k','filled')
+plot( movmean(Xasym(:,2),binwith))
+pp=patch([40 490 490 40],[-0.5 -0.5 1 1],.7*ones(1,3),'FaceAlpha',.2,'EdgeColor','none');
+legend('Contextual','AutoUpdate','off')
+uistack(pp,'bottom')
+yline(0)
+
+set(gcf,'color','w')
+
+legacy_vizSingleModel_FreeModel_ShortAdaptation(model,Yasym',Uf)
 %% Free model - Linear regression - Indv Legs
 
 % load('ATS_11_IndvLegs_EarlyLateAdaptation.mat')
 
 % fname='dynamicsData_ATR_V4.h5';
 % fname='dynamicsData_ATS_V6.h5';
-fname='dynamicsData_PATR.h5';
+fname='dynamicsData_PATS_subjects_3.h5';
 EMGdata=h5read(fname,'/EMGdata');
  
 binwith=5;
