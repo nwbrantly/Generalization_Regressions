@@ -19,13 +19,7 @@
 clear; close all; clc;
 
 % set script parameters, SHOULD CHANGE/CHECK THIS EVERY TIME.
-groupID = 'ATR';
-saveResAndFigure = false;
-plotAllEpoch = true;
-plotIndSubjects = true;
-plotGroup = true;
-bootstrap=true;
-
+groupID = 'PATR';
 scriptDir = cd;% fileparts(matlab.desktop.editor.getActiveFilename);
 files = dir ([groupID '*params.mat']);
 
@@ -34,14 +28,7 @@ files = dir ([groupID '*params.mat']);
 sub = {};
 subID = {};
 
-% for i = 1:size(files,1)
-% 
-%         sub{end+1} = files(i).name;
-%         subID{end+1} = sub{end}(1:end-10);
-% 
-% end
-% % n_subjects = size(files,1) - session2_n_subjects;
-% subID
+
 session2_n_subjects = 0;
 sub = {};
 subID = {};
@@ -63,12 +50,6 @@ session2subID
 
 group=adaptationData.createGroupAdaptData(sub); %loading the data
 group=group.removeBadStrides; %Removing bad strides
-%%
-
-% group=adaptationData.createGroupAdaptData({'ATR01params','ATR02params','ATR03params','ATR04params'});
-% group=adaptationData.createGroupAdaptData({'ATS02params','ATS03params','ATS04params','ATS05params','ATS06params','ATS07params',...
-%      'ATS08params','ATS09params','ATS10params','ATS11params','ATS12params'});
-% group=group.removeBadStrides; %Removing bad strides
 age=group.getSubjectAgeAtExperimentDate/12;
 
 %% Define epochs
@@ -77,8 +58,8 @@ baseEp=getBaseEpoch;
 
 %Adaptation epochs
 % strides=[-150 300 300 300 600];exemptFirst=[0];exemptLast=[0];
-strides=[-50 900 300];
-% strides=[-40 450 200];
+% strides=[-50 900 300];
+strides=[-40 450 200];
 
 exemptFirst=[1];
 exemptLast=[5]; %Strides needed 
@@ -97,9 +78,7 @@ if contains(groupID,'NTS') || contains(groupID,'NTR') || contains(groupID,'CTS')
 end
 ep=defineEpochs(cond,cond,strides,exemptFirst,exemptLast,'nanmean',{'Base','Adapt','Post1'}); %epochs 
 %% Define params we care about:
-% mOrder={'TA', 'PER', 'SOL', 'LG', 'MG', 'BF', 'SEMB', 'SEMT', 'VM', 'VL', 'RF', 'HIP','TFL', 'GLU'};
-mOrder={'TA', 'PER', 'SOL', 'LG', 'MG', 'BF', 'SEMB', 'SEMT', 'VM', 'VL', 'RF','TFL', 'GLU'};
-% mOrder={'TA', 'PER', 'SOL', 'LG', 'MG', 'BF', 'SEMB', 'SEMT', 'VM', 'VL', 'RF', 'HIP', 'ADM', 'TFL', 'GLU'};
+mOrder={'TA', 'PER', 'SOL', 'LG', 'MG', 'BF', 'SEMB', 'SEMT', 'VM', 'VL', 'RF', 'HIP','TFL', 'GLU'};
 nMusc=length(mOrder);
 type='s';
 labelPrefix=fliplr([strcat('f',mOrder) strcat('s',mOrder)]); %To display
@@ -128,13 +107,13 @@ end
 
 %% Save to hdf5 format for sharing with non-Matlab users
 EMGdata=cell2mat(allDataEMG);
-name='dynamicsData_ATR_NO_HIP.h5';
+name=['dynamicsData_',groupID,'_subjects_', num2str(size(subID,2)),'.h5'];
 h5create(name,'/EMGdata',size(EMGdata))
 h5write(name,'/EMGdata',EMGdata)
 SLA=squeeze(cell2mat(dataContribs));
 h5create(name,'/SLA',size(SLA))
 h5write(name,'/SLA',SLA)
-speedDiff=[zeros(1,50),ones(1,900),zeros(1,300)];
+speedDiff=[zeros(1,abs(strides(1))),ones(1,strides(2)),zeros(1,(strides(3)))];
 % speedDiff=[zeros(1,40),ones(1,450),zeros(1,200)];
 % speedDiff=[zeros(1,40),ones(1,900),zeros(1,200)];
 h5create(name,'/speedDiff',size(speedDiff))
