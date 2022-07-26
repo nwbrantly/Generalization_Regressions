@@ -1,21 +1,7 @@
 %%
 %Running this script requires labTools (github.com/pittSMLlab/labTools/)
-
+% addpath(genpath('../../../splitbelt-EMG-adaptation/'))
 % addpath(genpath('../../../EMG-LTI-SSM/'))
-% addpath(genpath('../../../matlab-linsys/'))
-% addpath(genpath('../../../robustCov/'))
-%% Aux vars:
-% groupName='controls';
-% groupName='YoungAbuptTM';
-% matDataDir='./';
-% loadName=[matDataDir groupName];
-% load(loadName)
-
-%%
-% group=controls;
-% group=TMFullAbrupt;
-% group={adaptData};
-%%
 clear; close all; clc;
 
 % set script parameters, SHOULD CHANGE/CHECK THIS EVERY TIME.
@@ -59,16 +45,20 @@ baseEp=getBaseEpoch;
 %Adaptation epochs
 % strides=[-150 300 300 300 600];exemptFirst=[0];exemptLast=[0];
 % strides=[-50 900 300];
-strides=[-40 450 200];
-
+splits=1;
+if splits==1
+    strides=[-40 980 100];
+    cond={'TM base','Multiple pos short splits','TM mid 2'}; %Conditions for this group
+else
+    
+    strides=[-40 450 200];
+    cond={'TM base','Adaptation','Post 1'}; %Conditions for this group
+end
 exemptFirst=[1];
 exemptLast=[5]; %Strides needed 
 names={};
 shortNames={};
-% cond={'TM Base','Adapt1','Adapt2','Adapt3','Washout'};
-% cond={'TM base','gradual adaptation','TM post'}; %Conditions for this group 
-cond={'TM base','Adaptation','Post 1'}; %Conditions for this group 
-% ep=defineEpochs(cond,cond,strides,exemptFirst,exemptLast,'nanmedian',{'B','A1','A2','A3','P'});
+
 
 if contains(groupID,'NTS') || contains(groupID,'NTR') || contains(groupID,'CTS') || contains(groupID,'CTR')
     epLong=defineEpochNimbusShoes_longProtocol('nanmean'); 
@@ -94,6 +84,14 @@ l2=regexprep(regexprep(ll,'^Norm',''),'_s','s');
 group=group.renameParams(ll,l2);
 newLabelPrefix=strcat(labelPrefix,'s');
 
+%% Set bad muscles to nan
+ 
+ removeBadmuscles=0;
+if removeBadmuscles==1
+    [RemovedData]=RemoveBadMuscles(group,groupID);
+    group=RemovedData;
+end
+
 %% get data:
 padWithNaNFlag=true;
 [dataEMG,labels,allDataEMG]=group.getPrefixedEpochData(newLabelPrefix,ep,padWithNaNFlag);
@@ -107,18 +105,15 @@ end
 
 %% Save to hdf5 format for sharing with non-Matlab users
 EMGdata=cell2mat(allDataEMG);
-name=['dynamicsData_',groupID,'_subjects_', num2str(size(subID,2)),'.h5'];
+name=['dynamicsData_',groupID,'_subj_', num2str(size(subID,2)),'_RemoveBadMuscles', num2str(removeBadmuscles),'_splits_',num2str(splits),'.h5'];
 h5create(name,'/EMGdata',size(EMGdata))
 h5write(name,'/EMGdata',EMGdata)
 SLA=squeeze(cell2mat(dataContribs));
 h5create(name,'/SLA',size(SLA))
 h5write(name,'/SLA',SLA)
 speedDiff=[zeros(1,abs(strides(1))),ones(1,strides(2)),zeros(1,(strides(3)))];
-% speedDiff=[zeros(1,40),ones(1,450),zeros(1,200)];
-% speedDiff=[zeros(1,40),ones(1,900),zeros(1,200)];
 h5create(name,'/speedDiff',size(speedDiff))
 h5write(name,'/speedDiff',speedDiff)
-% breaks=[zeros(1,150),1,zeros(1,299),1,zeros(1,299),1,zeros(1,299),1,zeros(1,599)];
 breaks=[zeros(1,length(speedDiff))];
 h5create(name,'/breaks',size(breaks))
 h5write(name,'/breaks',breaks)
