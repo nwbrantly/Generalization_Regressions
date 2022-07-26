@@ -1,31 +1,17 @@
 %getting Cs 
 %% Load data and Plot checkerboard for all conditions.
-% clear; close all; clc;
+clear; close all; clc;
 
 % set script parameters, SHOULD CHANGE/CHECK THIS EVERY TIME.
 groupID = 'PATR';
-saveResAndFigure = false;
-plotAllEpoch = true;
-plotIndSubjects = true;
-plotGroup = true;
-bootstrap=true;
 
 % scriptDir = fileparts(matlab.desktop.editor.getActiveFilename);
 files = dir ([ groupID '*params.mat']);
 
-% n_subjects = size(files,1);
+
 n_subjects = size(files,1);
-% p = randperm(4,4);
+
 ii=0;
-
-subID = cell(1, n_subjects);
-sub=cell(1,n_subjects);
-% for i = 1:n_subjects
-%     sub{i} = files(i).name;
-%     subID{i} = sub{i}(1:end-10);
-%    
-% end
-
 for i =1:n_subjects
     ii=1+ii;
     sub{ii} = files(i).name;
@@ -37,56 +23,44 @@ subID
 regModelVersion =  'default';
 
 %%%% load and prep data
-
-% muscleOrder={'TA', 'PER', 'SOL', 'LG', 'MG', 'BF', 'SEMB', 'SEMT', 'VM', 'VL', 'RF', 'TFL', 'HIP', 'GLU'};
-% muscleOrder={'GLU','TFL','HIP','RF','VL','VM','BF', 'SEMB','SEMT','MG','LG','SOL','PER','TA'};
 muscleOrder={'TA', 'PER', 'SOL', 'LG', 'MG', 'BF', 'SEMB', 'SEMT', 'VM', 'VL', 'RF', 'HIP','TFL', 'GLU'};
-
-% muscleOrder={'TA', 'PER', 'SOL', 'LG', 'MG', 'BF', 'SEMB', 'SEMT', 'VM', 'VL', 'RF', 'HIP', 'ADM', 'TFL', 'GLU'};
-% muscleOrder(end:-1:1) = muscleOrder(:);
-
-% muscleOrder={'TA', 'PER', 'SOL', 'LG', 'MG', 'BF', 'SEMB', 'SEMT', 'VM', 'VL', 'RF', 'HIP', 'ADM', 'TFL', 'GLU'};
-% muscleOrder={'GLU','HIP','TFL','RF','VL','VM','SEMT','SEMB','BF','MG','LG','SOL','PER','TA'};
 
 n_muscles = length(muscleOrder);
 
-% ep=defineEpochs_regressionYA('nanmean');
+
 ep=defineRegressorsDynamics('nanmean');
-% ep=defineEpochs_regression('nanmean');
 refEpTM = defineReferenceEpoch('TM base',ep);
-% refEpOG = defineReferenceEpoch('OG base',ep);
-
-%% Bootstrapping section
-
-
-%For group data try to use the median to be consistnace with Pablo's
-
-% summaryflag='nanmean';
-% Defining the epochs of interest
-% ep=defineEpochs_regressionYA(summaryflag);
 
 
 %%
 
 GroupData=adaptationData.createGroupAdaptData(sub); %loading the data
-% GroupData=GroupData.removeBadStrides; %Removing bad strides
+GroupData=GroupData.removeBadStrides; %Removing bad strides
 
 % GroupData=group;
 
 newLabelPrefix = defineMuscleList(muscleOrder);
 normalizedGroupData = GroupData.normalizeToBaselineEpoch(newLabelPrefix,refEpTM); %Normalized by OG base same as nimbus data
 ll=normalizedGroupData.adaptData{1}.data.getLabelsThatMatch('^Norm');
-l2=regexprep(regexprep(ll,'^Norm',''),'_s','');
+l2=regexprep(regexprep(ll,'^Norm',''),'_s','s');
 normalizedGroupData=normalizedGroupData.renameParams(ll,l2);
-newLabelPrefix = regexprep(newLabelPrefix,'_s','');
+newLabelPrefix = regexprep(newLabelPrefix,'_s','s');
 
 Data=cell(7,1);
 Data2=cell(5,1);
 group=cell(5,1);
 summFlag='nanmedian';
+
+%% Remove aftereffects using Shuqi's code
+
+ removeBadmuscles=0;
+if removeBadmuscles==1
+     [RemovedData]=RemoveBadMuscles(normalizedGroupData,groupID);
+    normalizedGroupData=RemovedData;
+end
 %%
-% epochOfInterest={'Adaptation_{early}','Adaptation','Post1_{Early}','PosShort_{early}','Ramp','Optimal'};
-epochOfInterest={'TM base','PosShort_{early}','PosShort_{late}','Ramp','Optimal'};
+
+epochOfInterest={'TM base','TM mid 1','PosShort_{early}','PosShort_{late}','Ramp','Optimal'};
 fh=figure('Units','Normalized','OuterPosition',[0 0 1 1]);
 ph=tight_subplot(1,length(epochOfInterest),[.03 .005],.04,.04);
 
@@ -103,7 +77,6 @@ end
 C=[];
 for l=1:length(epochOfInterest)
 ep2=defineReferenceEpoch(epochOfInterest{l},ep);
-% [~,~,~,Data{l}]=
 normalizedGroupData.plotCheckerboards(newLabelPrefix,ep2,fh,ph(1,l),[],flip,summFlag);
 [~,~,~,Data{l}]=normalizedGroupData.getCheckerboardsData(newLabelPrefix,ep2,[],flip,summFlag);
 C=[C reshape(Data{l}(:,end:-1:1),12*n_muscles*n,1)];
@@ -111,8 +84,7 @@ end
   
 %%
 resDir = [cd '/LTI models/'];
-% resDir = [cd];
-save([resDir '/'  groupID,'_',num2str(n_subjects),'_',method,'C',num2str(length(epochOfInterest)) ,'_ShortPertubations'], 'C','epochOfInterest')
+save([resDir '/'  groupID,'_',num2str(n_subjects),'_',method,'C',num2str(length(epochOfInterest)) ,'_ShortPertubations_RemovedBadMuscle_',num2str(removeBadmuscles)], 'C','epochOfInterest')
 
 %%
 %% Color definition 
@@ -144,78 +116,3 @@ set(ph(:,1),'CLim',[-1 1]*1,'FontSize',fs);
 set(ph(:,2:end),'YTickLabels',{},'CLim',[-1 1]*1,'FontSize',fs);
 
 %%
-% ph=figure 
-% 
-% 
-% ytl={'GLU','TFL','HIP','RF','VL','VM','BF', 'SEMB','SEMT','MG','LG','SOL','PER','TA'};
-% ytl=newLabelPrefix;
-% ytl=ytl(end:-1:1);
-% yt=1:14*2;
-% fs=14;
-% 
-% subplot(1,4,1)
-% imagesc((reshape(C(:,1),12,14*2)'))
-% caxis([-1 1])
-% set(gca,'XTick',[],'YTick',yt,'YTickLabel',ytl,'FontSize',fs)
-% title('Adaptation_{early}')
-% % title('F(A)')
-% 
-% 
-% subplot(1,4,2)
-% imagesc((reshape(C(:,2),12,14*2)'))
-% caxis([-1 1])
-% set(gca,'XTick',[],'YTick',yt,'YTickLabel',ytl,'FontSize',fs)
-% title('Adaptation_{late}')
-% % title(['F(-A)'])
-% 
-% subplot(1,4,3)
-% imagesc((reshape(C(:,3),12,14*2)'))
-% caxis([-1 1])
-% set(gca,'XTick',[],'YTick',yt,'YTickLabel',ytl,'FontSize',fs)
-% title(['Negative_{Short}'])
-% 
-% %%
-% 
-%            %Colormap:
-%             ex2=[0.2314    0.2980    0.7529];
-%             ex1=[0.7255    0.0863    0.1608];
-%             gamma=.5;
-%             map=[bsxfun(@plus,ex1.^(1/gamma),bsxfun(@times,1-ex1.^(1/gamma),[0:.01:1]'));bsxfun(@plus,ex2.^(1/gamma),bsxfun(@times,1-ex2.^(1/gamma),[1:-.01:0]'))].^gamma;
-% 
-%             colormap(flipud(map))
-% %%
-% subplot(1,4,4)
-% imagesc((reshape(-C(:,1),12,14)'))
-% caxis([-1 1])
-% set(gca,'XTick',[],'YTick',yt,'YTickLabel',ytl,'FontSize',fs)
-% title(['-(Adaptation_{early})'])
-% %%
-% % CosTheta = max(min(dot(C(:,1),C(:,2))/(norm(C(:,1))*norm(C(:,2))),1),-1);
-% % ThetaInDegrees = real(acosd(CosTheta));
-% % title(['Adaptation_{late}'],[ 'cosine = ' num2str(ThetaInDegrees)])
-% 
-% subplot(1,4,3)
-% imagesc((reshape(C(:,3),12,14)'))
-% caxis([-1 1])
-% set(gca,'XTick',[],'YTick',yt,'YTickLabel',ytl,'FontSize',fs)
-% 
-% %%
-%                                                                                                                                                                                       
-% % set(ph(:,1),'CLim',[-1 1]*1);
-% CosTheta = max(min(dot(C(:,1),C(:,3))/(norm(C(:,1))*norm(C(:,3))),1),-1);
-% ThetaInDegrees = real(acosd(CosTheta));
-% 
-% title(['NegShort_{early}'],[ 'cosine = ' num2str(ThetaInDegrees)])
-% 
-% subplot(1,4,4)
-% imagesc((reshape(abs(C(:,1))-abs(C(:,3)),12,14)'))
-% caxis([-1 1])
-% 
-% title('|Adaptation_{early}| - |NegShrot_{early}|')
-% set(gca,'XTick',[],'YTick',yt,'YTickLabel',ytl,'FontSize',fs)
-% 
-% colormap(flipud(map))
-% set(gcf,'color','w');
-% colorbar   
-% 
-% vif(C)
