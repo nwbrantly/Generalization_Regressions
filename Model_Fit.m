@@ -1,7 +1,7 @@
 %%
-addpath(genpath('../../../EMG-LTI-SSM/'))
-addpath(genpath('../../../matlab-linsys/'))
-addpath(genpath('../../../robustCov/'))
+% addpath(genpath('../../../EMG-LTI-SSM/'))
+% addpath(genpath('../../../matlab-linsys/'))
+% addpath(genpath('../../../robustCov/'))
 %%
 % clear all;clc;close all
 %% Load real data:
@@ -28,12 +28,16 @@ addpath(genpath('../../../robustCov/'))
 
 
 %% Free model - Linear regression - Asymmetry with baseline
-% load PATS_3_AsymC4_ShortPertubations
-load PATR_4_AsymC5_ShortPertubations
+% load PATS_3_AsymC5_ShortPertubations
+
+% load PATR_4_AsymC5_ShortPertubations
+load PATS_3_AsymC5_ShortPertubations_RemovedBadMuscle_1
 
 % figure 
 
-fname='dynamicsData_PATR_subjects_4.h5';
+% fname='dynamicsData_PATR_subjects_4.h5';
+% fname='dynamicsData_PATS_subjects_3.h5';
+fname='dynamicsData_PATS_subj_3_RemoveBadMuscles1.h5'
 EMGdata=h5read(fname,'/EMGdata');
  
 binwith=5;
@@ -90,10 +94,15 @@ legacy_vizSingleModel_FreeModel_ShortAdaptation(model,Yasym',Uf)
 %% Free model - Linear regression - Asymmetry 
 % load PATS_3_AsymC4_ShortPertubations
 load PATR_4_AsymC4_ShortPertubations
-
+% load PATS_3_AsymC5_ShortPertubations_RemovedBadMuscle_1
+% load ATR_4_AsymC5
 % figure 
 
-fname='dynamicsData_PATR_subjects_4.h5';
+% fname='dynamicsData_PATR_subjects_4.h5';
+% fname='dynamicsData_PATS_subj_3_RemoveBadMuscles1.h5'
+% fname='dynamicsData_PATS_subjects_3.h5';
+fname= 'dynamicsData_PATR_subj_4_RemoveBadMuscles0_splits_1.h5';
+% fname='dynamicsData_ATR_V4.h5'
 EMGdata=h5read(fname,'/EMGdata');
  
 binwith=5;
@@ -101,7 +110,7 @@ binwith=5;
 Uf=[U;ones(size(U))];
 % C=[C1 C3];
 % C=Cnew;
-bias=0;%nanmean(Yasym(5:30,:));
+bias=nanmean(Yasym(5:30,:));
 C=[C(:,3) C(:,4)];
 C=C-bias';
 Yasym=Yasym-bias;
@@ -134,7 +143,34 @@ yline(0)
 
 set(gcf,'color','w')
 
+% legacy_vizSingleModel_FreeModel_ShortAdaptation(model,Yasym',Uf)
+%%
+% PCA 
+[pp,cc,aa]=pca(Yasym,'Centered','off');
+C=[pp(:,1:2)];
+model.C=C;
+Cinv=pinv(C)';
+X= Yasym*Cinv;
+X=[X(1:40,:); nan(1,2);X(41:490,:);nan(1,2);X(490:end,:)];
+
+figure
+subplot(2,1,1)
+hold on
+scatter(1:length(movmean(X(:,1),binwith)), movmean(X(:,1),binwith),10,'k','filled')
+plot(movmean(X(:,1),5),'LineWidth',2)
+yline(0)
+title('C_1 = PCA1')
+
+
+subplot(2,1,2)
+hold on
+scatter(1:length(movmean(X(:,1),binwith)), movmean(X(:,2),binwith),10,'k','filled')
+plot(movmean(X(:,2),5),'LineWidth',2)
+yline(0)
+title('C_2 = PCA2')
+
 legacy_vizSingleModel_FreeModel_ShortAdaptation(model,Yasym',Uf)
+% legacy_vizSingleModelMLMC_FreeModel(model,Yasym',Uf)
 %% Free model - Linear regression - Indv Legs
 
 % load('ATS_11_IndvLegs_EarlyLateAdaptation.mat')
