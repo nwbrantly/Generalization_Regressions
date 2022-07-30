@@ -1,4 +1,5 @@
-function [Data,regressorNames,fh]=RegressionsGeneralization(Labels,session1,session2,plotIndSubjects, plotGroup,NegShort,TMbeforeNeg,PostShort,TMbeforePost,AdaptLate,Post1Early,Post1Late,Post2Early, OGpostPosEarly, OGbase, EnvBase,Pos5_Late,OGPos5_Late,subIdx,flip)
+function [Data,regressorNames,fh]=RegressionsGeneralization(Labels,session1,session2,plotIndSubjects, plotGroup,NegShort,TMbeforeNeg,PostShort,TMbeforePost,AdaptLate,Post1Early,...
+    Post1Late,Post2Early, OGpostPosEarly, OGbase, EnvBase,Pos5_Late,OGPos5_Late,subIdx,flip)
 
 if nargin<17 || isempty(subIdx)
     subIdx=[];
@@ -49,9 +50,9 @@ if  plotIndSubjects
         
         [~,~,~,Data{6},~] = adaptDataSubjectSession2.plotCheckerboards(Labels,OGpostPosEarly,fh,ph(1,6),PostShort,flip); % OGpost Pos - Pos Short
         title('Transition 3: Short Split')
-        
-        [~,~,~,Data{7},~] = adaptDataSubjectSession2.plotCheckerboards(Labels,Pos5_Late,fh,ph(1,7),OGPos5_Late,flip); % OGpost Pos - Pos Short
-        title('Fastforward')        
+%         
+%         [~,~,~,Data{7},~] = adaptDataSubjectSession2.plotCheckerboards(Labels,Pos5_Late,fh,ph(1,7),OGPos5_Late,flip); % OGpost Pos - Pos Short
+%         title('Forward')        
         
         set(ph(:,1),'CLim',[-1 1]*1);
         set(ph(:,2:end),'YTickLabels',{},'CLim',[-1 1]*1);
@@ -111,9 +112,9 @@ if  plotGroup
         d = nanmedian(Data{6}, 4);
         title(['Transition 3: Short Split',] ,[ 'Norm=', num2str(norm(reshape(d,[],1)))])
 
-        [~,~,~,Data{7},~] = session2Data.plotCheckerboards(Labels,Pos5_Late,fh,ph(1,7),OGPos5_Late,flip,summaryflag); %TM post VR early - OG post late, transition 2
-        d = nanmedian(Data{7}, 4);
-        title(['Forward: Short Split',] ,[ 'Norm=', num2str(norm(reshape(d,[],1)))])
+%         [~,~,~,Data{7},~] = session2Data.plotCheckerboards(Labels,Pos5_Late,fh,ph(1,7),OGPos5_Late,flip,summaryflag); %TM post VR early - OG post late, transition 2
+%         d = nanmedian(Data{7}, 4);
+%         title(['Forward: Short Split',] ,[ 'Norm=', num2str(norm(reshape(d,[],1)))])
      
         
         

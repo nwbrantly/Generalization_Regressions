@@ -56,6 +56,26 @@ newLabelPrefix = regexprep(newLabelPrefix,'_s','');
 
 summFlag='nanmedian'; %how are we going to get the group behavior, due to the high noise on the data we choose median instead of mean
 fs=8; %font size, this is for the plots 
+flip=1; %1 individual leg behavior - 2: Asymmetry value 
+
+%plotting epochs of interest bias
+fh=figure('Units','Normalized','OuterPosition',[0 0 1 1]);
+ph=tight_subplot(1,length(ep),[.03 .005],.04,.04);
+normalizedGroupData.plotCheckerboards(newLabelPrefix,ep,fh,ph,[],flip,summFlag);
+set(ph(:,1),'CLim',[-1 1]*1,'FontSize',fs);
+set(ph(:,2:end),'YTickLabels',{},'CLim',[-1 1]*1,'FontSize',fs);
+set(gcf,'color','w');
+%plotting epochs of interest unbias - we are removing TM base for all
+%condition - NO smart bc we have OG data too - TO BE FIX
+fh=figure('Units','Normalized','OuterPosition',[0 0 1 1]);
+ph=tight_subplot(1,length(ep),[.03 .005],.04,.04);
+normalizedGroupData.plotCheckerboards(newLabelPrefix,ep,fh,ph,refEpTM,flip,summFlag);
+set(ph(:,1),'CLim',[-1 1]*1,'FontSize',fs);
+set(ph(:,2:end),'YTickLabels',{},'CLim',[-1 1]*1,'FontSize',fs);
+set(gcf,'color','w');
+%% Plotting eopochs of interest next to each other to be able to visually compare between them
+unbias=0;
+
 flip=2; %1 individual leg behavior - 2: Asymmetry value 
 
 if flip==1
@@ -85,23 +105,6 @@ else
     
     
 end
-
-%plotting epochs of interest bias 
-fh=figure('Units','Normalized','OuterPosition',[0 0 1 1]);
-ph=tight_subplot(1,length(ep),[.03 .005],.04,.04);
-normalizedGroupData.plotCheckerboards(newLabelPrefix,ep,fh,ph,[],flip,summFlag);
-set(ph(:,1),'CLim',[-1 1]*1,'FontSize',fs);
-set(ph(:,2:end),'YTickLabels',{},'CLim',[-1 1]*1,'FontSize',fs);
-
-%plotting epochs of interest unbias - we are removing TM base for all
-%condition - NO smart bc we have OG data too - TO BE FIX 
-fh=figure('Units','Normalized','OuterPosition',[0 0 1 1]);
-ph=tight_subplot(1,length(ep),[.03 .005],.04,.04);
-normalizedGroupData.plotCheckerboards(newLabelPrefix,ep,fh,ph,refEpTM,flip,summFlag);
-set(ph(:,1),'CLim',[-1 1]*1,'FontSize',fs);
-set(ph(:,2:end),'YTickLabels',{},'CLim',[-1 1]*1,'FontSize',fs);
-%% Plotting eopochs of interest next to each other to be able to visually compare between them
-unbias=0;
 if unbias==1
     bias = [];
 else
@@ -122,18 +125,19 @@ cc{4}={'PostShort_{early}','PosShort_{late}','PosRamp','NegShort_{early}','NegSh
 
 
 for c=1:length(cc)
-fh=figure('Units','Normalized','OuterPosition',[0 0 1 1]);
-ph=tight_subplot(1,length(cc{c}),[.03 .005],.04,.04);
-
-for i=1:length(cc{c})
-    ep2=defineReferenceEpoch(cc{c}{i},ep);
-    normalizedGroupData.plotCheckerboards(newLabelPrefix,ep2,fh,ph(1,i),bias,flip,summFlag);
-end
-set(ph(:,1),'CLim',[-1 1]*1,'FontSize',fs);
-set(ph(:,2:end),'YTickLabels',{},'CLim',[-1 1]*1,'FontSize',fs);
-if flip==2
-colormap(flipud(map))
-end
-colorbar   
+    fh=figure('Units','Normalized','OuterPosition',[0 0 1 1]);
+    ph=tight_subplot(1,length(cc{c}),[.03 .005],.04,.04);
+    
+    for i=1:length(cc{c})
+        ep2=defineReferenceEpoch(cc{c}{i},ep);
+        normalizedGroupData.plotCheckerboards(newLabelPrefix,ep2,fh,ph(1,i),bias,flip,summFlag);
+    end
+    set(ph(:,1),'CLim',[-1 1]*1,'FontSize',fs);
+    set(ph(:,2:end),'YTickLabels',{},'CLim',[-1 1]*1,'FontSize',fs);
+    set(gcf,'color','w');
+    if flip==2
+        colormap(flipud(map))
+    end
+    colorbar
 end
 

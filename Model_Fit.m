@@ -30,24 +30,33 @@
 %% Free model - Linear regression - Asymmetry with baseline
 % load PATS_3_AsymC5_ShortPertubations
 
-% load PATR_4_AsymC5_ShortPertubations
-load PATS_3_AsymC5_ShortPertubations_RemovedBadMuscle_1
+load PATR_4_AsymC5_ShortPertubations
+% load PATS_3_AsymC5_ShortPertubations_RemovedBadMuscle_1
 
 % figure 
 
-% fname='dynamicsData_PATR_subjects_4.h5';
+fname='dynamicsData_PATR_subjects_4.h5';
 % fname='dynamicsData_PATS_subjects_3.h5';
-fname='dynamicsData_PATS_subj_3_RemoveBadMuscles1.h5'
+% fname='dynamicsData_PATS_subj_3_RemoveBadMuscles1.h5'
 EMGdata=h5read(fname,'/EMGdata');
  
 binwith=5;
 [Y,Yasym,~,U]=groupDataToMatrixForm(1:size(EMGdata,3),0,fname);
 Uf=[U;ones(size(U))];
+
+% Y=datSet.out;
+% U=datSet.in;
+Uinv=pinv(U)';
+X=Yasym'-(Yasym'*Uinv')*U; %Projection over input
+s=var(X'); %Estimate of variance
+flatIdx=s<.005; %Variables are split roughly in half at this threshold
+% Yasym=Yasym(:,~flatIdx);
 % C=[C1 C3];
 % C=Cnew;
 bias=0;%nanmean(Yasym(5:30,:));
 C=[C(:,1) C(:,4) C(:,5)];
 C=C-bias';
+% C=C(~flatIdx,:);
 Yasym=Yasym-bias;
 model.C=C;
 % Y=datSet.out;
@@ -55,6 +64,7 @@ Cinv=pinv(model.C)';
 X2asym = Yasym*Cinv; %x= y/C
 Y2asym= C * X2asym' ; %yhat = C 
 
+% Xasym=[X2asym(1:40,:); nan(1,3);X2asym(41:490,:);nan(1,3);X2asym(490:end,:)];
 Xasym=[X2asym(1:40,:); nan(1,3);X2asym(41:490,:);nan(1,3);X2asym(490:end,:)];
 
 figure

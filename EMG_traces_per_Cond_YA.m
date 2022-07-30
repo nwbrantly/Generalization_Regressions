@@ -15,49 +15,52 @@ normCond = {'TM mid 1'};
 conds={'TM mid 1'};
 late=1;
 strides=40;
-IgnoreStridesEarly=[];
+IgnoreStridesEarly=1;
 % fh=figure(1)
 plotEMGtraces(expData,conds,muscle,late,strides,normalize,normCond,IgnoreStridesEarly);
 
 %%
-conds={'Adaptation'};
-late=0;
-strides=40;
-IgnoreStridesEarly=1;
+conds={'TM mid 1','Adaptation','Adaptation','Post 1'};
+late=[1 0 1 0];
+strides=[40 40 40 30];
+IgnoreStridesEarly=[1 50 1 1];
 plotEMGtraces(expData,conds,muscle,late,strides,normalize,normCond,IgnoreStridesEarly);
 %% Baseline condtions 
 conds={'TM mid 1','OG base','TM fast'};
-late=1;
-strides=40;
-IgnoreStridesEarly=[];
+late=1*ones(1,length(conds));
+strides=40*ones(1,length(conds));
+IgnoreStridesEarly=0*ones(1,length(conds));
 fh=plotEMGtraces(expData,conds,muscle,late,strides,normalize,normCond,IgnoreStridesEarly);
 
 %% Late condition 
-late=1;
-strides=40;
-IgnoreStridesEarly=[];
 conds={'TM mid 1','OG base','TM fast',...
     'Adaptation',...
     'Post 1','Post 2'};
+late=1*ones(1,length(conds));
+strides=40*ones(1,length(conds));
+IgnoreStridesEarly=zeros(1,length(conds));
+
 fh=plotEMGtraces(expData,conds,muscle,late,strides,normalize,normCond,IgnoreStridesEarly);
 
 
 %% Early conditions 
-late=0;
-strides=30;
-IgnoreStridesEarly=50;
 conds={'Pos short',...
     'Neg Short','Adaptation',...
     'Post 1','Post 2'};
+late=0*ones(1,length(conds));
+strides=30*ones(1,length(conds));
+IgnoreStridesEarly=50*ones(1,length(conds));
+
 fh=plotEMGtraces(expData,conds,muscle,late,strides,normalize,normCond,IgnoreStridesEarly);
 
 %% Early conditions 
-late=0;
-strides=30;
-IgnoreStridesEarly=50;
 conds={'Pos short',...
     'Neg Short','Adaptation',...
         };
+late=0*ones(1,length(conds));
+strides=30*ones(1,length(conds));
+IgnoreStridesEarly=50*ones(1,length(conds));
+
 fh=plotEMGtraces(expData,conds,muscle,late,strides,normalize,normCond,IgnoreStridesEarly);
 
 %% save figures

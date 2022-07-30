@@ -18,7 +18,7 @@
 clear; close all; clc;
 
 % set script parameters, SHOULD CHANGE/CHECK THIS EVERY TIME.
-groupID = 'ATS12';
+groupID = 'ATR';
 saveResAndFigure = false;
 plotAllEpoch = true;
 plotIndSubjects = true;
@@ -62,7 +62,8 @@ regModelVersion =  'default';
 GroupData=adaptationData.createGroupAdaptData(sub); %loading the data
 GroupData=GroupData.removeBadStrides; %Removing bad strides
 
-muscleOrder={'TA', 'PER', 'SOL', 'LG', 'MG', 'BF', 'SEMB', 'SEMT', 'VM', 'VL', 'RF', 'TFL', 'GLU', 'HIP'};
+% muscleOrder={'TA', 'PER', 'SOL', 'LG', 'MG', 'BF', 'SEMB', 'SEMT', 'VM', 'VL', 'RF', 'TFL', 'GLU', 'HIP'};
+muscleOrder={'TA', 'PER', 'SOL', 'LG', 'MG', 'BF', 'SEMB',  'VM', 'VL', 'RF', 'TFL', 'GLU', 'HIP'};
 
 n_muscles = length(muscleOrder);
 n_subjects = length(subID);
@@ -129,12 +130,12 @@ if plotAllEpoch
     for i = 1:sub
                 
         fh=figure('Units','Normalized','OuterPosition',[0 0 1 1]);
-        ph=tight_subplot(1,length(ep)-1,[.03 .005],.04,.04);
+        ph=tight_subplot(1,length(ep),[.03 .005],.04,.04);
         flip=true;
         
         refEp=[];
         adaptDataSubject.plotCheckerboards(newLabelPrefix,ep(1:8,:),fh,ph(1,1:8),refEp,flip,summaryflag);%plot all epochs normalized by the mid baseline
-        adaptDataSubject.plotCheckerboards(newLabelPrefix,ep(10:17,:),fh,ph(1,9:length(ep)-1),refEp,flip,summaryflag);%plot all epochs normalized by the mid baseline
+        adaptDataSubject.plotCheckerboards(newLabelPrefix,ep(10:length(ep),:),fh,ph(1,9:length(ep)-1),refEp,flip,summaryflag);%plot all epochs normalized by the mid baseline
        
         
         set(ph(:,1),'CLim',[-1 1]*1);
@@ -187,7 +188,8 @@ Pos1_Early=defineReferenceEpoch('Post1_{Early}',ep);
 AdaptLate=defineReferenceEpoch('Adaptation',ep);
 Pos1_Late=defineReferenceEpoch('Post1_{Late}',ep);
 Pos2_Early=defineReferenceEpoch('Post2_{Early}',ep);
-Pos5_Late=defineReferenceEpoch('PostShort5_{late}',ep);
+% Pos5_Late=defineReferenceEpoch('PostShort5_{late}',ep);
+Pos5_Late=defineReferenceEpoch('ShortSplits',ep);
 OGPos5_Late=defineReferenceEpoch('OG_{after5pos}',ep);
 
 if (contains(groupID, 'ATR'))

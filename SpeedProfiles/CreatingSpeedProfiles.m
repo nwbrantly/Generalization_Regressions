@@ -1,18 +1,19 @@
 %speed profiles update (Exploration)
 clear all;close all;clc
-small= [0.65 0.85];
 mid=[0.5 1];
-large=[0.35 1.15];
+small=mid;% [0.65 0.85];
+
+large=mid;%[0.35 1.15];
 
 split={small, mid, large};
 speed=[0.75*ones(50,2)];
 
-for t=1:5
+for t=1:3
 y=randsample(3,3);
 
-speed= [speed; split{y(1)}.*ones(30,2);0.75*ones(randsample(10:30,1),2);...
-    split{y(2)}.*ones(30,2);0.75*ones(randsample(10:30,1),2);...
-    split{y(3)}.*ones(30,2);0.75*ones(randsample(10:30,1),2)];
+speed= [speed; split{y(1)}.*ones(50,2);0.75*ones(randsample(10:30,1),2);...
+    split{y(2)}.*ones(50,2);0.75*ones(randsample(10:30,1),2);...
+    split{y(3)}.*ones(50,2);0.75*ones(randsample(10:30,1),2)];
 
 
 end
@@ -31,6 +32,8 @@ figure
 plot(velR)
 hold on
 plot(velL)
+
+
 %% 
 legend('R','L')
 
