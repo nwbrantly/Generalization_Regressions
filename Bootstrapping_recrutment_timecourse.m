@@ -41,6 +41,11 @@ newLabelPrefix = regexprep(newLabelPrefix,'_s','s');
 
 
 
+%% Removing bad muscles 
+
+
+[normalizedGroupData]=RemoveBadMuscles(normalizedGroupData,{'BATS02','BATS04','BATS06','BATS09','BATS12'},{{'fSOLs','sSOLs','fVMs','sVMs','fVLs','sVLs','sRFs','fRFs'},{'fBFs','sBFs'},{'fRFs','sRFs'},{'fRFs','sRFs'},{'sRFs','fRFs','fVLs','sVLs'}});
+
 %%  Getting the step-by-step data 
 
 %Adaptation epochs
@@ -97,7 +102,7 @@ X2=[];
 replacement=1
 if bootstrap
     if replacement
-        n=10000; %number of iterations
+        n=1000; %number of iterations
     else
         n=1
     end
@@ -169,7 +174,7 @@ delete(f)
 
 grayColor = [.7 .7 .7];
 
-figure(1)
+figure()
 subplot(2,1,1)
 hold on
 % X_1=[X1(:,1:40) nan(size(X1(:,1:40),1),1) X1(:,41:480) nan(size(X1(:,1:40),1),1) X1(:,481:end)];
@@ -245,7 +250,7 @@ for i=1:3
     hold on;
     ylabel('W_{context}')
     xlabel('Strides')
-    plot(x, y, 'b', 'LineWidth', 2);
+    plot(x, y, 'r', 'LineWidth', 2);
     
 end
 yline(0)
@@ -257,21 +262,23 @@ save([groupID,'_',num2str(n_subjects),'_iteration_', num2str(n)],'X1','X2','subI
 %%
 
 % 
-load('BATS_11_iteration_10000.mat')
+% load('BATS_11_iteration_10000WO_BATS02.mat')
+load('BATS_12_iteration_1000.mat')
 figure
 subplot(2,1,1)
 hold on
-reactive=nanmean(X1(:,481:485),2);
-histogram(reactive)
+reactive1=nanmean(X1(:,481:485),2);
+histogram(reactive1)
+
 xlabel('Reactive')
 disp('BATS - Reactive')
-[h,p,ci,stats] = ttest(reactive)
+[h,p,ci,stats] = ttest(reactive1)
 subplot(2,1,2)
 hold on
-context=nanmean(X2(:,481:485),2);
-histogram(context)
+context1=nanmean(X2(:,481:485),2);
+histogram(context1)
 disp('BATS - Context')
-[h,p,ci,stats]= ttest(context)
+[h,p,ci,stats]= ttest(context1)
 xlabel('Context')
 
 
@@ -294,7 +301,33 @@ disp('BATR - Context')
 [h,p,ci,stats]= ttest(context)
 xlabel('Context')
 
+legend('BATS','BATR')
+
 set(gcf,'color','w')
+%%
+figure 
+% set(gca,'TickLabelInterpreter','latex');
+boxplot([reactive1 reactive context1 context],'Notch','on','Labels',{'W^{OG}_{reactive}','W^{TM}_{reactive}','W^{OG}_{contex}','W^{TM}_{contex}'})
+% set(gca, 'interpreter', 'latex');
+yline(0)
+
+%%
+% % figure 
+% mean_Data=mean([[reactive1 reactive context1 context]]);
+% SD_Data=std([[reactive1 reactive context1 context]]);
+% Q1 = quantile([reactive1 reactive context1 context],0.025,1);
+% Q2=quantile([reactive1 reactive context1 context],0.975,1);
+
+
+modifiedBoxPlot([1,2,3,4],[ reactive1 reactive context1 context]);
+% set(gca,'title','Marce')
+set(gca,'XTick',[1 2,3,4],'XTickLabel',{'W^{OG}_{reactive}','W^{TM}_{reactive}','W^{OG}_{contex}','W^{TM}_{contex}'},'FontSize',10)
+
+
+
+
+
+
 %%
 % figure
 % load('BATS_10_iteration_10000.mat')
