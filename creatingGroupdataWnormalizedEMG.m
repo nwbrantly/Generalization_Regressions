@@ -1,4 +1,4 @@
-function [normalizedGroupData, newLabelPrefix]=creatingGroupdataWnormalizedEMG(groupID)
+function [normalizedGroupData, newLabelPrefix,n_subjects]=creatingGroupdataWnormalizedEMG(groupID)
 %This function is to created the group data and also normalize the EMG. In
 %this version I am normalizing to TM base (tied belt right before
 %adpatation)
