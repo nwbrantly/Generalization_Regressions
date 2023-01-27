@@ -14,7 +14,8 @@ groupID ='BAT';
 %This script make sure that we always remove the same muscle for the
 %different analysis 
 normalizedGroupData= RemovingBadMuscleToSubj(normalizedGroupData);
-% [normalizedGroupData]=RemoveBadMuscles(normalizedGroupData,{'BATS02','BATS04','BATS06','BATS09','BATS12'},{{'fSOLs','sSOLs','fVMs','sVMs','fVLs','sVLs','sRFs','fRFs'},{'fBFs','sBFs'},{'fRFs','sRFs'},{'fRFs','sRFs'},{'sRFs','fRFs','fVLs','sVLs'}});
+% [normalizedGroupData]=RemoveBadMuscles(normalizedGroupData,{'BATS02','BATS04','BATS06','BATS09','BATS12'},...
+%%{{'fSOLs','sSOLs','fVMs','sVMs','fVLs','sVLs','sRFs','fRFs'},{'fBFs','sBFs'},{'fRFs','sRFs'},{'fRFs','sRFs'},{'sRFs','fRFs','fVLs','sVLs'}});
 
 %% Plotting 
 ep=defineEpochs({'eA','lA'},{'Adaptation','Adaptation'},[ nstrides -40],[eE eE ],[eL eL],'nanmean');
