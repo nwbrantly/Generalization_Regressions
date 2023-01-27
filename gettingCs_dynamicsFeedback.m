@@ -1,97 +1,61 @@
-%getting Cs 
+%getting Cs
 %% Load data and Plot checkerboard for all conditions.
 clear; close all; clc;
 
-% set script parameters, SHOULD CHANGE/CHECK THIS EVERY TIME.
-groupID = 'BAT';
-
-% scriptDir = fileparts(matlab.desktop.editor.getActiveFilename);
-files = dir ([ groupID '*params.mat']);
-
-
-n_subjects = size(files,1);
-
-ii=0;
-for i =1:n_subjects
-    ii=1+ii;
-    sub{ii} = files(i).name;
-    subID{ii} = sub{ii}(1:end-10);
-end
-
-subID
-
-regModelVersion =  'default';
-
-%%%% load and prep data
-muscleOrder={'TA', 'PER', 'SOL', 'LG', 'MG', 'BF', 'SEMB', 'SEMT', 'VM', 'VL', 'RF', 'HIP','TFL', 'GLU'};
-% muscleOrder={'PER', 'SOL', 'LG', 'MG', 'BF', 'SEMB', 'SEMT', 'VM', 'VL','TFL', 'GLU'};
-% muscleOrder={'TA', 'PER', 'SOL', 'LG', 'MG', 'BF', 'SEMB', 'SEMT', 'VM','VL', 'RF', 'HIP', 'ADM', 'TFL', 'GLU'}; %Older adults
-
-n_muscles = length(muscleOrder);
-
-
-ep=defineRegressorsDynamicsFeedback('nanmean');
-refEpTM = defineReferenceEpoch('TM base',ep);
-
-
-%%
-
-GroupData=adaptationData.createGroupAdaptData(sub); %loading the data
-GroupData=GroupData.removeBadStrides; %Removing bad strides
-
-% GroupData=group;
-
-newLabelPrefix = defineMuscleList(muscleOrder);
-normalizedGroupData = GroupData.normalizeToBaselineEpoch(newLabelPrefix,refEpTM); %Normalized by OG base same as nimbus data
-ll=normalizedGroupData.adaptData{1}.data.getLabelsThatMatch('^Norm');
-l2=regexprep(regexprep(ll,'^Norm',''),'_s','s');
-normalizedGroupData=normalizedGroupData.renameParams(ll,l2);
-newLabelPrefix = regexprep(newLabelPrefix,'_s','s');
+groupID ='BAT';
+[normalizedGroupData, newLabelPrefix,n_subjects]=creatingGroupdataWnormalizedEMG(groupID);
 
 Data=cell(7,1);
 Data2=cell(5,1);
 group=cell(5,1);
 summFlag='nanmedian';
+n_muscles =14; %number fo muscle in the experiment
+%% Remove aftereffects
 
-%% Remove aftereffects using Shuqi's code
-
- removeBadmuscles=0;
+removeBadmuscles=0;
 if removeBadmuscles==1
-     [RemovedData]=RemoveBadMuscles(normalizedGroupData,groupID);
-    normalizedGroupData=RemovedData;
-end
-%%
 
-epochOfInterest={'TM base','TM mid 1','PosShort_{early}','PosShort_{late}','Ramp','Optimal','Adaptation','Adaptation_{early}','TiedPostPos','OG2','NegShort_{late}','Post1_{Early}','TMbase_{early}'};
+    normalizedGroupData= RemovingBadMuscleToSubj(normalizedGroupData);
+end
+%% Getting the data that we use for matrices
+ep=defineRegressorsDynamicsFeedback('nanmean'); % This is a hardcade (aka specific to this experiment) script to get the data from name epochs of interest
+
+epochOfInterest={'TM base','TM mid 1','PosShort_{early}',...
+    'PosShort_{late}','Ramp','Optimal','Adaptation',...
+    'Adaptation_{early}','TiedPostPos','OG2','NegShort_{late}',...
+    'Post1_{Early}','TMbase_{early}'}; % This line chooses the epochs that want to get data from
+
+
 % epochOfInterest={'Post1_{Early}','TiedPostPos','TMmid2','Tied post ramp','Ramp','Tied post Neg'};
+% epochOfInterest={'OG2','Ramp','Optimal'};
+
 
 fh=figure('Units','Normalized','OuterPosition',[0 0 1 1]);
 ph=tight_subplot(1,length(epochOfInterest),[.03 .005],.04,.04);
 
-flip=2;
-
-if flip==1
-n=2;
-method='IndvLegs';
+flip=2; %1 for individual leg analysis and 2 for asymmetric (R-L)
+if flip==1 
+    n=2;
+    method='IndvLegs';
 else
-   n=1; 
-   method='Asym';
+    n=1;
+    method='Asym';
 end
-
+fdr=.1;
 C=[];
 for l=1:length(epochOfInterest)
-ep2=defineReferenceEpoch(epochOfInterest{l},ep);
-normalizedGroupData.plotCheckerboards(newLabelPrefix,ep2,fh,ph(1,l),[],flip,summFlag);
-[~,~,~,Data{l}]=normalizedGroupData.getCheckerboardsData(newLabelPrefix,ep2,[],flip,summFlag);
-C=[C reshape(Data{l}(:,end:-1:1),12*n_muscles*n,1)];
-end 
-  
-%%
+    ep2=defineReferenceEpoch(epochOfInterest{l},ep); 
+    [~,~,~,Data2{l}]=normalizedGroupData.plotCheckerboards(newLabelPrefix,ep2,fh,ph(1,l),[],flip,summFlag); %plotting the data
+    [~,~,~,Data{l}]=normalizedGroupData.getCheckerboardsData(newLabelPrefix,ep2,[],flip,summFlag); %getting the data from the plots
+    C=[C reshape(Data{l}(:,end:-1:1),12*n_muscles*n,1)]; %Reshaping the data form the plot to a vector
+end
+
+%% Saving the data
 resDir = [cd];% '/LTI models/'];
 save([resDir '/'  groupID,'_',num2str(n_subjects), '_',method,'C',num2str(length(epochOfInterest)) ,'_ShortPertubations_RemovedBadMuscle_',num2str(removeBadmuscles)], 'C','epochOfInterest')
 
 %%
-%% Color definition 
+%% Color definition
 ex1=[1,0,0];
 ex2=[0,0,1];
 cc=[0    0.4470    0.7410
@@ -109,16 +73,10 @@ gamma=1.5; %gamma > 1 expands the white (mid) part of the map, 'hiding' low valu
 gamma=1;
 map=[flipud(mid+ (ex1-mid).*([1:N]'/N).^gamma); mid; (mid+ (ex2-mid).*([1:N]'/N).^gamma)];
 
-%%
-% colormap(map)
-fs=14;
-% colormap(flipud(map))
-% colormap default
-set(gcf,'color','w');
-                                            
-
-set(ph(:,1),'CLim',[-.9 1]*1,'FontSize',fs);
-set(ph(:,2:end),'YTickLabels',{},'CLim',[-.9 1]*1,'FontSize',fs);
-colorbar  
-
-%%
+%% Making the figure a bit prettier 
+fs=14; %font size 
+colormap(flipud(map)) %changing the color map to the one tha defined about, we flipup the matrix bc the code does L-R and we want R-L 
+set(gcf,'color','w'); %setting the background white 
+set(ph(:,1),'CLim',[-1 1]*1,'FontSize',fs); %making sure that the first plot color scheme goes [-1 1] and making the name of the labels larger 
+set(ph(:,2:end),'YTickLabels',{},'CLim',[-1 1]*1,'FontSize',fs);
+colorbar %Showing the colormap bar 
