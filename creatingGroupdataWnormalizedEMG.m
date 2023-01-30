@@ -1,7 +1,7 @@
-function [normalizedGroupData, newLabelPrefix,n_subjects]=creatingGroupdataWnormalizedEMG(groupID)
+function [GroupData, newLabelPrefix,n_subjects]=creatingGroupdataWnormalizedEMG(groupID,invMuscles)
 %This function is to created the group data and also normalize the EMG. In
 %this version I am normalizing to TM base (tied belt right before
-%adpatation)
+%adpatation). We are normalizing everthing by TM base for consistance
 
 files = dir ([groupID '*params.mat']);
 
@@ -21,20 +21,24 @@ subID % This display what are the ID of the partocopants that you are using.
 
 %%%% load and prep data
 muscleOrder={'TA', 'PER', 'SOL', 'LG', 'MG', 'BF', 'SEMB', 'SEMT', 'VM', 'VL', 'RF', 'HIP','TFL', 'GLU'};
-n_muscles = length(muscleOrder);
-
-ep=defineRegressorsDynamicsFeedback('nanmean');
-refEpTM = defineReferenceEpoch('TM base',ep);
+newLabelPrefix = defineMuscleList(muscleOrder); %List of muscle 
 
 
+if nargin>2 || invMuscles==1 %For the prepocess code this needs to run bc we need to organize the data correctly 
+    newLabelPrefix=newLabelPrefix([28:-1:15 14:-1:1]);
+end
+
+ep=defineRegressorsDynamicsFeedback('nanmedian'); %loading the variables for multiple epochs of interest
+refEpTM = defineReferenceEpoch('TM base',ep); %extracting the info for the epoch that want to use to normalize the data
+ 
 GroupData=adaptationData.createGroupAdaptData(sub); %loading the data
 GroupData=GroupData.removeBadStrides; %Removing bad strides
 
-newLabelPrefix = defineMuscleList(muscleOrder);
-normalizedGroupData = GroupData.normalizeToBaselineEpoch(newLabelPrefix,refEpTM); 
-ll=normalizedGroupData.adaptData{1}.data.getLabelsThatMatch('^Norm');
-l2=regexprep(regexprep(ll,'^Norm',''),'_s','s');
-normalizedGroupData=normalizedGroupData.renameParams(ll,l2);
-newLabelPrefix = regexprep(newLabelPrefix,'_s','s');
+
+GroupData = GroupData.normalizeToBaselineEpoch(newLabelPrefix,refEpTM,true); %Normalizing the data
+ll=GroupData.adaptData{1}.data.getLabelsThatMatch('^Norm'); %Getting the label witht the word Norm 
+l2=regexprep(regexprep(ll,'^Norm',''),'_s','s'); %Removing the word norm. This is just to make our life easier
+GroupData=GroupData.renameParams(ll,l2); %Rename the variable to not have the word Norm 
+newLabelPrefix = regexprep(newLabelPrefix,'_s','s'); %removing the underscore "_"
 
 end
