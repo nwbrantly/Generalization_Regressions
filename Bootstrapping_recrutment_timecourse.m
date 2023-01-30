@@ -5,53 +5,17 @@
 % clear all; close all; clc;
 clear all; clc;
 
-
-% set script parameters, SHOULD CHANGE/CHECK THIS EVERY TIME.
-groupID = 'BATS';
-files = dir ([ groupID '*params.mat']);
-
-
-n_subjects = size(files,1);
-
-ii=0;
-for i =1:n_subjects
-    ii=1+ii;
-    sub{ii} = files(i).name;
-    subID{ii} = sub{ii}(1:end-10);
-end
-
-subID
-n_subjects = size(files,1);
-
-ep=defineRegressorsDynamicsFeedback('nanmean');
-refEpTM = defineReferenceEpoch('TM base',ep);
-
-
-%% Data Normalization 
-
-mOrder={'TA','PER', 'SOL', 'LG', 'MG', 'BF', 'SEMB', 'SEMT', 'VM', 'VL', 'RF', 'HIP','TFL', 'GLU'};
-GroupData=adaptationData.createGroupAdaptData(sub); %loading the data
-GroupData=GroupData.removeBadStrides; %Removing bad strides
-newLabelPrefix = defineMuscleList(mOrder); 
-normalizedGroupData = GroupData.normalizeToBaselineEpoch(newLabelPrefix,refEpTM); %Normalized by OG base same as nimbus data
-ll=normalizedGroupData.adaptData{1}.data.getLabelsThatMatch('^Norm');
-l2=regexprep(regexprep(ll,'^Norm',''),'_s','s');
-normalizedGroupData=normalizedGroupData.renameParams(ll,l2);
-newLabelPrefix = regexprep(newLabelPrefix,'_s','s');
-
-
-
+groupID ='BATS';
+[normalizedGroupData, newLabelPrefix]=creatingGroupdataWnormalizedEMG(groupID);
 %% Removing bad muscles 
-
-
-[normalizedGroupData]=RemoveBadMuscles(normalizedGroupData,{'BATS02','BATS04','BATS06','BATS09','BATS12'},{{'fSOLs','sSOLs','fVMs','sVMs','fVLs','sVLs','sRFs','fRFs'},{'fBFs','sBFs'},{'fRFs','sRFs'},{'fRFs','sRFs'},{'sRFs','fRFs','fVLs','sVLs'}});
-
+%This script make sure that we always remove the same muscle for the
+%different analysis 
+normalizedGroupData= RemovingBadMuscleToSubj(normalizedGroupData);
 %%  Getting the step-by-step data 
 
 %Adaptation epochs
 strides=[-40 440 200];
 cond={'TM base','Adaptation','Post 1'}; %Conditions for this group
-
 
 exemptFirst=[1];
 exemptLast=[5]; %Strides needed
@@ -61,7 +25,8 @@ shortNames={};
 ep=defineEpochs(cond,cond,strides,exemptFirst,exemptLast,'nanmean',{'Base','Adapt','Post1'}); %epochs
 
 padWithNaNFlag=true;
-[dataEMG,labels,allDataEMG]=normalizedGroupData.getPrefixedEpochData(newLabelPrefix(end:-1:1),ep,padWithNaNFlag);
+[dataEMG,labels,allDataEMG]=normalizedGroupData.getPrefixedEpochData(newLabelPrefix(end:-1:1),ep,padWithNaNFlag); %Getting the data 
+
 %Flipping EMG:
 for i=1:length(allDataEMG)
     aux=reshape(allDataEMG{i},size(allDataEMG{i},1),size(labels,1),size(labels,2),size(allDataEMG{i},3));
@@ -69,7 +34,9 @@ for i=1:length(allDataEMG)
 end
 
 EMGdata=cell2mat(allDataEMG);
-muscPhaseIdx=1:size(EMGdata,2);%336; %14 muscles per leg %360; %All muscles
+muscPhaseIdx=1:size(EMGdata,2);
+
+
 %% Getting the C values 
 epochOfInterest={'TM base','TM mid 1','PosShort_{early}','PosShort_{late}','Ramp','Optimal','Adaptation','Adaptation_{early}','TiedPostPos','TMmid2','NegShort_{late}','Post1_{Early}','TMbase_{early}'};
 ep=defineRegressorsDynamicsFeedback('nanmean');
@@ -92,14 +59,14 @@ for s=1:n_subjects
    end
 end
 
-%%
+%% Bootstrapping 
 
-% figure()
-% hold on 
-bootstrap=1
+bootstrap=1 %Do you want to run the loop (1 yes 0 No) 
 X1=[];
 X2=[];
-replacement=1
+replacement=1 %do you want to do it with replacement (1 yes 0 No) 
+
+
 if bootstrap
     if replacement
         n=1000; %number of iterations
@@ -263,12 +230,15 @@ save([groupID,'_',num2str(n_subjects),'_iteration_', num2str(n)],'X1','X2','subI
 
 % 
 % load('BATS_11_iteration_10000WO_BATS02.mat')
-load('BATS_12_iteration_1000.mat')
+load('BATS_12_iteration_10000.mat')
 figure
 subplot(2,1,1)
 hold on
 reactive1=nanmean(X1(:,481:485),2);
+early_reactive1=nanmean(X1(:,41:51),2);
+late_reactive1=nanmean(X1(:,480-40:480),2);
 histogram(reactive1)
+
 
 xlabel('Reactive')
 disp('BATS - Reactive')
@@ -276,6 +246,8 @@ disp('BATS - Reactive')
 subplot(2,1,2)
 hold on
 context1=nanmean(X2(:,481:485),2);
+early_context1=nanmean(X2(:,41:51),2);
+late_context1=nanmean(X2(:,480-40:480),2);
 histogram(context1)
 disp('BATS - Context')
 [h,p,ci,stats]= ttest(context1)
@@ -289,6 +261,8 @@ load('BATR_12_iteration_10000.mat')
 subplot(2,1,1)
 hold on
 reactive=nanmean(X1(:,481:485),2);
+early_reactive=nanmean(X1(:,41:51),2);
+late_reactive=nanmean(X1(:,480-40:480),2);
 histogram(reactive)
 xlabel('Reactive')
 disp('BATR - Reactive')
@@ -296,6 +270,8 @@ disp('BATR - Reactive')
 subplot(2,1,2)
 hold on
 context=nanmean(X2(:,481:485),2);
+early_context=nanmean(X2(:,41:51),2);
+late_context=nanmean(X2(:,480-40:480),2);
 histogram(context)
 disp('BATR - Context')
 [h,p,ci,stats]= ttest(context)
@@ -322,11 +298,28 @@ yline(0)
 modifiedBoxPlot([1,2,3,4],[ reactive1 reactive context1 context]);
 % set(gca,'title','Marce')
 set(gca,'XTick',[1 2,3,4],'XTickLabel',{'W^{OG}_{reactive}','W^{TM}_{reactive}','W^{OG}_{contex}','W^{TM}_{contex}'},'FontSize',10)
+title('Post-adaptation')
 
 
 
+modifiedBoxPlot([1:4],[early_reactive1  early_context1   late_reactive1 late_context1 ]);
+% set(gca,'title','Marce')
+set(gca,'XTick',[1 2,3,4],'XTickLabel',{'W^{TS}_{early-reactive}','W^{TS}_{early-contex}','W^{TS}_{late-reactive}','W^{TS}_{late-contex}'},'FontSize',10)
+title('Adaptation BATS')
 
 
+modifiedBoxPlot([1:4],[ early_reactive  early_context   late_reactive  late_context]);
+% set(gca,'title','Marce')
+set(gca,'XTick',[1 2,3,4],'XTickLabel',{'W^{TR}_{early-reactive}','W^{TR}_{early-contex}','W^{Tr}_{late-reactive}','W^{TR}_{late-contex}'},'FontSize',10)
+title('Adaptation BATR')
+
+%%
+display('Reactive Distribution test')
+[h,p,ks2stat] = kstest2(reactive1,reactive)
+
+
+display('Context Distribution test')
+[h,p,ks2stat] = kstest2(context1, context)
 
 %%
 % figure
