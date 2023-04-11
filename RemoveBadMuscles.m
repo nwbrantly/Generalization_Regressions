@@ -1,20 +1,20 @@
-function [RemovedData]=RemoveBadMuscles(normalizedGroupData,groupID)
+function [RemovedData]=RemoveBadMuscles(normalizedGroupData,badSubjID,badMuscles )
 %This is a function that change the values of the "bad" muscle to NaN. The subjects and muscle
 %are hard code. Make sure you update this to your needs and that you
 %removed muscle bilaterally
 
 subjectsToPlot=[];  subjectsToPlotID=[];
     subjectsToPlot{end+1} = normalizedGroupData; %
-    subjectsToPlotID{end+1} = groupID;% from SLcode
+%     subjectsToPlotID{end+1} = groupID;% from SLcode
 
 % Bad muscles for group plots
-% %CTR
-if contains(groupID,'PATS')
-    badSubjID = {'PATS05','PATS03'}; %badSubj and muscle are index matched, if want to remove group, put group ID here
-    badMuscles = {{'sRFs', 'fRFs'},{'sRFs', 'fRFs','sHIPs','fHIPs','sVLs', 'fVLs','sVMs', 'fVMs'}}; %labels in group ID will be removed for all regression and AE computations;
-elseif contains(groupID,'PATR')
-    
-end
+% % %CTR
+% if contains(groupID,'PATS')
+%     badSubjID = {'PATS05','PATS03'}; %badSubj and muscle are index matched, if want to remove group, put group ID here
+%     badMuscles = {{'sRFs', 'fRFs'},{'sRFs', 'fRFs','sHIPs','fHIPs','sVLs', 'fVLs','sVMs', 'fVMs'}}; %labels in group ID will be removed for all regression and AE computations;
+% elseif contains(groupID,'PATR')
+%     
+% end
 
 
 for idxToRemove = 1:numel(badSubjID)
@@ -28,6 +28,7 @@ for idxToRemove = 1:numel(badSubjID)
          badSubj = subjectsToPlot{end}.adaptData{subjIdx};
         
         for i = 1:numel(badMuscles{idxToRemove})
+            
             
             badDataIdx=find(contains(badSubj.data.labels, {[badMuscles{idxToRemove}{i},' ']}));
             if length(badDataIdx)<12
