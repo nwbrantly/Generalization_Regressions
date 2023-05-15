@@ -5,7 +5,7 @@
 clear; close all; clc;
 
 % set script parameters, SHOULD CHANGE/CHECK THIS EVERY TIME.
-groupID = 'BATS';
+groupID = 'BATS02';
 scriptDir = cd;% fileparts(matlab.desktop.editor.getActiveFilename);
 files = dir ([groupID '*params.mat']);
 
@@ -79,7 +79,7 @@ labelPrefixLong= strcat(labelPrefix,['_' type]); %Actual names
 
 % %Adding alternative normaliza tion parameters:
 l2=group.adaptData{1}.data.getLabelsThatMatch('^Norm');
-group=group.renameParams(l2,strcat('N',l2)).normalizeToBaselineEpoch(labelPrefixLong,baseEp,true); %Normalization to max=1 but not min=0
+group=group.normalizeToBaselineEpoch(labelPrefixLong,baseEp,true); %Normalization to max=1 but not min=0
 
 
 % %Renaming normalized parameters, for convenience:
@@ -110,7 +110,7 @@ end
 
 %% Save to hdf5 format for sharing with non-Matlab users
 EMGdata=cell2mat(allDataEMG);
-name=['dynamicsData_',groupID,'_subj_', num2str(size(subID,2)),'_RemoveBadMuscles', num2str(removeBadmuscles),'_splits_',num2str(splits),'.h5'];
+name=['dynamicsData_',groupID,'_subj_', num2str(size(subID,2)),'_RemoveBadMuscles', num2str(removeBadmuscles),'_splits_',num2str(splits),'V2','.h5'];
 h5create(name,'/EMGdata',size(EMGdata))
 h5write(name,'/EMGdata',EMGdata)
 SLA=squeeze(cell2mat(dataContribs));
