@@ -1,6 +1,6 @@
 % Script to separate the conditions 
 %% Load params file 
-subID='BATS06'
+subID='BATR11'
 load([subID, 'params.mat'])
 
 %%
