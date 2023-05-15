@@ -5,14 +5,10 @@
 % scriptDir = fileparts(matlab.desktop.editor.getActiveFilename); 
 % load([scriptDir '/data/' subID])
 
-%% Set muscle to plot
-
-
-
 %% Calf muscle 
 
 normalize = 1;  % 1 to normalize data
-normCond = {'TM mid 1'};
+normCond = {'TM mid 1'}; 
 conds={'TM mid','Adaptation','Adaptation','Pos Short','Neg Short'};
 late=[1  0 1 1 0 0];
 strides=[40 40 40 20 20 ];
