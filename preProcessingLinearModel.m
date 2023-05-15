@@ -1,20 +1,19 @@
 %%
 clear; close all; clc;
 %%
-groupID ='BATS'; %Group of interest 
-[group2, newLabelPrefix,n]=creatingGroupdataWnormalizedEMG(groupID,1); % Creating the gropData normalized
+groupID ='BATR'; %Group of interest 
+[group2, newLabelPrefix,n]=creatingGroupdataWnormalizedEMG(groupID,1); % Creating the groupData normalized
 %% Removing bad muscles 
 %This script make sure that we always remove the same muscle for the
 %different analysis 
-removeBadmuscles=0;
+removeBadmuscles=1;
 if removeBadmuscles==1
-group= RemovingBadMuscleToSubj(group);
+group2= RemovingBadMuscleToSubj(group2);
 end
 %% Define epochs
 splits=0;
-baseEp=getBaseEpoch;
-strides=[-40 440 200];
-cond={'TM base','Adaptation','Post 1'}; %Conditions for this group
+strides=[-40 440 200 200];
+cond={'TM base','Adaptation','Post 1', 'Post 2'}; %Conditions for this group
 
 exemptFirst=[1];
 exemptLast=[5]; %Strides needed
@@ -22,7 +21,23 @@ names={};
 shortNames={};
 
 
-ep=defineEpochs(cond,cond,strides,exemptFirst,exemptLast,'nanmean',{'Base','Adapt','Post1'}); %epochs
+ep=defineEpochs(cond,cond,strides,exemptFirst,exemptLast,'nanmean',{'Base','Adapt','Post1','Post 2'}); %epochs
+%% Pick muscles that you wanted to get the data from 
+
+%%%% load and prep data
+% muscleOrder={'SOL', 'LG', 'MG', 'BF', 'SEMB', 'SEMT'};
+muscleOrder={'TA','PER', 'SOL', 'LG', 'MG', 'BF', 'SEMB', 'SEMT', 'VM', 'VL', 'RF', 'HIP','TFL', 'GLU'};
+newLabelPrefix2 = defineMuscleList(muscleOrder); %List of muscle
+newLabelPrefix2 = regexprep(newLabelPrefix2,'_s','s'); %removing the underscore "_"
+
+for m=1:length(newLabelPrefix2)
+
+    idx(m)=find(strcmp(newLabelPrefix,newLabelPrefix2(m))); %getting the index of the muscles
+
+end
+
+ wanted_Muscles= newLabelPrefix(sort(idx)); %It needs to be the muscle form the slow leg first
+ newLabelPrefix= wanted_Muscles;
 %% get data:
 padWithNaNFlag=true;
 [dataEMG,labels,allDataEMG2]=group2.getPrefixedEpochData(newLabelPrefix,ep,padWithNaNFlag);
@@ -37,13 +52,13 @@ end
 
 %% Save to hdf5 format for sharing with non-Matlab users
 EMGdata=cell2mat(allDataEMG2);
-name=['dynamicsData_',groupID,'_subj_', num2str(n),'_RemoveBadMuscles', num2str(removeBadmuscles),'_splits_',num2str(splits),'V3','.h5'];
+name=['dynamicsData_',groupID,'_subj_', num2str(n),'_RemoveBadMuscles', num2str(removeBadmuscles),'_splits_',num2str(splits),'.h5'];
 h5create(name,'/EMGdata',size(EMGdata))
 h5write(name,'/EMGdata',EMGdata)
 SLA=squeeze(cell2mat(dataContribs));
 h5create(name,'/SLA',size(SLA))
 h5write(name,'/SLA',SLA)
-speedDiff=[zeros(1,abs(strides(1))),ones(1,strides(2)),zeros(1,(strides(3)))];
+speedDiff=[zeros(1,abs(strides(1))),ones(1,strides(2)),zeros(1,(strides(3))),zeros(1,(strides(4)))];
 h5create(name,'/speedDiff',size(speedDiff))
 h5write(name,'/speedDiff',speedDiff)
 breaks=[zeros(1,length(speedDiff))];
