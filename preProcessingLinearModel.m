@@ -11,11 +11,10 @@ if removeBadmuscles==1
 group2= RemovingBadMuscleToSubj(group2);
 end
 %% Define epochs
-splits=0;
-strides=[-40 440 200 200];
-cond={'TM base','Adaptation','Post 1', 'Post 2'}; %Conditions for this group
 
-exemptFirst=[1];
+strides=[-40 440 200 200]; %Number per strides per condition
+cond={'TM base','Adaptation','Post 1', 'Post 2'}; %Conditions for this group
+exemptFirst=[1]; %ignore inital strides
 exemptLast=[5]; %Strides needed
 names={};
 shortNames={};
@@ -23,7 +22,6 @@ shortNames={};
 
 ep=defineEpochs(cond,cond,strides,exemptFirst,exemptLast,'nanmean',{'Base','Adapt','Post1','Post 2'}); %epochs
 %% Pick muscles that you wanted to get the data from 
-
 %%%% load and prep data
 % muscleOrder={'SOL', 'LG', 'MG', 'BF', 'SEMB', 'SEMT'};
 muscleOrder={'TA','PER', 'SOL', 'LG', 'MG', 'BF', 'SEMB', 'SEMT', 'VM', 'VL', 'RF', 'HIP','TFL', 'GLU'};
@@ -40,7 +38,7 @@ end
  newLabelPrefix= wanted_Muscles;
 %% get data:
 padWithNaNFlag=true;
-[dataEMG,labels,allDataEMG2]=group2.getPrefixedEpochData(newLabelPrefix,ep,padWithNaNFlag);
+[dataEMG,labels,allDataEMG2]=group2.getPrefixedEpochData(newLabelPrefix,ep,padWithNaNFlag); 
 
 %Flipping EMG:
 for i=1:length(allDataEMG2)
@@ -52,7 +50,7 @@ end
 
 %% Save to hdf5 format for sharing with non-Matlab users
 EMGdata=cell2mat(allDataEMG2);
-name=['dynamicsData_',groupID,'_subj_', num2str(n),'_RemoveBadMuscles', num2str(removeBadmuscles),'_splits_',num2str(splits),'.h5'];
+name=['dynamicsData_',groupID,'_subj_', num2str(n),'_RemoveBadMuscles', num2str(removeBadmuscles),'.h5'];
 h5create(name,'/EMGdata',size(EMGdata))
 h5write(name,'/EMGdata',EMGdata)
 SLA=squeeze(cell2mat(dataContribs));
