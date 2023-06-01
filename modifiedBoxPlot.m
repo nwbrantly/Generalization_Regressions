@@ -1,14 +1,14 @@
-function modifiedBoxPlot(x,y,labels)
+function stats=modifiedBoxPlot(x,y,labels)
 
 %% First compute the statistics of each dataset
 
-means = nanmean(y,1);
-SDs = nanstd(y,[],1);
-medians = nanmedian(y,1);
-
+means = nanmean(y);
+SDs = nanstd(y);
+medians = nanmedian(y);
+stats=[];
 %% Plot the rectangles which will be located in mean +/- SD
 
-figure();
+% figure();
 hold on;
 
 for i=1:length(x)
@@ -18,8 +18,10 @@ for i=1:length(x)
     xtemp = [x(i)-0.25:0.01:x(i)+0.25];
    
     %Plot the 95% confidence interval of the data
+%     disp(['mean = ', num2str(means(i)),' CI ='])
      P = prctile(y(:,i),[2.5 97.5],"all");
-   errorbar(x(i),medians(i),abs(medians(i)-P(1)), abs(medians(i)-P(2)), 'Color', 'k');
+   errorbar(x(i),means(i),abs(means(i)-P(1)), abs(means(i)-P(2)), 'Color', 'k');
+%     errorbar(x(i),means(i),abs(P(1)), abs(P(2)), 'Color', 'k');
 
 
 
@@ -29,8 +31,10 @@ for i=1:length(x)
 
     %     %Plot the values that are outside the 95% interval
     idx = find(y(:,i)<P(1) | y(:,i)>P(2));
-   plot(x(i), y(idx,i),'Marker','+', 'Color', 'r');
+%    plot(x(i), y(idx,i),'Marker','+', 'Color', 'r');
 
+stats.mean(i)=means(i);
+stats.CI(:,i)=P;
 end
 
 newX = [x(1)-1 : 0.01 : x(end)+1];
