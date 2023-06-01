@@ -13,7 +13,8 @@ rmpath(genpath('/Users/dulcezmariscal/Documents/GitHub/PittSMLlab'))
 clear all;clc;close all
 
 %% Free model - Linear regression - Asymmetry with baseline
-%% This is just the saved data
+%% This is just the saved data - Updat accrodingly 
+
 % %Testing
 % fname='dynamicsData_BATR_subj_12_RemoveBadMuscles1_splits_0_V4.h5';
 % fname='dynamicsData_BAT_subj_24_RemoveBadMuscles1_splits_0_V4.h5'
@@ -170,9 +171,7 @@ for i=28 %pick the muscle that you want
     
 end
 
-%% Thing to plo 
-
-
+%% 
 %% Geting the average of the first 5 strides post-adaptation per muscle
 figure
 hold on
