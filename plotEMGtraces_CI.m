@@ -103,7 +103,7 @@ for m=1:length(muscle)
             end
             ph=subplot(row,colum,loc(i));
             data.plot(fh,ph,condColors(m,:),[],0,[-49:0],prc,false);
-            ylim([-.5 2])
+%             ylim([-.5 2.2])
             grid on
             ylabel('')
             ylabel(tit)
