@@ -50,5 +50,5 @@ for idxToRemove = 1:numel(badSubjID)
     
 end
 
-RemovedData=subjectsToPlot{1}; % from SLcode
+RemovedData=subjectsToPlot{1}; % from SL code
 end
