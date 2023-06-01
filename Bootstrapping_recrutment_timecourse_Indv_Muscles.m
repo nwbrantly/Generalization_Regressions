@@ -17,7 +17,7 @@ rmpath(genpath('/Users/dulcezmariscal/Documents/GitHub/PittSMLlab'))
 clear all; close all; clc;
 % clear all; clc;
 
-groupID ='BATS';
+groupID ='BAT';
 [normalizedGroupData, newLabelPrefix,n_subjects]=creatingGroupdataWnormalizedEMG(groupID);
 
 %% Removing bad muscles
@@ -58,10 +58,10 @@ end
 
 if strcmp(groupID,'BATS')
     fname='dynamicsData_BATS_subj_12_RemoveBadMuscles1_splits_0_WithPost2V2_WogBaseline.h5'
-    load BATS_12_IndvLegsC17_ShortPertubations_RemovedBadMuscle_1RemovBias_0.mat
+%     load BATS_12_IndvLegsC17_ShortPertubations_RemovedBadMuscle_1RemovBias_0.mat
 elseif  strcmp(groupID,'BATR')
     fname='dynamicsData_BATR_subj_12_RemoveBadMuscles1_splits_0_WithPost2V2.h5'
-    load BATR_12_IndvLegsC16_ShortPertubations_RemovedBadMuscle_1RemovBias_0.mat
+%     load BATR_12_IndvLegsC16_ShortPertubations_RemovedBadMuscle_1RemovBias_0.mat
 end
 
 EMGdata2=h5read(fname,'/EMGdata');
@@ -70,8 +70,8 @@ binwith=10;
 [~,~,~,~,~,~,EMGdata,labels]=groupDataToMatrixForm_Update(1:size(EMGdata2,3),fname,0);
 muscPhaseIdx=1:size(EMGdata,2); %
 
-context= find(strcmp(epochOfInterest,'Optimal')==1);
-reactive2=find(strcmp(epochOfInterest,'NegShort_{late}')==1);
+% context= find(strcmp(epochOfInterest,'Optimal')==1);
+% reactive2=find(strcmp(epochOfInterest,'NegShort_{late}')==1);
 
 
 
@@ -169,7 +169,7 @@ if bootstrap
             
             unit(:,:,i,l)=Cmuscles(:,:,i)'./vecnorm(Cmuscles(:,:,i)');
             %             unit(:,1,i,l)=-unit(:,1,i,l);
-            temp3(:,:,i,l)=pinv(unit(:,:,i,l)'); %geeting the inverse of the constant
+%             temp3(:,:,i,l)=pinv(unit(:,:,i,l)'); %geeting the inverse of the constant
                       %             unit(:,1,i,l)=-unit(:,1,i,l);
             temp3(:,:,i,l)=pinv(unit(:,:,i,l)'); %geeting the inverse of the constant
             Xhat(:,:,i,l) =temp3(:,:,i,l)'*Ymuscles(:,:,i)'; %x= y/C
@@ -207,6 +207,7 @@ muscles=[1:14 1:14];
 g=[14:-1:1 14:-1:1];
 ff=[1:14 1:14;15:28 15:28];
 range=481:485;
+
 for dyn=1:2%
     figure()
     hold on
@@ -236,7 +237,7 @@ for dyn=1:2%
             dynamics(:,:,i,l)=Xhat(:,:,i,l)'; %step-by-step dynamics
             
             
-        end
+       
         
     end
     close(ww)
@@ -337,7 +338,7 @@ muscles=[1:14 1:14];
 g=[14:-1:1 14:-1:1];
 ff=[1:14 1:14;15:28 15:28];
 range=481:485;
-for dyn=1:2%
+for dyn=2%
 
     temp=[];
     x=[];
@@ -366,7 +367,7 @@ for dyn=1:2%
 
         
         text(x0+.02,y0,{labels(m).Data(1:end-1)})
-        if P_y(1)<0 &&  P_y(2)>0 %P_TM(1)<0 &&  P_TM(2)>0 ||
+        if P_y(1)<0 &&  P_y(2)>0 || P_x(1)<0 &&  P_x(2)>0 
             rectangle('Position',[llc,CIrng],'Curvature',[1,1],'EdgeColor',clrMap(m+3,:),'LineStyle','--');
         else
             rectangle('Position',[llc,CIrng],'Curvature',[1,1],'EdgeColor',clrMap(m+3,:));
@@ -377,13 +378,13 @@ for dyn=1:2%
         xlabel('Treadmill')
         ylabel('Overground')
 %         
-%         if m<15
-%             Li{1}=scatter(nanmean(TM_2(dyn,range,m)),nanmean(OG_2(dyn,range,m)),100,"filled",'MarkerFaceColor', 'b');
-%             text(nanmean(TM_2(dyn,range,m))+.02,nanmean(OG_2(dyn,range,m)),{labels(m).Data(1:end-1)})
-%         else
-%             Li{2}=scatter(nanmean(TM_2(dyn,range,m)),nanmean(OG_2(dyn,range,m)),100,"filled",'MarkerFaceColor', 'r')  ;
-%                text(nanmean(TM_2(dyn,range,m))+.02,nanmean(OG_2(dyn,range,m)),{labels(m).Data(1:end-1)})
-%         end
+        if m<15
+            Li{1}=scatter(nanmean(TM_2(dyn,range,m)),nanmean(OG_2(dyn,range,m)),100,"filled",'MarkerFaceColor', 'b');
+            text(nanmean(TM_2(dyn,range,m))+.02,nanmean(OG_2(dyn,range,m)),{labels(m).Data(1:end-1)})
+        else
+            Li{2}=scatter(nanmean(TM_2(dyn,range,m)),nanmean(OG_2(dyn,range,m)),100,"filled",'MarkerFaceColor', 'r')  ;
+               text(nanmean(TM_2(dyn,range,m))+.02,nanmean(OG_2(dyn,range,m)),{labels(m).Data(1:end-1)})
+        end
 
 if dyn==1
     title('Reactive')
