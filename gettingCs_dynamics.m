@@ -60,11 +60,11 @@ if removeBadmuscles==1
 end
 %%
 
-epochOfInterest={'TM base','TM mid 1','PosShort_{early}','PosShort_{late}','Ramp','Optimal'};
+epochOfInterest={'TM base','TM mid 1','PosShort_{early}','PosShort_{late}','Ramp','Optimal','Adaptation','Adaptation_{early}'};
 fh=figure('Units','Normalized','OuterPosition',[0 0 1 1]);
 ph=tight_subplot(1,length(epochOfInterest),[.03 .005],.04,.04);
 
-flip=1;
+flip=2;
 
 if flip==1
 n=2;
@@ -83,8 +83,8 @@ C=[C reshape(Data{l}(:,end:-1:1),12*n_muscles*n,1)];
 end 
   
 %%
-% resDir = [cd '/LTI models/'];
-% save([resDir '/'  groupID,'_',num2str(n_subjects),'_',method,'C',num2str(length(epochOfInterest)) ,'_ShortPertubations_RemovedBadMuscle_',num2str(removeBadmuscles)], 'C','epochOfInterest')
+resDir = [cd];% '/LTI models/'];
+save([resDir '/'  groupID,'_',num2str(n_subjects),'_',method,'C',num2str(length(epochOfInterest)) ,'_ShortPertubations_RemovedBadMuscle_',num2str(removeBadmuscles)], 'C','epochOfInterest')
 
 %%
 %% Color definition 
@@ -108,7 +108,7 @@ map=[flipud(mid+ (ex1-mid).*([1:N]'/N).^gamma); mid; (mid+ (ex2-mid).*([1:N]'/N)
 %%
 % colormap(map)
 fs=14;
-colormap(flipud(map))
+% colormap(flipud(map))
 % colormap default
 set(gcf,'color','w');
 colorbar                                                                                                                                                                                         
