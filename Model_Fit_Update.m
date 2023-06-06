@@ -4,14 +4,14 @@ addpath(genpath('/Users/dulcemariscal/Documents/GitHub/Generalization_Regression
 addpath(genpath('/Users/dulcemariscal/Documents/GitHub/labTools'))
 addpath(genpath('/Users/dulcemariscal/Documents/GitHub/LongAdaptation'))
 addpath(genpath('/Users/dulcemariscal/Documents/GitHub/R01'))
-addpath(genpath('/Users/dulcemzariscal/Documents/GitHub/splitbelt-EMG-adaptation'))
+addpath(genpath('/Users/dulcemariscal/Documents/GitHub/splitbelt-EMG-adaptation'))
 addpath(genpath('/Users/dulcemariscal/Documents/GitHub/EMG-LTI-SSM'))
 addpath(genpath('/Users/dulcemariscal/Documents/GitHub/matlab-linsys'))
-rmpath(genpath('/Users/dulcezmariscal/Documents/GitHub/PittSMLlab'))
- 
+rmpath(genpath('/Users/dulcemariscal/Documents/GitHub/PittSMLlab'))
+
 
 %%
-
+clear all;clc;close all
 %% Load real data:
 % sqrtFlag=false;
 % % subjIdx=[2:6,8,10:15]; %Excluding C01 (outlier), C07, C09 (less than 600 strides of Post), C16 (missed first trial of Adapt)
@@ -34,48 +34,23 @@ rmpath(genpath('/Users/dulcezmariscal/Documents/GitHub/PittSMLlab'))
 % s=var(X'); %Estimate of variance
 % flatIdx=s<.005; %Variables are split roughly in half at this threshold
 
-clear all;clc;close all
+
 %% Free model - Linear regression - Asymmetry with baseline
-
 % %Testing 
-% fname='dynamicsData_BATR_subj_12_RemoveBadMuscles1_splits_0_V4.h5';
-% fname='dynamicsData_BAT_subj_24_RemoveBadMuscles1_splits_0_V4.h5'
-fname='dynamicsData_BATR_subj_12_RemoveBadMuscles1_splits_0_WithPost2V2.h5'
-% fname='dynamicsData_BATS_subj_12_RemoveBadMuscles1_splits_0_WithPost2V2_WogBaseline.h5'
-
-%posterior muscles
-% fname='dynamicsData_BATR_subj_12_RemoveBadMuscles1_splits_0_PosteriorMuscles.h5';
-% load BAT_24_IndvLegsC17_ShortPertubations_RemovedBadMuscle_1RemoveBias_0_PosteriorMuscles.mat
-
-%BATR 
-% load BATR_12_AsymC16_ShortPertubations_RemovedBadMuscle_1.mat
-% load BATR_12_IndvLegsC16_ShortPertubations_RemovedBadMuscle_1RemovBias_0.mat
-
-%BATS
-% load BATS_12_IndvLegsC17_ShortPertubations_RemovedBadMuscle_1RemovBias_0.mat
+fname='dynamicsData_BATR_subj_12_RemoveBadMuscles0_splits_0.h5';
+% load BATR_12_AsymC13_ShortPertubations_RemovedBadMuscle_0.mat 
 
 % ALL 24 participatns
-% load BAT_24_AsymC16_ShortPertubations_RemovedBadMuscle_1.mat
-load BAT_24_IndvLegsC16_ShortPertubations_RemovedBadMuscle_1.mat
+load BAT_24_AsymC13_ShortPertubations_RemovedBadMuscle_0.mat
 
 
 EMGdata=h5read(fname,'/EMGdata');
  
 binwith=5;
-[Y,Yasym,~,U,~,Ysum,Yinv]=groupDataToMatrixForm_Update(1:size(EMGdata,3),fname,0);
-Yasym=Yinv;
-% Yasym=Yasym(:,1:size(Yasym,2)/2); %SLOW
-% Yasym=Yasym(:,169:end); %FAST
-
-range=1:12;
-% Yasym=Yasym(:,range); %One mucles
-% Yasym=Yinv(1:480,:);
-% Yasym=Y;
+[Y,Yasym,~,U,~,Ysum]=groupDataToMatrixForm_Update(1:size(EMGdata,3),fname,0);
+Yasym=Y;
 % [Y,Yasym,Ycom,U,Ubreaks,Ysum]
-% Yasym=Yasym(481:end,:);
-% U=U(481:end);
 Uf=[U;ones(size(U))];
-% Uf=Uf(:,1:480);
 % Uf=Uf(:,41:end);
 % Y=datSet.out;
 %  
@@ -90,59 +65,33 @@ Uf=[U;ones(size(U))];
 
 % C=[C1 C3];
 % C=Cnew;
-reactive=find(strcmp(epochOfInterest,'Ramp')==1);
-reactive2=find(strcmp(epochOfInterest,'Tied post ramp')==1);
-context= find(strcmp(epochOfInterest,'Optimal')==1);
-base= find(strcmp(epochOfInterest,'TM base')==1);
-% base= find(strcmp(epochOfInterest,'OG base')==1);
-% Casym=[C(:,reactive) C(:,context) -C(:,reactive2) C(:,base)]; % EMGreactive and EMGcontext
 
-% reactive2=find(strcmp(epochOfInterest,'NegShort_{late}')==1);
-% reactive=find(strcmp(epochOfInterest,'Adaptation_{early}')==1);
-% context= find(strcmp(epochOfInterest,'Adaptation')==1);
+Casym=[C(:,5) C(:,6)];
+% Casym=[ones(size(C(:,5))) C(:,5) C(:,6) C(:,9)];
+% Casym=[C(:,5) C(:,6)];
+% Casym=[(1+.447)*C(:,6) C(:,10)];
+% Casym=[(1+.7293)*C(:,5) C(:,10)];
+% Casym=[C(:,8) C(:,7) C(:,12)]; %Upper bound
+% load BATR_4_IndvLegsC8_ShortPertubations_RemovedBadMuscle_0.mat
+% load BATS_5_IndvLegsC13_ShortPertubations_RemovedBadMuscle_0.mat
+load BATR_12_IndvLegsC13_ShortPertubations_RemovedBadMuscle_0.mat
+Csum=C(:,1)+fftshift(C(:,1),2);
+Csum=Csum(1:size(Csum,1)/2,1);
 
-% reactive=find(strcmp(epochOfInterest,'Post1_{Early}')==1);
-% context= find(strcmp(epochOfInterest,'Adaptation')==1);
-
-
-NNMF=0
-PCA_analysis=0
-removemean=0
+%getting the norm 
+EMGsumNorm=norm(Csum)
+for s=1:680
+data(s)=norm(Yasym(s,:));
+end
+EMGsumNorm=norm(Csum)./mean(data);
+% Yasym=Yasym(41:end,:);
 const=0
 removebaseline=1
-
-
-% mix=[C(1:168,context); C(169:end,reactive2)];
-Casym=[C(:,reactive2) C(:,context)]; % EMGreactive and EMGcontext
-% Casym=[C(:,context)];
-% Cnorm=vecnorm([C(:,reactive2) C(:,context)]);
-% % Casym=[C(:,reactive) C(:,context) -C(:,reactive2)]; % EMGreactive and EMGcontext
-% Casym= [C(:,base)]; 
-% Casym=[ C(:,context) -C(:,reactive2)]; % EMGreactive and EMGcontext
-
-% Casym=[C(1:size(C,1)/2,reactive2)  C(1:size(C,1)/2,context)]; %SLOW
-% Casym=[C(169:end,reactive2)  C(169:end,context)]; %FAST
-
-% Casym=[C(range,reactive2)  C(range,context)]; %one muscle
-% Casym=[ C(range,context)]; %one muscle
-% 
-% load BATR_12_IndvLegsC13_ShortPertubations_RemovedBadMuscle_0.mat
-% Csum=C(:,1)+fftshift(C(:,1),2);
-% Csum=Csum(1:size(Csum,1)/2,1);
-% 
-% %getting the norm 
-% EMGsumNorm=norm(Csum)
-% for s=1:length(Yasym)
-% data(s)=norm(Yasym(s,:));
-% end
-% EMGsumNorm=norm(Csum)./mean(data);
-% Yasym=Yasym(41:end,:);
-
 if const==1
     Casym=[Casym Csum./mean(data)];
     Ymodel=[Csum'./mean(data)+ Yasym]' ;
 else
-%     C=[Casym];
+    C=[Casym];
     Ymodel=Yasym';
     
 end
@@ -150,167 +99,110 @@ end
 if removebaseline==1
     bias=nanmean(Yasym(5:30,:));
     Casym=Casym-bias';
-%     Casym=Casym./vecnorm(Casym);
     Ymodel=Ymodel-bias'; % Transpose the EMG data to match equations
-%      load BAT_24_IndvLegsC16_ShortPertubations_RemovedBadMuscle_1.mat
-%      model.C1=[C(:,reactive) C(:,context)]-bias';
-%      model.C2=[C(:,reactive2) C(:,context)]-bias';
-    
 end
+% C=[Csum./mean(data) Casym];
+% C=[Csum./5 Casym];
 
-if removemean==1
-    m=nanmean(Yasym(41:end,:),1); %m stands fro mean
-    Casym=Casym-m';
-    Ymodel=Ymodel-m'; % Transpose the EMG data to match equations
+% C=C-bias';
+% C=C(~flatIdx,:);
 
-end
+% Ymodel=Csum'./5+ Yasym ;
+% 
+model.C=Casym;
+Cinv=pinv(model.C);
+X2asym = Cinv*Ymodel; %x= y/C
+Y2asym=  model.C * X2asym  ; %yhat = C 
+
+ X2asym=[X2asym'];
 
 
-if PCA_analysis==1
-    [pp,cc,aa]=pca(Ymodel(:,35:485)');%,'Centered','off');
-    PC= [(cc(:,1:2)*pp(:,1:2)') + nanmean(Ymodel')]';
-    X=cc(:,1:2);
-    C=pp(:,1:2);
-    
-    
-    model.C=C;
-    X2asym =X;
-    
-    
-elseif NNMF==1
-    
-    swift=abs(min(Ymodel,[],'all'));
-    data=Ymodel+swift;
-    [W,H] = nnmf(data',2);
-    data_hat=W*H;
-    data_hat2=data_hat-swift;
-    
-    model.C=H';
-    X2asym =W;
-     
-    
-    
-else
-    model.C=Casym;
-    Cinv=pinv(model.C);
-    X2asym = Cinv*Ymodel; %x= y/C
-    Y2asym=  model.C * X2asym  ; %yhat = C
-    
-
-    X2asym=[X2asym'];
-end
-
-% Xasym=[X2asym(1:40,:); nan(1,size(X2asym,2));X2asym(41:480,:);nan(1,size(X2asym,2));X2asym(481:end,:);nan(1,size(X2asym,2));X2asym(681:end,:)];
-% Xasym=[X2asym(1:40,:); nan(1,size(X2asym,2));X2asym(41:480,:);nan(1,size(X2asym,2));X2asym(481:end,:)];
-
-% Xasym=[X2asym(1:200,:);nan(1,size(X2asym,2));X2asym(201:end,:)];
+Xasym=[X2asym(1:40,:); nan(1,size(X2asym,2));X2asym(41:480,:);nan(1,size(X2asym,2));X2asym(481:end,:)];
+% Xasym=[X2asym(1:440,:); nan(1,size(X2asym,2));X2asym(441:end,:)];
 
 % Xasym=[X2asym(1:40,:); nan(1,2);X2asym(41:480,:);nan(1,2);X2asym(480:end,:)];
 fdr=0.1;
 % [pvalc,hc,alphaAdj_c]=checkerstatsV2(reshape(C(:,1),12,14)',[],1,0,fdr,'benhoch',0);
 %%
-
-% Xasym=[X2asym(41:480,:);nan(1,size(X2asym,2));X2asym(481:681,:);nan(1,size(X2asym,2));X2asym(681:end,:)];
-Xasym=[X2asym(1:40,:);nan(1,size(X2asym,2));X2asym(41:480,:);nan(1,size(X2asym,2));X2asym(481:end,:)];
-% Xasym=[X2asym(1:40,:);nan(1,size(X2asym,2));X2asym(41:80,:);...
-%     nan(1,size(X2asym,2));X2asym(81:520,:);nan(1,size(X2asym,2));X2asym(521:end,:)];
-% Xasym=[X2asym(681:843,:);nan(1,size(X2asym,2))];
-
+Xasym=[X2asym(41:480,:);nan(1,size(X2asym,2));X2asym(481:end,:)];
 figure
 subplot(4,1,1)
 hold on
 % scatter(1:length(movmean(Xasym(:,1),binwith)), movmean(Xasym(:,1),binwith),10,'k','filled')
-scatter(1:length(movmean(Xasym(:,1),binwith)), movmean(Xasym(:,1),binwith),'filled','MarkerFaceColor',"#EDB120") %"#77AC30" )%
-pp=patch([40 480 480 40],[-0.5 -0.5 1 1],.7*ones(1,3),'FaceAlpha',.2,'EdgeColor','none');
+scatter(1:length(movmean(Xasym(:,1),binwith)), movmean(Xasym(:,1),binwith),'filled','MarkerFaceColor',"#EDB120")
 % plot( movmean(Xasym(:,1),binwith),'Color',"#EDB120",'LineWidth',5)
 % pp=patch([40 480 480 40],[0.5 0.5 1.5 1.5],.7*ones(1,3),'FaceAlpha',.2,'EdgeColor','none');
 % pp=patch([40 480 480 40],[-0.5 -0.5 1 1],.7*ones(1,3),'FaceAlpha',.2,'EdgeColor','none');
-% pp=patch([0 440 440 0],[-0.5 -0.5 1 1],.7*ones(1reactive2,3),'FaceAlpha',.2,'EdgeColor','none');
+pp=patch([0 440 440 0],[-0.5 -0.5 1 1],.7*ones(1,3),'FaceAlpha',.2,'EdgeColor','none');
 
 % pp=patch([40 480 480 40],[-4 -4 5 5],.7*ones(1,3),'FaceAlpha',.2,'EdgeColor','none');
 
-% legend('Baseline','AutoUpdate','off')
+% legend('Baseline','AutoUpdate','off') 
 legend('Reactive','AutoUpdate','off')
-%     legend('Removal Perturbation','AutoUpdate','off')
-% uistack(pp,'bottom')
+uistack(pp,'bottom')
 yline(0)
 ylabel({'Reactive';'(A.U)'})
-%     ylabel({'Removal';'(A.U)'})
 xlabel('strides')
 
-if size(X2asym,2)>=2
-    % figure
-    subplot(4,1,2)
-    hold on
-    scatter(1:length(movmean(Xasym(:,2),binwith)), movmean(Xasym(:,2),binwith),'filled','MarkerFaceColor',"#77AC30")
-    pp=patch([40 480 480 40],[-0.5 -0.5 1 1],.7*ones(1,3),'FaceAlpha',.2,'EdgeColor','none');
-    % % plot( movmean(Xasym(:,2),binwith),'Color',"#77AC30",'LineWidth',5)
-    % % pp=patch([40 480 480 40],[-0.5 -0.5 1 1],.7*ones(1,3),'FaceAlpha',.2,'EdgeColor','none');
-    % % pp=patch([0 440 440 0],[-0.5 -0.5 1 1],.7*ones(1,3),'FaceAlpha',.2,'EdgeColor','none');
-    %
-    legend('Contextual','AutoUpdate','off')
-    % % legend('Switch','AutoUpdate','off')
-    % % uistack(pp,'bottom')
-    yline(0)
-    ylabel({'Contextual';'(A.U)'})
-    xlabel('strides')
-end
+% figure
+subplot(4,1,2)
+hold on
+scatter(1:length(movmean(Xasym(:,2),binwith)), movmean(Xasym(:,2),binwith),'filled','MarkerFaceColor',"#77AC30")
+% plot( movmean(Xasym(:,2),binwith),'Color',"#77AC30",'LineWidth',5)
+% pp=patch([40 480 480 40],[-0.5 -0.5 1 1],.7*ones(1,3),'FaceAlpha',.2,'EdgeColor','none');
+pp=patch([0 440 440 0],[-0.5 -0.5 1 1],.7*ones(1,3),'FaceAlpha',.2,'EdgeColor','none');
+
+legend('Contextual','AutoUpdate','off')
+% legend('Switch','AutoUpdate','off')
+uistack(pp,'bottom')
+yline(0)
+ylabel({'Contextual';'(A.U)'})
+xlabel('strides')
 
 if size(X2asym,2)>=3
     subplot(4,1,3)
     scatter(1:length(movmean(Xasym(:,3),binwith)),movmean(Xasym(:,3),binwith),'filled','MarkerFaceColor',"#0072BD")
     hold on
-    %     scatter(movmean(Xasym(:,3),binwith),'Color',"#0072BD",'filled')
+%     scatter(movmean(Xasym(:,3),binwith),'Color',"#0072BD",'filled')
     hold on
-    %     legend('Contextual','AutoUpdate','off')
+%     legend('Contextual','AutoUpdate','off')
     legend('Removal Perturbation','AutoUpdate','off')
-    %     pp=patch([40 480 480 40],[-0.5 -0.5 1 1],.7*ones(1,3),'FaceAlpha',.2,'EdgeColor','none');
-    pp=patch([40 480 480 40],[-0.5 -0.5 1 1],.7*ones(1,3),'FaceAlpha',.2,'EdgeColor','none');
-    
-    uistack(pp,'bottom')
+%     pp=patch([40 480 480 40],[-0.5 -0.5 1 1],.7*ones(1,3),'FaceAlpha',.2,'EdgeColor','none');
+pp=patch([0 440 440 0],[-0.5 -0.5 1 1],.7*ones(1,3),'FaceAlpha',.2,'EdgeColor','none');
+
+uistack(pp,'bottom')
     axis tight
     yline(0)
     ylabel({'Removal';'(A.U)'})
-    xlabel('strides')
+xlabel('strides')
 end
 if size(X2asym,2)==4
     subplot(4,1,4)
-    scatter(1:length(movmean(Xasym(:,4),binwith)),movmean(Xasym(:,4),binwith),'filled','MarkerFaceColor','k')
+    scatter(1:length(movmean(Xasym(:,4),binwith)),movmean(Xasym(:,4),binwith),10,'k','filled')
     hold on
-    %     plot(movmean(Xasym(:,4),binwith))
+    plot(movmean(Xasym(:,4),binwith))
     hold on
-    legend('Baseline','AutoUpdate','off')
+    legend('Removal Perturbation','AutoUpdate','off')
     pp=patch([40 480 480 40],[-0.5 -0.5 1 1],.7*ones(1,3),'FaceAlpha',.2,'EdgeColor','none');
     uistack(pp,'bottom')
-    ylabel({'Baseline';'(A.U)'})
     axis tight
     yline(0)
 end
 set(gcf,'color','w')
-%% Define the type of analysis that you want to do 
-%0 linear regression 
-%1 Using hypothesize patterns as constants
-%2 PCA 
-%3 removing the mean for the data (varaince reconstrucitons)
-analysis=0
-    
- 
+%%
+legacy_vizSingleModel_FreeModel_ShortAdaptation(model,Ymodel,Uf,3)
 
-% legacy_vizSingleModel_FreeModel_ShortAdaptation(model,Ymodel,Uf,analysis)
-legacy_vizSingleModel_FreeModel_ShortAdaptation_IndvLeg(model,Ymodel,Uf,analysis,[],[])
-% legacy_vizSingxleModel_FreeModel_›ShortAdae ptation(model,Ymodel',Uf,1)
+% legacy_vizSingxleModel_FreeModel_›ShortAda ptation(model,Ymodel',Uf,1)
 %     
 % model.C=C(:,1); 
 % legacy_vizSingleModel_FreeeModel_ShortAdaptation(model,Ymodel',Uf,1)
 
-% legacy_vizSingleModel_FreeModel_ShortAdaptation_IndvLeg_cond(model,Ymodel,Uf,analysis)
-
 %% Individual muscle reconstruction - RMSE
 
 
-mm= 0:12:336;
-mm2=1:12:336;
-for m=1:28
+mm= 0:12:168;
+mm2=1:12:168;
+for m=1:14
     muscle(m,:)=sqrt(sum((Ymodel(mm2(m):mm(m+1),:)-Y2asym(mm2(m):mm(m+1),:)).^2));
     muscles(m,:)= 1 - sum((Ymodel(mm2(m):mm(m+1),:)-Y2asym(mm2(m):mm(m+1),:)).^2)./sum((Ymodel(mm2(m):mm(m+1),:)- mean(Ymodel(mm2(m):mm(m+1),:))).^2);
     
@@ -323,12 +215,9 @@ end
 
 
 figure(1)
-muscleOrder={'GLU','TFL','HIP','RF','VL','VM','BF', 'SEMB','SEMT','MG','LG','SOL','PER','TA'};
-ytl= defineMuscleListV2(muscleOrder); %List of muscle 
-% ytl={'TA', 'PER', 'SOL', 'LG', 'MG', 'BF', 'SEMB', 'SEMT', 'VM', 'VL', 'RF', 'HIP','TFL', 'GLU'};
-ytl(end:-1:1) = ytl(:);
-for m=1:14
-    subplot(14,1,m)
+ytl={'GLU','TFL','HIP','RF','VL','VM','BF', 'SEMB','SEMT','MG','LG','SOL','PER','TA'};
+for m=1:7
+    subplot(7,1,m)
     hold on
     plot(movmean(muscle(m,41:end),5))
 %     scatter(1:length(muscle(m,:)),movmean(muscle(m,:),5),'filled')
@@ -344,8 +233,8 @@ end
 set(gcf,'color','w')
 
 figure(2)
-for m=15:28
-    subplot(14,1,m-14)
+for m=8:14
+    subplot(7,1,m-7)
     hold on
         plot(movmean(muscle(m,41:end),5))
 %     scatter(1:length(muscle(m,:)),movmean(muscle(m,:),5),'filled')

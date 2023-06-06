@@ -25,7 +25,7 @@ get(pc);
 hold on
 for i=1:size(hc,1)
     for k=1:size(hc,2)
-        if hc(i,k)==1  && abs(dataEcmed(i,k))>0.2 %since statistical testing was done againts zero, amplitude testing happens here 10% change from baseline
+        if hc(i,k)==1  && abs(dataEcmed(i,k))>0.1 %since statistical testing was done againts zero, amplitude testing happens here 10% change from baseline
             plot3((k-0.5)/12,i-0.5,1,'.','MarkerSize',15,'Color','k');
            
         end
@@ -37,8 +37,10 @@ end
 
 %%
 %% Color definition 
-ex1=[1,0,0];
-ex2=[0,0,1];
+ex2=[0.2314    0.2980    0.7529];
+ex1=[0.7255    0.0863    0.1608];
+% ex1=[1,0,0];
+% ex2=[0,0,1];
 cc=[0    0.4470    0.7410
     0.8500    0.3250    0.0980
     0.9290    0.6940    0.1250
@@ -46,14 +48,13 @@ cc=[0    0.4470    0.7410
     0.4660    0.6740    0.1880
     0.3010    0.7450    0.9330
     0.6350      0.0780    0.1840];
-ex1=cc(2,:);
-ex2=cc(5,:);
+% ex1=[1,0,0];
+% ex2=cc(5,:);
 mid=ones(1,3);
 N=100;
-gamma=1.5; %gamma > 1 expands the white (mid) part of the map, 'hiding' low values. Gamma<1 does the opposite
+% gamma=1.5; %gamma > 1 expands the white (mid) part of the map, 'hiding' low values. Gamma<1 does the opposite
 gamma=1;
 map=[flipud(mid+ (ex1-mid).*([1:N]'/N).^gamma); mid; (mid+ (ex2-mid).*([1:N]'/N).^gamma)];
-
 
 %%
 fs=14;
@@ -65,7 +66,7 @@ set(ph(:,2:end),'YTickLabels',{},'CLim',[-1 1]*1,'FontSize',fs);
 colorbar 
 set(gcf,'renderer','painters')
 if savefig==1
-    saveas(gcf,[groupID, '_EMGstructure.eps'])
+    saveas(gcf,[groupID, '_EMGstructure'],'epsc')
 end
 end
 %%

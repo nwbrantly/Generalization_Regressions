@@ -15,20 +15,23 @@ clear all;clc;close all
 %% Free model - Linear regression - Asymmetry with baseline
 
 
-fname='dynamicsData_BATR_subj_12_RemoveBadMuscles1_splits_0_V4.h5';
+fname='dynamicsData_BATS_subj_12_RemoveBadMuscles1_splits_0_V4.h5';
 
-load BATR_12_AsymC2_ShortPertubations_RemovedBadMuscle_1.mat %Loeading EMG_reactive and EMG_adaptve
+load BATS_12_AsymC2_ShortPertubations_RemovedBadMuscle_1.mat %Loeading EMG_reactive and EMG_adaptve
 
 
 EMGdata=h5read(fname,'/EMGdata'); %to get the EMG data fro size 
 binwith=5; %running average window 
-[Y]=groupDataToMatrixForm_Update(1:size(EMGdata,3),fname,0); % to get the data 
+[Y,~,~,U]=groupDataToMatrixForm_Update(1:size(EMGdata,3),fname,0); % to get the data 
 
 Yasym=Y; %Data that we want to fit 
 Uf=[U;ones(size(U))]; % Speed differences 
 
+reactive=find(strcmp(epochOfInterest,'Neg_')==1);
+context= find(strcmp(epochOfInterest,'Optimal')==1);
 
-Casym=[C(:,1) C(:,2)]; % EMGreactive and EMGcontext
+
+Casym=[C(:,reactive) C(:,context)]; % EMGreactive and EMGcontext
 
 % load BATR_12_IndvLegsC13_ShortPertubations_RemovedBadMuscle_0.mat
 % Csum=C(:,1)+fftshift(C(:,1),2);

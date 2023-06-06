@@ -38,10 +38,18 @@ IgnoreStridesEarly=[1 50 1 1];
 plotEMGtraces(expData,conds,muscle,late,strides,normalize,normCond,IgnoreStridesEarly);
 
 %% 
-conds={'Adaptation','Adaptation','Adaptation','Adaptation','Adaptation','Adaptation'};
+conds={'TM mid 1','Adaptation','Adaptation','Adaptation','Adaptation','Adaptation','Adaptation'};
 late=[0 0  0 0 0 0 1 ];
 strides=[40 40 40 40 40 40 40];
 IgnoreStridesEarly=[1 50 100 200 300 400 1];
+plotEMGtraces(expData,conds,muscle,late,strides,normalize,normCond,IgnoreStridesEarly); 
+
+
+%% 
+conds={'TM mid 1','Adaptation','Adaptation'};
+late=[1 0  1 ];
+strides=[40  40 40];
+IgnoreStridesEarly=[1 1 400 ];
 plotEMGtraces(expData,conds,muscle,late,strides,normalize,normCond,IgnoreStridesEarly); 
 %% Baseline condtions 
 conds={'TM mid 1','OG base','Post 1','Post 2'};

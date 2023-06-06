@@ -1,5 +1,7 @@
 %Model fit per muscle
-%%
+
+%% Adding path 
+
 addpath(genpath('/Users/dulcemariscal/Documents/GitHub/Generalization_Regressions'))
 addpath(genpath('/Users/dulcemariscal/Documents/GitHub/labTools'))
 addpath(genpath('/Users/dulcemariscal/Documents/GitHub/LongAdaptation'))
@@ -11,34 +13,40 @@ rmpath(genpath('/Users/dulcezmariscal/Documents/GitHub/PittSMLlab'))
 
 %% Load real data:
 clear all;clc;close all
-
 %% Free model - Linear regression - Asymmetry with baseline
-%% This is just the saved data - Updat accrodingly 
+%% This is just the saved data - Update accrodingly 
 
-% %Testing
-% fname='dynamicsData_BATR_subj_12_RemoveBadMuscles1_splits_0_V4.h5';
-% fname='dynamicsData_BAT_subj_24_RemoveBadMuscles1_splits_0_V4.h5'
-% fname='dynamicsData_BATR_subj_12_RemoveBadMuscles1_splits_0_WithPost2V2.h5'
-fname='dynamicsData_BATS_subj_12_RemoveBadMuscles1_splits_0_WithPost2V2_WogBaseline.h5'
+type= 1; %1 testing; 2 training ; 3 both groups
+%EMG Data 
+if type==1 %Testing
+    fname='dynamicsData_BATS_subj_12_RemoveBadMuscles1_splits_0_WithPost2V2_WogBaseline.h5'
+elseif type==2 %Training
+    %posterior muscles
+    % fname='dynamicsData_BATR_subj_12_RemoveBadMuscles1_splits_0_PosteriorMuscles.h5';
+    
+    % fname='dynamicsData_BATR_subj_12_RemoveBadMuscles1_splits_0_V4.h5'
+    fname='dynamicsData_BATR_subj_12_RemoveBadMuscles1_splits_0_WithPost2V2.h5'
+elseif type==3 %Both groups
+    fname='dynamicsData_BAT_subj_24_RemoveBadMuscles1_splits_0_V4.h5'
+end
 
-%posterior muscles
-% fname='dynamicsData_BATR_subj_12_RemoveBadMuscles1_splits_0_PosteriorMuscles.h5';
-% load BAT_24_IndvLegsC17_ShortPertubations_RemovedBadMuscle_1RemoveBias_0_PosteriorMuscles.mat
+%%%%%%%% Regressors
 
 %BATR
 % load BATR_12_AsymC16_ShortPertubations_RemovedBadMuscle_1.mat
 % load BATR_12_IndvLegsC16_ShortPertubations_RemovedBadMuscle_1RemovBias_0.mat
 
 %BATS
-load BATS_12_IndvLegsC17_ShortPertubations_RemovedBadMuscle_1RemovBias_0.mat
+% load BATS_12_IndvLegsC17_ShortPertubations_RemovedBadMuscle_1RemovBias_0.mat
 
-% ALL 24 participatns
+% ALL 24 participants
 % load BAT_24_AsymC16_ShortPertubations_RemovedBadMuscle_1.mat
-% load BAT_24_IndvLegsC16_ShortPertubations_RemovedBadMuscle_1.mat
+load BAT_24_IndvLegsC16_ShortPertubations_RemovedBadMuscle_1.mat
+% load BAT_24_IndvLegsC17_ShortPertubations_RemovedBadMuscle_1RemoveBias_0_PosteriorMuscles.mat
 
 %% Getting the data
-EMGdata=h5read(fname,'/EMGdata');
 
+EMGdata=h5read(fname,'/EMGdata');
 binwith=10;
 [Y,Yasym,~,U,~,Ysum,Yinv,labels]=groupDataToMatrixForm_Update(1:size(EMGdata,3),fname,0);
 Yasym=Y;
@@ -82,14 +90,14 @@ for i=1:28
     X2asym(:,:,i) =temp(:,:,i)'*Ymuscles(:,:,i)'; %x= y/C
     Y2asym(:,:,i)=  unit(:,:,i)* X2asym(:,:,i) ; %yhat
     temp2(:,:,i)=X2asym(:,:,i)'; % transposing the dynamics vector
-    model{i}.C=unit(:,:,i); %sabong the regressors
+    model{i}.C=unit(:,:,i); %saving the regressors. Yhis is necesary for the plotting funciton
     
     reconstruction_indv =[ reconstruction_indv ; Y2asym(:,:,i)]; % Concatenating the data reconstructed
     data =[ data ; Ymuscles(:,:,i)'];  % Concatenating the data
     C_indv=[C_indv;unit(:,:,i)];  % Concatenating the regressors for each muscles
     X_indv=[X_indv,X2asym(:,:,i) ];  % Concatenating the dynamics
     
-    % Chechking for colinearity and correlation between the regresssions
+    % Checking for colinearity and correlation between the regresssions
     temp5=corrcoef(model{i}.C); % correlation coeficient
     correlation(i,1)=temp5(2);
     temp10(i,:)=vif([model{i}.C nanmean(Ymuscles(481:491,:,i))']); %Variance inflation

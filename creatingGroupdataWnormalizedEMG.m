@@ -21,11 +21,16 @@ subID % This display what are the ID of the partocopants that you are using.
 
 %%%% load and prep data
 muscleOrder={'TA', 'PER', 'SOL', 'LG', 'MG', 'BF', 'SEMB', 'SEMT', 'VM', 'VL', 'RF', 'HIP','TFL', 'GLU'};
+%%%% load and prep data Posterior muscles
+% muscleOrder={ 'SOL', 'LG', 'MG', 'BF', 'SEMB', 'SEMT'};
 newLabelPrefix = defineMuscleList(muscleOrder); %List of muscle 
+n_muscles=length(muscleOrder)*2;
 
 
-if nargin>2 || invMuscles==1 %For the prepocess code this needs to run bc we need to organize the data correctly 
-    newLabelPrefix=newLabelPrefix([28:-1:15 14:-1:1]);
+if nargin>1 
+    if invMuscles==1 %For the prepocess code this needs to run bc we need to organize the data correctly 
+    newLabelPrefix=newLabelPrefix([n_muscles:-1:n_muscles/2+1 n_muscles/2:-1:1]);
+    end
 end
 
 ep=defineRegressorsDynamicsFeedback('nanmedian'); %loading the variables for multiple epochs of interest

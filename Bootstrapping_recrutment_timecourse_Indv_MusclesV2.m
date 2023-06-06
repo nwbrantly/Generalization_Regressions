@@ -11,7 +11,7 @@ addpath(genpath('/Users/dulcemzariscal/Documents/GitHub/splitbelt-EMG-adaptation
 addpath(genpath('/Users/dulcemariscal/Documents/GitHub/EMG-LTI-SSM'))
 addpath(genpath('/Users/dulcemariscal/Documents/GitHub/matlab-linsys'))
 rmpath(genpath('/Users/dulcezmariscal/Documents/GitHub/PittSMLlab'))
- 
+  
 
 %% Load data and Plot checkerboard for all conditions.
 clear all; close all; clc;

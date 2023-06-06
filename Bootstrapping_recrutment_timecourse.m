@@ -6,7 +6,7 @@
 clear all; clc;
 
 groupID ='BATS';
-[normalizedGroupData, newLabelPrefix]=creatingGroupdataWnormalizedEMG(groupID);
+[normalizedGroupData, newLabelPrefix,n_subjects]=creatingGroupdataWnormalizedEMG(groupID);
 %% Removing bad muscles 
 %This script make sure that we always remove the same muscle for the
 %different analysis 
@@ -121,6 +121,8 @@ if bootstrap
         Yasym2=Yasym2(:,1:size(Yasym2,2)/2,:);
         
         
+        
+        
         Cinv2=pinv(C2);
         Xdynamics= Cinv2*Yasym2'; %x= y/C
      
@@ -226,94 +228,158 @@ set(gcf,'color','w')
 save([groupID,'_',num2str(n_subjects),'_iteration_', num2str(n)],'X1','X2','subID')
 
 
-%%
+%% EMG norm 
+load('BATR_12_iteration_10000wEMGnorm_16-Feb-2023.mat')
+subplot(2,1,1)
+hold on
+TR_post=nanmean(EMGnorm(:,481:485),2);
+TR_eA=nanmean(EMGnorm(:,41:51),2);
+TR_lA=nanmean(EMGnorm(:,480-40:480),2);
+histogram(TR_post,'FaceColor','r')
+xlabel('EMGnorm')
+disp('BATR')
+% [h,p,ci,stats] = ttest(reactive)
+% subplot(2,1,2)
+hold on
 
-% 
-% load('BATS_11_iteration_10000WO_BATS02.mat')
-load('BATS_12_iteration_10000.mat')
+load('BATS_12_iteration_10000wEMGnorm_16-Feb-2023.mat')
+TS_post=nanmean(EMGnorm(:,481:485),2);
+TS_eA=nanmean(EMGnorm(:,41:51),2);
+TS_lA=nanmean(EMGnorm(:,480-40:480),2);
+histogram(TS_post,'FaceColor','b')
+disp('BATR - Context')
+% [h,p,ci,stats]= ttest(context)
+xlabel('Context')
+legend('BATR','BATS')
+set(gcf,'color','w')
+
+disp('Context Distribution test')
+[h,p,ks2stat] = kstest2( TS_post, TR_post)
+
+% disp('t-test')
+% [h,p,ks2stat] = ttest2( TS_post, TR_post)
+
+title(['Two-sample Kolmogorov-Smirnov, p=',num2str(p),' Rejects the null hypothesis =', num2str(h)])
+
+stats_norm=modifiedBoxPlot([1,2],[ TS_post TR_post]);
+% set(gca,'title','Marce')
+set(gca,'XTick',[1 2],'XTickLabel',{'EMGnorm^{TS}_{post}','EMGnorm^{TR}_{post}' },'FontSize',10)
+title('Post-adaptation')
+
+stats_norm=modifiedBoxPlot([1,2,3,4],[ TS_eA TR_eA TS_lA TR_lA]);
+% set(gca,'title','Marce')
+set(gca,'XTick',[1 2,3,4],'XTickLabel',{'EMGnorm^{TS}_{early}','EMGnorm^{TR}_{early}' ,'EMGnorm^{TS}_{late}','EMGnorm^{TR}_{late}' },'FontSize',10)
+title('Adaptation')
+
+%% Adaptation 
+
+eA=42:51;
+lA=435:480-5;
+eP=482:486;
+
+
+load('BAT_24_iteration_10000wEMGnorm_16-Feb-2023.mat')
 figure
 subplot(2,1,1)
 hold on
-reactive1=nanmean(X1(:,481:485),2);
-early_reactive1=nanmean(X1(:,41:51),2);
-late_reactive1=nanmean(X1(:,480-40:480),2);
+early_reactive1=nanmean(X1(:,eA),2);
+late_reactive1=nanmean(X1(:,lA),2);
+
+
+early_context1=nanmean(X2(:,eA),2);
+late_context1=nanmean(X2(:,lA),2);
+histogram(early_context1)
+
+
+stats_Adapt=modifiedBoxPlot([1:4],[early_reactive1  early_context1   late_reactive1 late_context1 ]);
+set(gca,'XTick',[1 2,3,4],'XTickLabel',{'W_{early-reactive}','W_{early-contex}','W_{late-reactive}','W_{late-contex}'},'FontSize',10)
+title('Adaptation (All Data)')
+
+%% Post-adaptation data 
+eA=42:51;
+lA=435:480-5;
+eP=482:486;
+lP=680-45:680-5;
+
+% load('BATS_12_iteration_10000wEMGnorm_16-Feb-2023.mat')
+load('BATS_12_iteration_10000wEMGnorm_TiedPostRamp13-Mar-2023')
+figure
+subplot(2,1,1)
+hold on
+
+early_reactive1=nanmean(X1(:,eA),2);
+late_reactive1=nanmean(X1(:,lA),2);
+reactive1=nanmean(X1(:,eP),2);
+late_Preactive1=nanmean(X1(:,lP),2);
 histogram(reactive1)
-
-
 xlabel('Reactive')
 disp('BATS - Reactive')
+
 [h,p,ci,stats] = ttest(reactive1)
+
 subplot(2,1,2)
 hold on
-context1=nanmean(X2(:,481:485),2);
-early_context1=nanmean(X2(:,41:51),2);
-late_context1=nanmean(X2(:,480-40:480),2);
+context1=nanmean(X2(:,eP),2);
+early_context1=nanmean(X2(:,eA),2);
+late_context1=nanmean(X2(:,lA),2);
+late_Pcontext1=nanmean(X2(:,lP),2);
 histogram(context1)
 disp('BATS - Context')
 [h,p,ci,stats]= ttest(context1)
 xlabel('Context')
 
 
+% early_reactive2=nanmean(X3(:,eA),2);
+% late_reactive2=nanmean(X3(:,lA),2);
+% reactive2=nanmean(X3(:,eP),2);
+% late_Preactive2=nanmean(X3(:,lP),2);
 
-load('BATR_12_iteration_10000.mat')
+load('BATR_12_iteration_10000wEMGnorm_TiedPostRamp13-Mar-2023')
+% load('BATR_12_iteration_10000wEMGnorm_16-Feb-2023.mat')
 % load('BATR_11_Individual_C.mat')
-% figure
+figure
 subplot(2,1,1)
 hold on
-reactive=nanmean(X1(:,481:485),2);
-early_reactive=nanmean(X1(:,41:51),2);
-late_reactive=nanmean(X1(:,480-40:480),2);
+reactive=nanmean(X1(:,eP),2);
+early_reactive=nanmean(X1(:,eA),2);
+late_reactive=nanmean(X1(:,lA),2);
+late_Preactive=nanmean(X1(:,lP),2);
+% 
+% reactive3=nanmean(X3(:,eP),2);
+% early_reactive3=nanmean(X3(:,eA),2);
+% late_reactive3=nanmean(X3(:,lA),2);
+% late_Preactive3=nanmean(X3(:,lP),2);
+
 histogram(reactive)
 xlabel('Reactive')
 disp('BATR - Reactive')
 [h,p,ci,stats] = ttest(reactive)
 subplot(2,1,2)
 hold on
-context=nanmean(X2(:,481:485),2);
-early_context=nanmean(X2(:,41:51),2);
-late_context=nanmean(X2(:,480-40:480),2);
+context=nanmean(X2(:,eP),2);
+early_context=nanmean(X2(:,eA),2);
+late_context=nanmean(X2(:,lA),2);
+late_Pcontext=nanmean(X2(:,lP),2);
 histogram(context)
 disp('BATR - Context')
 [h,p,ci,stats]= ttest(context)
 xlabel('Context')
-
 legend('BATS','BATR')
-
 set(gcf,'color','w')
-%%
+
+
 figure 
 % set(gca,'TickLabelInterpreter','latex');
-boxplot([reactive1 reactive context1 context],'Notch','on','Labels',{'W^{OG}_{reactive}','W^{TM}_{reactive}','W^{OG}_{contex}','W^{TM}_{contex}'})
-% set(gca, 'interpreter', 'latex');
-yline(0)
 
-%%
-% % figure 
-% mean_Data=mean([[reactive1 reactive context1 context]]);
-% SD_Data=std([[reactive1 reactive context1 context]]);
-% Q1 = quantile([reactive1 reactive context1 context],0.025,1);
-% Q2=quantile([reactive1 reactive context1 context],0.975,1);
+% stats_eP=modifiedBoxPlot([1:6],[reactive1 reactive reactive2 reactive3 context1 context]);
+% set(gca,'XTick',[1 2,3,4,5,6],'XTickLabel',{'W^{OG}_{intro}','W^{TM}_{intro}','W^{OG}_{removal}','W^{TM}_{removal}','W^{OG}_{contex}','W^{TM}_{contex}'},'FontSize',10)
+stats_eP=modifiedBoxPlot([1:4],[-reactive1 -reactive context1 context]);
+set(gca,'XTick',[1 2,3,4],'XTickLabel',{'W^{OG}_{intro}','W^{TM}_{intro}','W^{OG}_{contex}','W^{TM}_{contex}'},'FontSize',10)
 
+title('Early Post-adaptation')
+stats_eP.actualCI(1,:)=stats_eP.mean-abs(stats_eP.CI(1,:));
+stats_eP.actualCI(2,:)=stats_eP.mean+abs(stats_eP.CI(2,:));
 
-modifiedBoxPlot([1,2,3,4],[ reactive1 reactive context1 context]);
-% set(gca,'title','Marce')
-set(gca,'XTick',[1 2,3,4],'XTickLabel',{'W^{OG}_{reactive}','W^{TM}_{reactive}','W^{OG}_{contex}','W^{TM}_{contex}'},'FontSize',10)
-title('Post-adaptation')
-
-
-
-modifiedBoxPlot([1:4],[early_reactive1  early_context1   late_reactive1 late_context1 ]);
-% set(gca,'title','Marce')
-set(gca,'XTick',[1 2,3,4],'XTickLabel',{'W^{TS}_{early-reactive}','W^{TS}_{early-contex}','W^{TS}_{late-reactive}','W^{TS}_{late-contex}'},'FontSize',10)
-title('Adaptation BATS')
-
-
-modifiedBoxPlot([1:4],[ early_reactive  early_context   late_reactive  late_context]);
-% set(gca,'title','Marce')
-set(gca,'XTick',[1 2,3,4],'XTickLabel',{'W^{TR}_{early-reactive}','W^{TR}_{early-contex}','W^{Tr}_{late-reactive}','W^{TR}_{late-contex}'},'FontSize',10)
-title('Adaptation BATR')
-
-%%
 display('Reactive Distribution test')
 [h,p,ks2stat] = kstest2(reactive1,reactive)
 
@@ -321,14 +387,62 @@ display('Reactive Distribution test')
 display('Context Distribution test')
 [h,p,ks2stat] = kstest2(context1, context)
 
+
+% stats_lP=modifiedBoxPlot([1:6],[late_Preactive1 late_Preactive late_Preactive2 late_Preactive3 late_Pcontext1 late_Pcontext]);
+% set(gca,'XTick',[1 2,3,4,5,6],'XTickLabel',{'W^{OG}_{intro}','W^{TM}_{intro}','W^{OG}_{removal}','W^{TM}_{removal}','W^{TM}_{contex}'},'FontSize',10)
+stats_lP=modifiedBoxPlot([1:4],[-late_Preactive1 -late_Preactive late_Pcontext1 late_Pcontext]);
+set(gca,'XTick',[1 2,3,4,],'XTickLabel',{'W^{OG}_{intro}','W^{TM}_{intro}','W^{TM}_{contex}'},'FontSize',10)
+
+title('Late Post-adaptation')
+
+stats_lP.actualCI(1,:)=stats_lP.mean-abs(stats_lP.CI(1,:));
+stats_lP.actualCI(2,:)=stats_lP.mean+abs(stats_lP.CI(2,:));
+
+%% Expert behavior 
+
+lE=1030-45:1030-5;
+
+% load('BATS_12_iteration_10000wEMGnorm_16-Feb-2023.mat')
+figure
+subplot(2,1,1)
+hold on
+
+
+lateExpert_reactive=nanmean(X1(:,lE),2);
+histogram(lateExpert_reactive)
+xlabel('Reactive')
+disp('BAT - Reactive')
+
+subplot(2,1,2)
+hold on
+
+lateExpert_Context=nanmean(X2(:,lE),2);
+histogram(lateExpert_Context)
+disp('BAT - Context')
+
+xlabel('Context')
+
+
+set(gcf,'color','w')
+
+
+
+figure 
+% set(gca,'TickLabelInterpreter','latex');
+
+stats_eP=modifiedBoxPlot([1:2],[lateExpert_reactive lateExpert_Context]);
+set(gca,'XTick',[1 2],'XTickLabel',{'LateReactive_{expert}','LateContext_{expert}'},'FontSize',10)
+title('Expert')
+
+
 %%
-% figure
-% load('BATS_10_iteration_10000.mat')
-% subplot(2,1,1)
-% hold on 
-% boxplot([X1(:,481),X2(:,481)])
-% 
-% load('BATR_11_iteration_10000.mat')
-% subplot(2,1,2)
-% hold on 
-% boxplot([X1(:,481),X2(:,481)])
+stats_OG=modifiedBoxPlot([1:4],[reactive1 context1 late_Preactive1 late_Pcontext1]);
+set(gca,'XTick',[1 2,3,4],'XTickLabel',{'W^{OG}_{earlyP-reactive}','W^{OG}_{earlyP-reactive}','W^{OG}_{lateP-contex}','W^{OG}_{lateP-contex}'},'FontSize',10)
+title('OG Post-adaptation')
+ylim([-1 1.5])
+
+
+stats_TM=modifiedBoxPlot([1:4],[reactive context late_Preactive late_Pcontext]);
+set(gca,'XTick',[1 2,3,4],'XTickLabel',{'W^{TM}_{earlyP-reactive}','W^{TM}_{earlyP-reactive}','W^{TM}_{lateP-contex}','W^{T<}_{lateP-contex}'},'FontSize',10)
+title('TM Post-adaptation')
+ylim([-1 1.5])
