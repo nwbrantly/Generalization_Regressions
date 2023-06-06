@@ -2,7 +2,7 @@
 clear; close all; clc;
 %% General variables
 
-eE=1; %Number of strides early effect
+eE=0; %Number of strides early effect
 eL=5; %Number of strides late
 nstrides=5;% do not change
 
@@ -18,7 +18,7 @@ normalizedGroupData= RemovingBadMuscleToSubj(normalizedGroupData);
 %%{{'fSOLs','sSOLs','fVMs','sVMs','fVLs','sVLs','sRFs','fRFs'},{'fBFs','sBFs'},{'fRFs','sRFs'},{'fRFs','sRFs'},{'sRFs','fRFs','fVLs','sVLs'}});
 
 %% Plotting 
-ep=defineEpochs({'eA','lA'},{'Adaptation','Adaptation'},[ nstrides -40],[eE eE ],[eL eL],'nanmean');
+ep=defineEpochs({'eA','lA'},{'Adaptation','Adaptation'},[5 -40],[eE eE ],[eL eL],'nanmean');
 % ep=defineEpochs({'EarlyAdapt'},{'Adaptation'},[nstrides],[eE],[eL],'nanmean');
 % ep=defineEpochs({'EarlyPost'},{'Post 1'},[nstrides],[eE],[eL],'nanmean');
 % baseEp=defineEpochs({'Base'},{'TM base'}',[-40],[eE],[eL],'nanmean');
@@ -27,10 +27,14 @@ ph=tight_subplot(1,length(ep),[.03 .005],.04,.04);
 summFlag='nanmedian';
 fdr=.04;
 savefig=0;
-EMGchanges_Adaptation(normalizedGroupData,newLabelPrefix,ep,fi,ph,baseEp,fdr,summFlag,groupID,savefig) 
+EMGchanges_Adaptation(normalizedGroupData,newLabelPrefix,ep,fi,ph,[],fdr,summFlag,groupID,savefig) 
 
 
 %% Post-adaptation 
+
+eE=1; %Number of strides to ignore during early effect. We statrted & stopped the treadmill and OG 
+eL=5; %Number of strides late
+nstrides=5;% do not change
 %% Overgound 
 % clear all
 groupID ='BATS';
@@ -49,7 +53,7 @@ ph=tight_subplot(1,length(ep),[.03 .005],.04,.04);
 summFlag='nanmedian';
 fdr=.05;
 savefig=0;
-EMGchanges_Adaptation(normalizedGroupData,newLabelPrefix,ep,fi,ph,baseEp,fdr,summFlag,groupID,savefig) 
+EMGchanges_Adaptation(normalizedGroupData,newLabelPrefix,ep,fi,ph,[],fdr,summFlag,groupID,savefig) 
 
 %% Treadmill
 % clear all
@@ -70,5 +74,5 @@ ph=tight_subplot(1,length(ep),[.03 .005],.04,.04);
 summFlag='nanmedian';
 fdr=.05;
 savefig=0;
-EMGchanges_Adaptation(normalizedGroupData,newLabelPrefix,ep,fi,ph,baseEp,fdr,summFlag,groupID,savefig) 
+EMGchanges_Adaptation(normalizedGroupData,newLabelPrefix,ep,fi,ph,[],fdr,summFlag,groupID,savefig) 
 
