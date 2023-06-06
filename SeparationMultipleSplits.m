@@ -1,6 +1,6 @@
 % Script to separate the conditions 
 %% Load params file 
-subID='PATS01'
+subID='PATR07'
 load([subID, 'params.mat'])
 
 %%
@@ -16,8 +16,8 @@ changeCondName(subID,{'Adaptation', 'Adaptation2'},{'TM base','Adaptation'})
 % adaptData = AddingConditions(adaptData, 'Pos short', 'Pos short 2', true, 'Tied to Split');
 % save([subID, 'params.mat'],'adaptData')
 % changeCondName(subID,{'Pos short', 'Pos short 2'},{'Tied Pos', 'Pos short'})
-
-%Pos Short  to tied
+% 
+% % Pos Short  to tied
 % load([subID, 'params.mat'])
 % adaptData = AddingConditions(adaptData, 'Pos short', 'Tied post Pos', false, 'Tied to Split');
 % save([subID, 'params.mat'],'adaptData')
