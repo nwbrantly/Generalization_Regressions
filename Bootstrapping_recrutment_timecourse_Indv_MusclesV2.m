@@ -122,7 +122,8 @@ end
 
 epochOfInterest={'TM base','NegShort_{late}','Ramp','Optimal'};
 context= find(strcmp(epochOfInterest,'Optimal')==1);
-reactive2=find(strcmp(epochOfInterest,'NegShort_{late}')==1);
+% reactive=find(strcmp(epochOfInterest,'NegShort_{late}')==1);
+reactive=find(strcmp(epochOfInterest,'Ramp')==1);
 
 %Data TR 
 TR=EMG2(:,:,1:12);
@@ -188,7 +189,7 @@ if bootstrap
         x=x';
         
         %C values that we are using for the regressions
-        C2=[x(:,reactive2) x(:,context)];
+        C2=[x(:,reactive) x(:,context)];
         
         %Picking the data muscles that we want and participants
         Y_TR=TR(:,muscPhaseIdx,groupIdx);
@@ -262,12 +263,12 @@ TM=dynamics_TR;
 % load('BATS_indv_muscles.mat')
 % OG_2=X2asym;
 %%
-load('NCM2023_Treadmill.mat')
-TM_2=X2asym;
-TM_2(1,:,:)=-TM_2(1,:,:);
-load('NCM2023_OG.mat')
-OG_2=X2asym;
-OG_2(1,:,:)=-OG_2(1,:,:);
+% load('NCM2023_Treadmill.mat')
+% TM_2=X2asym;
+% TM_2(1,:,:)=-TM_2(1,:,:);
+% load('NCM2023_OG.mat')
+% OG_2=X2asym;
+% OG_2(1,:,:)=-OG_2(1,:,:);
 %% Group data plotting 
 clrMap = colorcube(28*3);
 muscles=[1:14 1:14];
@@ -323,16 +324,16 @@ for dyn=1:2%
         title('Reactive')
         xx=-.5:0.1:2.1;
         plot(xx,xx,'r')
-        xlim([-.5 2.5])
-        ylim([-.5 2.5])
+%         xlim([-.5 2.5])
+%         ylim([-.5 2.5])
         yline(0)
         xline(0)
     else
         title('Contextual')
         yline(0)
         xline(0)
-        xlim([-1 1])
-        ylim([-1 1])
+%         xlim([-1 1])
+%         ylim([-1 1])
     end
     
     set(gcf,'color','w')
@@ -344,8 +345,9 @@ clrMap = colorcube(28*3);
 muscles=[1:14 1:14];
 g=[14:-1:1 14:-1:1];
 ff=[1:14 1:14;15:28 15:28];
-range=481:485;
-for dyn=1;%:2
+range=41:45; %Post-adapt 481:485 Early-adapt 41:45 Late adapt 440:480
+% range=
+for dyn=1:2
     
     temp=[];
     x=[];
@@ -387,32 +389,87 @@ for dyn=1;%:2
         xlabel('Treadmill')
         ylabel('Overground')
         %
-        if m<15
-            Li{1}=scatter(nanmean(TM_2(dyn,range,m)),nanmean(OG_2(dyn,range,m)),100,"filled",'MarkerFaceColor', 'b');
-            text(nanmean(TM_2(dyn,range,m))+.02,nanmean(OG_2(dyn,range,m)),{labels(m).Data(1:end-1)})
-        else
-            Li{2}=scatter(nanmean(TM_2(dyn,range,m)),nanmean(OG_2(dyn,range,m)),100,"filled",'MarkerFaceColor', 'r')  ;
-            text(nanmean(TM_2(dyn,range,m))+.02,nanmean(OG_2(dyn,range,m)),{labels(m).Data(1:end-1)})
-        end
+%         if m<15
+%             Li{1}=scatter(nanmean(TM_2(dyn,range,m)),nanmean(OG_2(dyn,range,m)),100,"filled",'MarkerFaceColor', 'b');
+%             text(nanmean(TM_2(dyn,range,m))+.02,nanmean(OG_2(dyn,range,m)),{labels(m).Data(1:end-1)})
+%         else
+%             Li{2}=scatter(nanmean(TM_2(dyn,range,m)),nanmean(OG_2(dyn,range,m)),100,"filled",'MarkerFaceColor', 'r')  ;
+%             text(nanmean(TM_2(dyn,range,m))+.02,nanmean(OG_2(dyn,range,m)),{labels(m).Data(1:end-1)})
+%         end
         
         if dyn==1
             title('Reactive')
             xx=-.5:0.1:2.1;
             plot(xx,xx,'r')
-            xlim([-.5 2.5])
-            ylim([-.5 2.5])
+%             xlim([-.5 2.5])
+%             ylim([-.5 2.5])
             yline(0)
             xline(0)
         else
             title('Contextual')
             yline(0)
             xline(0)
-            xlim([-1 1])
-            ylim([-1 1])
+%             xlim([-1 1])
+%             ylim([-1 1])
         end
         xlabel('Treadmill')
         ylabel('Overground')
         set(gcf,'color','w')
     end
     
+end
+%% 
+%%Time Courses
+colors=[0 0.4470 0.7410;0.8500 0.3250 0.0980];
+range=481:680;
+for m=1:28
+    
+    temp=[];
+    x=[];
+    figure
+    for dyn=1:2
+        x=squeeze(TM(:,dyn,m,:));
+        y=squeeze(OG(:,dyn,m,:));
+        
+        x_mean=nanmean(x(range,:),2);
+        y_mean=nanmean(y(range,:),2);
+
+        P_x = prctile(x(range,:)',[2.5 97.5],1);
+        P_y = prctile(y(range,:)',[2.5 97.5],1);
+        %     x = 1:numel(y);
+%         x=index{i};
+%         std_dev = nanstd(d{i},1);
+
+        subplot(2,1,1)
+        hold on 
+        curve1 = P_y(1,:)';
+        curve2 = P_y(2,:)';
+        y2 = [1:size(x_mean,1), fliplr(1:size(x_mean,1))];
+        inBetween = [curve1', fliplr(curve2')];
+        fill(y2, inBetween,colors(dyn,:),'FaceAlpha',0.3,'EdgeColor','none')
+        hold on;
+        ylabel('W')
+        xlabel('Strides')
+        plot(1:size(x_mean,1),y_mean,'LineWidth', 2,'Color',colors(dyn,:));
+        title(['Treadmill' ,{labels(m).Data(1:end-1)}])
+        yline(0)
+        
+        subplot(2,1,2)
+        hold on 
+        curve1 = P_x(1,:)';
+        curve2 = P_x(2,:)';
+        y2 = [1:size(x_mean,1), fliplr(1:size(x_mean,1))];
+        inBetween = [curve1', fliplr(curve2')];
+        fill(y2, inBetween,colors(dyn,:),'FaceAlpha',0.3,'EdgeColor','none')
+        hold on;
+        ylabel('W')
+        xlabel('Strides')
+        title(['Overground' ,{labels(m).Data(1:end-1)}])
+        Li{dyn}=plot(1:size(x_mean,1),x_mean, 'LineWidth', 2,'Color',colors(dyn,:));
+        yline(0)
+        axis tight
+    end
+  
+    legend([Li{:}],[{'Reactive';'Contextual'}])
+   set(gcf,'color','w')
 end
