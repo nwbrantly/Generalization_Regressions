@@ -3,15 +3,16 @@
 
 %%
 % upload your path 
-addpath(genpath('/Users/dulcemariscal/Documents/GitHub/Generalization_Regressions'))
-addpath(genpath('/Users/dulcemariscal/Documents/GitHub/labTools'))
-addpath(genpath('/Users/dulcemariscal/Documents/GitHub/LongAdaptation'))
-addpath(genpath('/Users/dulcemariscal/Documents/GitHub/R01'))
-addpath(genpath('/Users/dulcemzariscal/Documents/GitHub/splitbelt-EMG-adaptation'))
-addpath(genpath('/Users/dulcemariscal/Documents/GitHub/EMG-LTI-SSM'))
-addpath(genpath('/Users/dulcemariscal/Documents/GitHub/matlab-linsys'))
-rmpath(genpath('/Users/dulcezmariscal/Documents/GitHub/PittSMLlab'))
-  
+% main_mac='/Users/dulcemariscal/Documents/GitHub/';
+main='C:\Users\dum5\OneDrive - University of Pittsburgh\_BoxMigration\GitHub\';
+addpath(genpath([main, 'Generalization_Regressions']))
+addpath(genpath([main,'labTools']))
+addpath(genpath([main,'LongAdaptation']))
+addpath(genpath([main,'R01']))
+addpath(genpath([main,'splitbelt-EMG-adaptation']))
+addpath(genpath([main,'EMG-LTI-SSM']))
+addpath(genpath([main,'matlab-linsys']))
+% rmpath(genpath([main,'PittSMLlab']))
 
 %% Load data and Plot checkerboard for all conditions.
 clear all; close all; clc;
@@ -92,7 +93,7 @@ end
  if contains(groupID{id},'TR') %for treadmill Post 1
      cond={'TM base','Adaptation','Post 1'}; %Conditions for this group
  else % for overground post 1
-     cond={'OG base','Adaptation','Post 1'}; %Conditions for this group
+     cond={'TM base','Adaptation','Post 1'}; %Conditions for this group
  end
  
  exemptFirst=[1];
@@ -123,6 +124,7 @@ end
 epochOfInterest={'TM base','NegShort_{late}','Ramp','Optimal'};
 context= find(strcmp(epochOfInterest,'Optimal')==1);
 % reactive=find(strcmp(epochOfInterest,'NegShort_{late}')==1);
+base=find(strcmp(epochOfInterest,'TM base')==1);
 reactive=find(strcmp(epochOfInterest,'Ramp')==1);
 
 %Data TR 
@@ -133,7 +135,7 @@ bootstrap=1; %Do you want to run the loop (1 yes 0 No)
 X1=[];
 X2=[];
 replacement=1; %do you want to do it with replacement (1 yes 0 No)
-
+regre_Const=1; % To keep the regressors constants for both groups
 
 if bootstrap
     if replacement
@@ -164,33 +166,41 @@ if bootstrap
         % Update waitbar and message
         ww=waitbar(l/n,f,['Iteration ' num2str(l)]);
         
-        if replacement %doing the bootstrap with replacement
+        if  regre_Const
+            subjIdx=datasample(1:24,24,'Replace',false);
+        else
             subjIdx=datasample(1:24,24,'Replace',true);
+        end
+        
+        if replacement %doing the bootstrap with replacement
+ 
             groupIdx=datasample(1:12,12,'Replace',true);
         else
-            subjIdx=datasample(1:24,24,'Replace',false);
             groupIdx=datasample(1:12,12,'Replace',false);
         end
         
         DataBoot=Data(subjIdx,:); %Subject pick at each loop
         
         %This loop is to compute the constrant on our regressions
-        for c=1:length(epochOfInterest)
-            for s=1:24
-                temp(:,:,s)=DataBoot{s,c};
+        if l==1 
+            for c=1:length(epochOfInterest)
+                for s=1:24
+                    temp(:,:,s)=DataBoot{s,c};
+                end
+                x{1,c}=nanmedian(temp,3);
+                tt=x{1,c}(:,end:-1:1);
+                x{1,c}=tt;
+                x{1,c}=reshape(x{1,c},14*2*12,1); %reshping the data for the C values
             end
-            x{1,c}=nanmedian(temp,3);
-            tt=x{1,c}(:,end:-1:1);
-            x{1,c}=tt;
-            x{1,c}=reshape(x{1,c},14*2*12,1); %reshping the data for the C values 
+            
+            
+            x=cell2mat(x)';
+            x=x';
+            
+            %C values that we are using for the regressions
+            C2=[x(:,reactive) x(:,context)]- x(:,base);
+            
         end
-        
-        x=cell2mat(x)';
-        x=x';
-        
-        %C values that we are using for the regressions
-        C2=[x(:,reactive) x(:,context)];
-        
         %Picking the data muscles that we want and participants
         Y_TR=TR(:,muscPhaseIdx,groupIdx);
         Y_TS=TS(:,muscPhaseIdx,groupIdx);
@@ -198,20 +208,20 @@ if bootstrap
         %removing the bias for group
         Y_TR=nanmedian(Y_TR,3); %getting the median of the group 
         bias=nanmean(Y_TR(5:30,:,:)) ; %estimating the gorup baseline 
-        C_TR=C2-bias'; %removing the bias from the constants 
+%         C_TR=C2-bias'; %removing the bias from the constants 
         Y_TR=Y_TR-bias; %removing the bias from the data
   
         Y_TS=nanmedian(Y_TS,3); %getting the median of the group 
-        bias=nanmean(Y_TS(5:30,:,:)) ; %estimating the gorup baseline 
-        C_TS=C2-bias'; %removing the bias from the constants 
+        bias=nanmean(Y_TS(5:30,:,:)) ; %estimating the group baseline 
+%         C_TS=C2-bias'; %removing the bias from the constants 
         Y_TS=Y_TS-bias; %removing the bias from the data
         
         
         %reorganize the data to be separatend by muscle
-        Cmuscles_TR=reshape(C_TR',2,12,28);
+        Cmuscles=reshape(C2',2,12,28);
         Ymuscles_TR=reshape(Y_TR(1:680,:),680,12,28);
         
-        Cmuscles_TS=reshape(C_TS',2,12,28);
+%         Cmuscles=reshape(C_TS',2,12,28);
         Ymuscles_TS=reshape(Y_TS(1:680,:),680,12,28);
         
         %Linear regression individual muscles
@@ -223,7 +233,7 @@ if bootstrap
         for i=1:size(Ymuscles_TR,3) %loop for individual muscle fit
             
             %%% TR
-            unit=Cmuscles_TR(:,:,i)'./vecnorm(Cmuscles_TR(:,:,i)');
+            unit=Cmuscles(:,:,i)'./vecnorm(Cmuscles(:,:,i)');
             temp3=pinv(unit'); %geeting the inverse of the constant
             Xhat_TR(:,:,i,l) =temp3'*Ymuscles_TR(:,:,i)'; %x= y/C
             Yhat_TR(:,:,i,l)=  unit* Xhat_TR(:,:,i,l) ; %Estimated Y with the constants
@@ -231,8 +241,8 @@ if bootstrap
             
             %%% TS
             
-            unit=Cmuscles_TS(:,:,i)'./vecnorm(Cmuscles_TS(:,:,i)');
-            temp3=pinv(unit'); %geeting the inverse of the constant
+%             unit=Cmuscles(:,:,i)'./vecnorm(Cmuscles(:,:,i)');
+%             temp3=pinv(unit'); %geeting the inverse of the constant
             Xhat_TS(:,:,i,l) =temp3'*Ymuscles_TS(:,:,i)'; %x= y/C
             Yhat_TS(:,:,i,l)=  unit* Xhat_TS(:,:,i,l) ; %Estimated Y with the constants
             dynamics_TS(:,:,i,l)=Xhat_TS(:,:,i,l)'; %step-by-step dynamics
@@ -246,7 +256,7 @@ end
 
 delete(f)
 %%
-save([groupID{1}(1:3),'_',num2str(24),'_iteration_', num2str(n),'_Individual_muscles'],'dynamics_TR','dynamics_TS','-v7.3')
+save([groupID{1}(1:3),'_',num2str(24),'_iteration_', num2str(l),'_Individual_muscles_C_constant_Adaptation'],'dynamics_TR','dynamics_TS','-v7.3')
 % save([groupID,'_',num2str(n_subjects),'_iteration_', num2str(n),'_Individual_muscles'],'dynamics','Yhat','Ymuscles','groupID','-v7.3')
 %%
 load('musclesLabels.mat')
@@ -263,12 +273,12 @@ TM=dynamics_TR;
 % load('BATS_indv_muscles.mat')
 % OG_2=X2asym;
 %%
-% load('NCM2023_Treadmill.mat')
-% TM_2=X2asym;
-% TM_2(1,:,:)=-TM_2(1,:,:);
-% load('NCM2023_OG.mat')
-% OG_2=X2asym;
-% OG_2(1,:,:)=-OG_2(1,:,:);
+load('NCM2023_Treadmill.mat')
+TM_2=X2asym;
+TM_2(1,:,:)=-TM_2(1,:,:);
+load('NCM2023_OG.mat')
+OG_2=X2asym;
+OG_2(1,:,:)=-OG_2(1,:,:);
 %% Group data plotting 
 clrMap = colorcube(28*3);
 muscles=[1:14 1:14];
@@ -305,10 +315,14 @@ for dyn=1:2%
  
         
         text(x0+.02,y0,{labels(m).Data(1:end-1)})
-        if P_y(1)<0 &&  P_y(2)>0 %P_TM(1)<0 &&  P_TM(2)>0 ||
-            rectangle('Position',[llc,CIrng],'Curvature',[1,1],'EdgeColor',clrMap(m+3,:),'LineStyle','--');
-        else
-            rectangle('Position',[llc,CIrng],'Curvature',[1,1],'EdgeColor',clrMap(m+3,:));
+        if P_y(1)<0 &&  P_y(2)>0 && P_x(1)<0 &&  P_x(2)>0
+            rectangle('Position',[llc,CIrng],'Curvature',[1,1],'EdgeColor',clrMap(m+3,:),'LineStyle',":",'LineWidth',0.2);
+        elseif P_y(1)<0 &&  P_y(2)>0 
+             rectangle('Position',[llc,CIrng],'Curvature',[1,1],'EdgeColor',clrMap(m+3,:),'LineStyle',"-.",'LineWidth',0.2);
+        elseif P_x(1)<0 &&  P_x(2)>0
+               rectangle('Position',[llc,CIrng],'Curvature',[1,1],'EdgeColor',clrMap(m+3,:),'LineStyle','--','LineWidth',0.2);
+        else 
+            rectangle('Position',[llc,CIrng],'Curvature',[1,1],'EdgeColor',clrMap(m+3,:),'LineWidth',1);
         end
 
         
@@ -345,9 +359,10 @@ clrMap = colorcube(28*3);
 muscles=[1:14 1:14];
 g=[14:-1:1 14:-1:1];
 ff=[1:14 1:14;15:28 15:28];
-range=41:45; %Post-adapt 481:485 Early-adapt 41:45 Late adapt 440:480
+range=440:480; %Post-adapt 481:485 Early-adapt 41:45 Late adapt 440:480
 % range=
-for dyn=1:2
+for dyn=2
+    
     
     temp=[];
     x=[];
@@ -379,9 +394,13 @@ for dyn=1:2
         
         %         if P_y(1)<0 &&  P_y(2)>0 || P_x(1)<0 &&  P_x(2)>0
         if P_y(1)<0 &&  P_y(2)>0 && P_x(1)<0 &&  P_x(2)>0
-            rectangle('Position',[llc,CIrng],'Curvature',[1,1],'EdgeColor',clrMap(m+3,:),'LineStyle','--');
-        else
-            rectangle('Position',[llc,CIrng],'Curvature',[1,1],'EdgeColor',clrMap(m+3,:));
+            rectangle('Position',[llc,CIrng],'Curvature',[1,1],'EdgeColor',clrMap(m+3,:),'LineStyle',":",'LineWidth',0.2);
+        elseif P_y(1)<0 &&  P_y(2)>0 
+             rectangle('Position',[llc,CIrng],'Curvature',[1,1],'EdgeColor',clrMap(m+3,:),'LineStyle',"-.",'LineWidth',0.2);
+        elseif P_x(1)<0 &&  P_x(2)>0
+               rectangle('Position',[llc,CIrng],'Curvature',[1,1],'EdgeColor',clrMap(m+3,:),'LineStyle','--','LineWidth',0.2);
+        else 
+            rectangle('Position',[llc,CIrng],'Curvature',[1,1],'EdgeColor',clrMap(m+3,:),'LineWidth',1);
         end
         
         
@@ -401,8 +420,9 @@ for dyn=1:2
             title('Reactive')
             xx=-.5:0.1:2.1;
             plot(xx,xx,'r')
-%             xlim([-.5 2.5])
-%             ylim([-.5 2.5])
+            
+%             xlim([-.5 2])
+%             ylim([-.5 2])
             yline(0)
             xline(0)
         else
@@ -421,7 +441,12 @@ end
 %% 
 %%Time Courses
 colors=[0 0.4470 0.7410;0.8500 0.3250 0.0980];
-range=481:680;
+if adaptation==1
+    range=1:480;
+else
+    range=481:680;
+end
+
 for m=1:28
     
     temp=[];
@@ -433,15 +458,15 @@ for m=1:28
         
         x_mean=nanmean(x(range,:),2);
         y_mean=nanmean(y(range,:),2);
-
+        
         P_x = prctile(x(range,:)',[2.5 97.5],1);
         P_y = prctile(y(range,:)',[2.5 97.5],1);
         %     x = 1:numel(y);
-%         x=index{i};
-%         std_dev = nanstd(d{i},1);
-
+        %         x=index{i};
+        %         std_dev = nanstd(d{i},1);
+        
         subplot(2,1,1)
-        hold on 
+        hold on
         curve1 = P_y(1,:)';
         curve2 = P_y(2,:)';
         y2 = [1:size(x_mean,1), fliplr(1:size(x_mean,1))];
@@ -451,11 +476,11 @@ for m=1:28
         ylabel('W')
         xlabel('Strides')
         plot(1:size(x_mean,1),y_mean,'LineWidth', 2,'Color',colors(dyn,:));
-        title(['Treadmill' ,{labels(m).Data(1:end-1)}])
+        title(['Overground' ,{labels(m).Data(1:end-1)}])
         yline(0)
         
         subplot(2,1,2)
-        hold on 
+        hold on
         curve1 = P_x(1,:)';
         curve2 = P_x(2,:)';
         y2 = [1:size(x_mean,1), fliplr(1:size(x_mean,1))];
@@ -464,12 +489,12 @@ for m=1:28
         hold on;
         ylabel('W')
         xlabel('Strides')
-        title(['Overground' ,{labels(m).Data(1:end-1)}])
+        title(['Treadmill' ,{labels(m).Data(1:end-1)}])
         Li{dyn}=plot(1:size(x_mean,1),x_mean, 'LineWidth', 2,'Color',colors(dyn,:));
         yline(0)
         axis tight
     end
-  
+    
     legend([Li{:}],[{'Reactive';'Contextual'}])
-   set(gcf,'color','w')
+    set(gcf,'color','w')
 end
