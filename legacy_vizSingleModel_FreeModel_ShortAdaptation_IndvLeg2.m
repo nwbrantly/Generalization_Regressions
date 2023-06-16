@@ -122,7 +122,8 @@ muscleOrder={'TA', 'PER', 'SOL', 'LG', 'MG', 'BF', 'SEMB', 'SEMT', 'VM', 'VL', '
 % muscleOrder={ 'SOL', 'LG', 'MG', 'BF', 'SEMB', 'SEMT'};
 end
 % muscleOrder={'MG'};
-ytl= defineMuscleListV2(muscleOrder); %List of muscle 
+% ytl= defineMuscleListV2(muscleOrder); %List of muscle 
+ytl=([strcat('f',muscleOrder) strcat('s',muscleOrder)]);  %List of muscle 
 % ytl={'TA', 'PER', 'SOL', 'LG', 'MG', 'BF', 'SEMB', 'SEMT', 'VM', 'VL', 'RF', 'HIP','TFL', 'GLU'};
 ytl(end:-1:1) = ytl(:);
 if isf==1
