@@ -19,11 +19,12 @@ plotGroup=1; %If you want to plot the group average
 %NOTE removebias is 1 you need to define your refence 
 
 removeBias=1; % We are choosing to remove bias 
-ref=TMbase; %This is the epoch that we are going to use as reference 
+ref=[]; %This is the epoch that we are going to use as reference 
 
 if removeBias==1
     if isempty(ref)
-        disp('You need to define your refence')
+        warning('You need to define your refence')
+        return
     end
 end
 
