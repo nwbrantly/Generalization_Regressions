@@ -16,7 +16,7 @@ clear all;clc;close all
 %% Free model - Linear regression - Asymmetry with baseline
 %% This is just the saved data - Update accrodingly 
 
-type= 1; %1 testing; 2 training ; 3 both groups
+type= 2; %1 testing; 2 training ; 3 both groups
 %EMG Data 
 if type==1 %Testing
     fname='dynamicsData_BATS_subj_12_RemoveBadMuscles1_splits_0_WithPost2V2_WogBaseline.h5'
@@ -25,7 +25,8 @@ elseif type==2 %Training
     % fname='dynamicsData_BATR_subj_12_RemoveBadMuscles1_splits_0_PosteriorMuscles.h5';
     
     % fname='dynamicsData_BATR_subj_12_RemoveBadMuscles1_splits_0_V4.h5'
-    fname='dynamicsData_BATR_subj_12_RemoveBadMuscles1_splits_0_WithPost2V2.h5'
+%     fname='dynamicsData_BATR_subj_12_RemoveBadMuscles1_splits_0_WithPost2V2.h5
+    fname='dynamicsData_BATR_subj_12_RemoveBadMuscles0.h5'
 elseif type==3 %Both groups
     fname='dynamicsData_BAT_subj_24_RemoveBadMuscles1_splits_0_V4.h5'
 end
@@ -49,7 +50,7 @@ load BAT_24_IndvLegsC16_ShortPertubations_RemovedBadMuscle_1.mat
 EMGdata=h5read(fname,'/EMGdata');
 binwith=10;
 [Y,Yasym,~,U,~,Ysum,Yinv,labels]=groupDataToMatrixForm_Update(1:size(EMGdata,3),fname,0);
-Yasym=Y;
+Yasym=Yinv(:,:,1);
 Uf=[U;ones(size(U))];
 
 %% Organizing the data
@@ -127,7 +128,8 @@ legacy_vizSingleModel_FreeModel_ShortAdaptation_IndvLeg2(model2{1},data,Uf,analy
 %% Plotting time course for individual muscles
 analysis=0
 
-for i=28 %pick the muscle that you want
+for i=2
+%pick the muscle that you want
     
     % Pick the data that you want to plot 
     %    Xasym=[temp2(1:40,:,i);nan(1,size(temp2,2));temp2(41:480,:,i);nan(1,size(temp2,2));temp2(481:end,:,i)];
