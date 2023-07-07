@@ -1,4 +1,9 @@
-function [Y,Yasym,Ycom,U,Ubreaks,Ysum,Yindv,labels]=groupDataToMatrixForm_Update(subjIdx,fName,sqrtFlag)
+function [Y,Yasym,U,Ubreaks,Ysum,Yindv,labels]=groupDataToMatrixForm_Update(subjIdx,fName,sqrtFlag)
+% Original function created by Pablo Iturralde
+% Update to work for the EMG generalization study. 
+%Main update is adding the file name
+%modified by DMMO
+
 %% Load real data:
 EMGdata=h5read(fName,'/EMGdata');
 SLA=h5read(fName,'/SLA');
@@ -10,24 +15,22 @@ labels=hdf5read(fName,'/labels');
 U=speedDiff;
 Ubreaks=breaks;
 
-%% Some pre-proc
-% if nargin<1
-%     subjIdx=2:16; %Excluding C01 only
-% end
-%%
-muscPhaseIdx=1:size(EMGdata,2);
-Y=EMGdata(:,muscPhaseIdx,subjIdx);
-% Yindv=nanmedian(Y,3);
-Yindv=Y;
+%%  Getting data 
+muscPhaseIdx=1:size(EMGdata,2); %gettign the lenght of the muscle vector 
+Y=EMGdata(:,muscPhaseIdx,subjIdx); %choosing the muscles and the participants that we want
+Yindv=Y; %all data (steps x muslces X number of subjs)
 
 if nargin>2 && sqrtFlag
     Y=sqrt(Y);
 end
+%Computes asymmety measure 
 Yasym=Y-fftshift(Y,2);
-Ycom=Y-Yasym;
 Yasym=Yasym(:,1:size(Yasym,2)/2,:);
+
+% Computer the sum the muscle activity per muscle
 Ysum=Y+fftshift(Y,2);
 Ysum=Ysum(:,1:size(Ysum,2)/2,:);
-Ycom=Ycom(:,1:size(Ycom,2)/2,:);
-Y=nanmedian(Y,3); %Median across subjs
+
+%Median across subjs
+Y=nanmedian(Y,3);
 end
