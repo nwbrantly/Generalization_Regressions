@@ -1,4 +1,4 @@
-function plotEpochsPlusNorm(EpochsOfInteres,GroupData, Labels,plotIndSubjects,plotGroup)
+function plotEpochsPlusNorm(EpochsOfInteres,GroupData, Labels,plotIndSubjects,plotGroup,removebias,ref)
 
 if plotIndSubjects
     for i = 1:length(GroupData.ID)
@@ -10,7 +10,11 @@ if plotIndSubjects
         
         for eps=1:length(EpochsOfInteres)
             
-            [~,~,~,Data{eps},~] = adaptDataSubject.plotCheckerboards(Labels,EpochsOfInteres{eps},fh,ph(1,eps),[],flip);
+            if removebias==1
+                [~,~,~,Data{eps},~] = adaptDataSubject.plotCheckerboards(Labels,EpochsOfInteres{eps},fh,ph(1,eps),ref,flip);
+            else
+                [~,~,~,Data{eps},~] = adaptDataSubject.plotCheckerboards(Labels,EpochsOfInteres{eps},fh,ph(1,eps),[],flip);
+            end
             vec_norm = norm(Data{eps});
             title({[EpochsOfInteres{eps}.Condition{1}] ['Norm=', num2str(norm(reshape(Data{eps},[],1)))]});
             
@@ -41,7 +45,12 @@ if plotGroup
     
     for eps=1:length(EpochsOfInteres)
         
-        [~,~,~,Data{eps},~] = GroupData.plotCheckerboards(Labels,EpochsOfInteres{eps},fh,ph(1,eps),[],flip,summFlag);
+        if removebias==1
+            
+            [~,~,~,Data{eps},~] = GroupData.plotCheckerboards(Labels,EpochsOfInteres{eps},fh,ph(1,eps),ref,flip,summFlag);
+        else
+            [~,~,~,Data{eps},~] = GroupData.plotCheckerboards(Labels,EpochsOfInteres{eps},fh,ph(1,eps),[],flip,summFlag);
+        end
         Data{eps} = nanmedian(Data{eps}, 4);
         title({[EpochsOfInteres{eps}.Condition{1}] ['Norm=', num2str(norm(reshape(Data{eps},[],1)))]});
         
