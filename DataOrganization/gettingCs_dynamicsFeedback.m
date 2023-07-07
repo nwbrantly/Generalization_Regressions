@@ -2,7 +2,7 @@
 %% Load data and Plot checkerboard for all conditions.
 % clear; close all; clc;
 
-groupID ='BAT';
+groupID ='BATR';
 [normalizedGroupData, newLabelPrefix,n_subjects]=creatingGroupdataWnormalizedEMG(groupID);
 
 Data=cell(7,1);
