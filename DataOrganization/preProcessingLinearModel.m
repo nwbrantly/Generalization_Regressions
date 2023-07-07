@@ -6,21 +6,18 @@ groupID ='BATR'; %Group of interest
 %% Removing bad muscles 
 %This script make sure that we always remove the same muscle for the
 %different analysis 
-removeBadmuscles=1;
+removeBadmuscles=0;
 if removeBadmuscles==1
 group2= RemovingBadMuscleToSubj(group2);
 end
 %% Define epochs
 
-strides=[-40 440 200 200]; %Number per strides per condition
-cond={'TM base','Adaptation','Post 1', 'Post 2'}; %Conditions for this group
+strides=[-40 440 200]; %Number per strides per condition
+cond={'TM base','Adaptation','Post 1'}; %Conditions for this group
 exemptFirst=[1]; %ignore inital strides
 exemptLast=[5]; %Strides needed
-names={};
-shortNames={};
 
-
-ep=defineEpochs(cond,cond,strides,exemptFirst,exemptLast,'nanmean',{'Base','Adapt','Post1','Post 2'}); %epochs
+ep=defineEpochs(cond,cond,strides,exemptFirst,exemptLast,'nanmean',{'Base','Adapt','Post1'}); %epochs
 %% Pick muscles that you wanted to get the data from 
 %%%% load and prep data
 % muscleOrder={'SOL', 'LG', 'MG', 'BF', 'SEMB', 'SEMT'};
@@ -56,7 +53,7 @@ h5write(name,'/EMGdata',EMGdata)
 SLA=squeeze(cell2mat(dataContribs));
 h5create(name,'/SLA',size(SLA))
 h5write(name,'/SLA',SLA)
-speedDiff=[zeros(1,abs(strides(1))),ones(1,strides(2)),zeros(1,(strides(3))),zeros(1,(strides(4)))];
+speedDiff=[zeros(1,abs(strides(1))),ones(1,strides(2)),zeros(1,(strides(3)))];
 h5create(name,'/speedDiff',size(speedDiff))
 h5write(name,'/speedDiff',speedDiff)
 breaks=[zeros(1,length(speedDiff))];

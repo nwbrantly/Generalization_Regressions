@@ -1,6 +1,6 @@
 %getting Cs
 %% Load data and Plot checkerboard for all conditions.
-clear; close all; clc;
+% clear; close all; clc;
 
 groupID ='BAT';
 [normalizedGroupData, newLabelPrefix,n_subjects]=creatingGroupdataWnormalizedEMG(groupID);
@@ -19,7 +19,7 @@ end
 
 %% Pick muscles that you wanted to get the data from
 
-muscleOrder={'SOL', 'LG', 'MG', 'BF', 'SEMB', 'SEMT'};
+muscleOrder={'TA', 'PER', 'SOL', 'LG', 'MG', 'BF', 'SEMB', 'SEMT', 'VM', 'VL', 'RF', 'HIP','TFL', 'GLU'};
 newLabelPrefix2 = defineMuscleList(muscleOrder); %List of muscle
 newLabelPrefix2 = regexprep(newLabelPrefix2,'_s','s'); %removing the underscore "_"
 
@@ -34,6 +34,7 @@ n_muscles =length(muscleOrder); %number fo muscle in the experiment
 %% Getting the data that we use for matrices
 
 ep=defineRegressorsDynamicsFeedback('nanmean'); % This is a hardcade (aka specific to this experiment) script to get the data from name epochs of interest
+
 epochOfInterest={'TM base','TM mid 1','PosShort_{early}',...
     'PosShort_{late}','Ramp','Optimal','Adaptation',...
     'Adaptation_{early}','TiedPostPos','OG2','NegShort_{early}','NegShort_{late}',...
@@ -41,7 +42,7 @@ epochOfInterest={'TM base','TM mid 1','PosShort_{early}',...
 
 
 % epochOfInterest={'Post1_{Early}','TiedPostPos','TMmid2','Tied post ramp','Ramp','Tied post Neg'};
-% epochOfInterest={'Ramp','Optimal'};
+epochOfInterest={'Ramp','PosShort_{early}','Adaptation_{early}','Optimal','NegShort_{early}'};
 % epochOfInterest={'TM base','Ramp','Optimal','Tied post ramp'}; % This line chooses the epochs that want to get data from
 
 fh=figure('Units','Normalized','OuterPosition',[0 0 1 1]);
@@ -78,33 +79,15 @@ end
 
 %% Saving the data
 resDir = [cd];% '/LTI models/'];
-save([resDir '/'  groupID,'_',num2str(n_subjects), '_',method,'C',num2str(length(epochOfInterest)) ,'_ShortPertubations_RemovedBadMuscle_',num2str(removeBadmuscles), 'RemoveBias_',num2str(removeBias),'_PosteriorMuscles'], 'C','epochOfInterest')
+% save([resDir '/'  groupID,'_',num2str(n_subjects), '_',method,'C',num2str(length(epochOfInterest)) ,'_ShortPertubations_RemovedBadMuscle_',num2str(removeBadmuscles), 'RemoveBias_',num2str(removeBias),'_PosteriorMuscles'], 'C','epochOfInterest')
 
-%%
-%% Color definition
-ex2=[0.2314    0.2980    0.7529];
-ex1=[0.7255    0.0863    0.1608];
-% ex1=[1,0,0];
-% ex2=[0,0,1];
-cc=[0    0.4470    0.7410
-    0.8500    0.3250    0.0980
-    0.9290    0.6940    0.1250
-    0.4940    0.1840    0.5560
-    0.4660    0.6740    0.1880
-    0.3010    0.7450    0.9330
-    0.6350      0.0780    0.1840];
-
-mid=ones(1,3);
-N=100;
-% gamma=1.5; %gamma > 1 expands the white (mid) part of the map, 'hiding' low values. Gamma<1 does the opposite
-gamma=1;
-map=[flipud(mid+ (ex1-mid).*([1:N]'/N).^gamma); mid; (mid+ (ex2-mid).*([1:N]'/N).^gamma)];
+%% redefining the colors for plots 
+color4checkerboards
 
 %% Making the figure a bit prettier
+
 fs=14; %font size
 colormap(flipud(map)) %changing the color map to the one tha defined about, we flipup the matrix bc the code does L-R and we want R-L
-% c=flipud('gray');
-% colormap(flipud(gray))
 set(gcf,'color','w'); %setting the background white
 set(ph(:,1),'CLim',[-1 1]*1,'FontSize',fs); %making sure that the first plot color scheme goes [-1 1] and making the name of the labels larger
 set(ph(:,2:end),'YTickLabels',{},'CLim',[-1 1]*1,'FontSize',fs);
