@@ -3,19 +3,11 @@ function [RemovedData]=RemoveBadMuscles(normalizedGroupData,badSubjID,badMuscles
 %are hard code. Make sure you update this to your needs and that you
 %removed muscle bilaterally
 
+%This code was developed by SL and updated by DMMO 
+
 subjectsToPlot=[];  subjectsToPlotID=[];
     subjectsToPlot{end+1} = normalizedGroupData; %
 %     subjectsToPlotID{end+1} = groupID;% from SLcode
-
-% Bad muscles for group plots
-% % %CTR
-% if contains(groupID,'PATS')
-%     badSubjID = {'PATS05','PATS03'}; %badSubj and muscle are index matched, if want to remove group, put group ID here
-%     badMuscles = {{'sRFs', 'fRFs'},{'sRFs', 'fRFs','sHIPs','fHIPs','sVLs', 'fVLs','sVMs', 'fVMs'}}; %labels in group ID will be removed for all regression and AE computations;
-% elseif contains(groupID,'PATR')
-%     
-% end
-
 
 for idxToRemove = 1:numel(badSubjID)
     
