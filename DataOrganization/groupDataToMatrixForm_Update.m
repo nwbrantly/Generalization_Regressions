@@ -2,7 +2,7 @@ function [Y,Yasym,U,Ubreaks,Ysum,Yindv,labels]=groupDataToMatrixForm_Update(subj
 % Original function created by Pablo Iturralde
 % Update to work for the EMG generalization study. 
 %Main update is adding the file name
-%modified by DMMO
+%modified by DMMO 07/07/2023
 
 %% Load real data:
 EMGdata=h5read(fName,'/EMGdata');

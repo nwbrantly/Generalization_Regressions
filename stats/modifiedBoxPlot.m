@@ -1,4 +1,5 @@
 function stats=modifiedBoxPlot(x,y,labels)
+%Functon created by MAG to mimic the barplots from Wang and ﻿Srinivasan 2014 
 
 %% First compute the statistics of each dataset
 
@@ -40,6 +41,6 @@ end
 newX = [x(1)-1 : 0.01 : x(end)+1];
 plot(newX, zeros(length(newX),1), 'k');
 hold off;
-% xlabel(labels)
+xlabel(labels)
 
 end
