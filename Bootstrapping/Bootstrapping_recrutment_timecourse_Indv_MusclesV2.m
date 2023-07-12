@@ -3,6 +3,7 @@
 
 %%
 % upload your path 
+% upload your path
 main='/Users/dulcemariscal/Documents/GitHub/';
 % main='C:\Users\dum5\OneDrive - University of Pittsburgh\_BoxMigration\GitHub\';
 addpath(genpath([main, 'Generalization_Regressions']))
@@ -18,6 +19,14 @@ clear all; close all; clc;
 % clear all; clc;
 groupID ={'BATR','BATS'};
 EMG2=[];
+adaptationonly=0
+removeMuscles=1
+
+if adaptationonly==1
+    groupID ={'BAT'};
+else
+    groupID ={'BATR','BATS'};
+end
 
 for id=1:length(groupID)
     
