@@ -1,23 +1,73 @@
 %%
 clear; close all; clc;
 %%
-groupID ='BATR'; %Group of interest 
-[group2, newLabelPrefix,n]=creatingGroupdataWnormalizedEMG(groupID,1); % Creating the groupData normalized
+groupID ='BAT'; %Group of interest 
+[group2, newLabelPrefix,n,subID]=creatingGroupdataWnormalizedEMG(groupID,1); % Creating the groupData normalized
+
+sesion1=1;
+adaptation=0;
+if strcmp(groupID,'C3')
+    sesion1  = questdlg('Is this session 1?', ...
+        'Session of interest', ...
+        'Yes','No','None');
+    
+    if strcmpi(sesion1, 'Yes')
+        sesion1 = 1;
+    else
+        sesion1 = 2;
+    end
+end
+
 %% Removing bad muscles 
 %This script make sure that we always remove the same muscle for the
 %different analysis 
-removeBadmuscles=0;
+removeBadmuscles=1;
 if removeBadmuscles==1
 group2= RemovingBadMuscleToSubj(group2);
 end
-%% Define epochs
+%% Define epochs depending on the group data
 
-strides=[-40 440 200]; %Number per strides per condition
-cond={'TM base','Adaptation','Post 1'}; %Conditions for this group
-exemptFirst=[1]; %ignore inital strides
-exemptLast=[5]; %Strides needed
+if contains(groupID,'BAT')
 
-ep=defineEpochs(cond,cond,strides,exemptFirst,exemptLast,'nanmean',{'Base','Adapt','Post1'}); %epochs
+    if adaptation==1
+        strides=[-40 450]; %Number per strides per condition
+        cond={'TM base','Adaptation'}; %Conditions for this group
+    else
+        strides=[-40 300]; %Number per strides per condition
+        cond={'TM base','Post 1'}; %Conditions for this group
+        
+    end
+    exemptFirst=[1]; %ignore inital strides
+    exemptLast=[5]; %Strides needed
+    
+
+elseif contains(groupID,'CTS') || contains(groupID,'CTR') || contains(groupID,'NTS') || contains(groupID,'NTR')
+    strides=[-40 300]; %Number per strides per condition
+    cond={'TR base','Post 1'}; %Conditions for this group
+    exemptFirst=[1]; %ignore inital strides
+    exemptLast=[5]; %Strides needed
+
+elseif contains(groupID,'C3')
+    
+    if  adaptation==1 
+        strides=[-40 900]; %Number per strides per condition
+        cond={'TM base','Adaptation'}; %Conditions for this group
+    else
+    if sesion1==1    
+        cond={'OG base','Post 1'}; %Conditions for this group
+    elseif sesion1==2
+        cond={'TM base','Post 1'}; %Conditions for this group
+    end
+    
+    strides=[-40 350]; %Number per strides per condition
+
+    end
+
+    exemptFirst=[1]; %ignore inital strides
+    exemptLast=[5]; %Strides needed    
+end
+
+ep=defineEpochs(cond,cond,strides,exemptFirst,exemptLast,'nanmean',{'Base','Post1'}); %epochs
 %% Pick muscles that you wanted to get the data from 
 %%%% load and prep data
 % muscleOrder={'SOL', 'LG', 'MG', 'BF', 'SEMB', 'SEMT'};
@@ -45,15 +95,68 @@ end
 
 [~,~,dataContribs]=group2.getEpochData(ep,{'netContributionNorm2'},padWithNaNFlag);
 
-%% Save to hdf5 format for sharing with non-Matlab users
+
+%% Getting the regressors values
+%% 
+if contains(groupID,'BAT')
+    ep=defineRegressorsDynamicsFeedback('nanmean');
+    epochOfInterest={'Ramp','PosShort_{late}','Adaptation_{early}','Optimal','NegShort_{late}','TM base'};
+elseif contains(groupID,'CTS') || contains(groupID,'CTR') || contains(groupID,'NTS') || contains(groupID,'NTR')
+    ep=defineEpochNimbusShoes('nanmean');
+    epochOfInterest={'SplitNeg','Adaptation','SplitPos','OGNimbus'};
+elseif contains(groupID,'C3') 
+    ep=defineRegressors_StrokeC3('nanmean');
+    epochOfInterest={'PosShort_{late}','Adaptation_{early}','Adaptation','NegShort_{late}','TM base','OG base'};
+end
+
+
+    padWithNaNFlag=true; %If no enough steps fill with nan, let this on
+for l=1:length(epochOfInterest)
+   
+    ep2=defineReferenceEpoch(epochOfInterest{l},ep);
+    
+    [dataEMG,labels,allDataEMG]=group2.getPrefixedEpochData(newLabelPrefix,ep2,padWithNaNFlag); %Getting the data
+    
+    %Flipping EMG:0
+    for i=1:length(allDataEMG)
+        aux=reshape(allDataEMG{i},size(allDataEMG{i},1),size(labels,1),size(labels,2),size(allDataEMG{i},3));
+        allDataEMG{i}=reshape(flipEMGdata(aux,2,3),size(aux,1),numel(labels),size(aux,4));
+        
+    end
+    
+  regressors{l}=nanmean(allDataEMG{:},1);
+
+
+end
+
+%% Reorganize data
 EMGdata=cell2mat(allDataEMG2);
-name=['dynamicsData_',groupID,'_subj_', num2str(n),'_RemoveBadMuscles', num2str(removeBadmuscles),'.h5'];
+regressors=cell2mat(regressors');
+
+%%
+%%Save to hdf5 format for sharing with non-Matlab users
+if adaptation==1
+    name=['dynamicsData_',groupID,'_subj_', num2str(n),'_Session_',num2str(sesion1),'_RemoveBadMuscles_', num2str(removeBadmuscles),'_',datestr(now,'dd-mmmm-yyyy'),'_Adaptation','.h5'];
+else
+    name=['dynamicsData_',groupID,'_subj_', num2str(n),'_Session_',num2str(sesion1),'_RemoveBadMuscles_', num2str(removeBadmuscles),'_',datestr(now,'dd-mmmm-yyyy'),'_Post-Adaptation','.h5'];
+    
+end
+
 h5create(name,'/EMGdata',size(EMGdata))
 h5write(name,'/EMGdata',EMGdata)
+
+h5create(name,'/Regressors',size(regressors))
+h5write(name,'/Regressors',regressors)
+
+hdf5write(name,'/SubID',subID(:),'WriteMode','append')
+
+hdf5write(name,'/Epochs',epochOfInterest(:),'WriteMode','append')
+
 SLA=squeeze(cell2mat(dataContribs));
 h5create(name,'/SLA',size(SLA))
 h5write(name,'/SLA',SLA)
-speedDiff=[zeros(1,abs(strides(1))),ones(1,strides(2)),zeros(1,(strides(3)))];
+% speedDiff=[zeros(1,abs(strides(1))),ones(1,strides(2)),zeros(1,(strides(3)))];
+speedDiff=[zeros(1,abs(strides(1))),ones(1,strides(2))];
 h5create(name,'/speedDiff',size(speedDiff))
 h5write(name,'/speedDiff',speedDiff)
 breaks=[zeros(1,length(speedDiff))];
