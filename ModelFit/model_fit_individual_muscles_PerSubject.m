@@ -4,8 +4,8 @@
 
 %Author: Dulce Mariscal, 2023
 %%
-% Before using this code you need: 
-% Process your data, lol 
+% Before using this code you need:
+% Process your data, lol
 % Get the .h5 files for this use - preProcessingLinearModel.m
 
 
@@ -31,11 +31,11 @@ clear all;clc;
 %% This is just the saved data - Update accrodingly
 
 c_constant=0; %1 if you want to use the same regressors for all the participants
-plot_visual=0; % 1 if you want to see the results
+plot_visual=1; % 1 if you want to see the results
 plotindv=0; % 1 plot individual subjects
 indv=1; % 1 individual subjects analsyis; 0 group analysis
 adapt=0; % 1 you are looking at data during adaptation; 0 post-adaptation
-groupID='BATS' %ID of the group of interest
+groupID='NTS' %ID of the group of interest
 savedata=1
 
 if contains(groupID,'BAT')
@@ -44,17 +44,19 @@ if contains(groupID,'BAT')
         
         fname='dynamicsData_BAT_subj_24_Session_1_RemoveBadMuscles_1_07-August-2023_Adaptation.h5'
     else %Post-adaptation we do it by condiition
-        fname=['dynamicsData_',groupID,'_subj_12_RemoveBadMuscles_1_PostAdaptation.h5']
+        %         fname=['dynamicsData_',groupID,'_subj_12_RemoveBadMuscles_1_PostAdaptation.h5']
+        fname=['dynamicsData_',groupID,'_subj_12_Session_1_RemoveBadMuscles_1_01-December-2023_Post-Adaptation.h5']
     end
     
-elseif contains(groupID,'CTS') %TO DO: Add conditions to look at the adaptation
+elseif contains(groupID,'CTS') ||  contains(groupID,'NTS')  %TO DO: Add conditions to look at the adaptation
     
-    fname=['dynamicsData_',groupID,'_subj_5_RemoveBadMuscles_1_PostAdaptation.h5']
+    %     fname=['dynamicsData_',groupID,'_subj_5_RemoveBadMuscles_1_PostAdaptation.h5']
+    fname=['dynamicsData_',groupID,'_subj_5_Session_1_RemoveBadMuscles_1_04-December-2023_Post-Adaptation.h5']
     
 elseif contains(groupID,'C3')
     
     fname= 'dynamicsData_C3_subj_7_Session_1_RemoveBadMuscles_1_17-November-2023_Post-Adaptation.h5'
-
+    
 elseif contains(groupID,'AUF')
     if contains(groupID,'V04')
         fname = '21';
@@ -102,7 +104,7 @@ colorOrder=[ p_orange; p_fade_green; p_fade_blue; p_plum; p_green; p_blue; p_fad
 color=[ colorOrder; colorOrder;colorOrder];
 % color=colormap(jet(size(Yindv,3)));
 
-%% prealoccating variable for speed 
+%% prealoccating variable for speed
 
 invEMG_m= zeros(12,2,28,'double');
 EMG_coef= zeros(12,2,28,'double');
@@ -131,7 +133,7 @@ for subj=1:n_sub
     
     EMGmodel=EMGdata';  % Transpose the EMG data to match equations
     
-    if c_constant==1        
+    if c_constant==1
         
         %Pick the conditions that we are going to use for the regression
         epochOfInterest=h5read(fname,'/Epochs')';
@@ -145,7 +147,7 @@ for subj=1:n_sub
             reactive2=find(strcmp(epochOfInterest,'NegShort_{late}')==1);
             tmbase=find(strcmp(epochOfInterest,'TM base')==1);
             reactive=find(strcmp(epochOfInterest,'Ramp')==1);
-        elseif contains(groupID,'CTS')
+        elseif contains(groupID,'CTS') || contains(groupID,'NTS')
             reactive=find(strcmp(epochOfInterest,'SplitPos')==1);
             context= find(strcmp(epochOfInterest,'Adaptation')==1);
             reactive2=find(strcmp(epochOfInterest,'SplitNeg')==1);
@@ -170,11 +172,12 @@ for subj=1:n_sub
         epochOfInterest=deblank(epochOfInterest); %Remove random null values added during the saving of the matrix
         
         if contains(groupID,'BAT')
-            context= find(strcmp(epochOfInterest,'Optimal')==1);
-            reactive2=find(strcmp(epochOfInterest,'NegShort_{early}')==1);
+            %             context= find(strcmp(epochOfInterest,'Optimal')==1);
+            context= find(strcmp(epochOfInterest,'Adaptation')==1);
+            reactive2=find(strcmp(epochOfInterest,'NegShort_{late}')==1);
             tmbase=find(strcmp(epochOfInterest,'TM base')==1);
             reactive=find(strcmp(epochOfInterest,'Ramp')==1);
-        elseif contains(groupID,'CTS')
+        elseif contains(groupID,'CTS') || contains(groupID,'NTS')
             reactive=find(strcmp(epochOfInterest,'SplitPos')==1);
             context= find(strcmp(epochOfInterest,'Adaptation')==1);
             reactive2=find(strcmp(epochOfInterest,'SplitNeg')==1);
@@ -209,8 +212,8 @@ for subj=1:n_sub
         EMGmodel=EMGmodel-bias'; %removing bias from the data
         
         %Removing any NaN for the data. This is needed for the NNMF
-%                 EMGmodel= rmmissing(EMGmodel,2);
-%                 Uf=Uf(:,1:size(EMGmodel,2));
+        %                 EMGmodel= rmmissing(EMGmodel,2);
+        %                 Uf=Uf(:,1:size(EMGmodel,2));
     end
     
     %Organizing the data per muscle
@@ -222,14 +225,14 @@ for subj=1:n_sub
     data=[];
     Regressors_indv=[];
     reconstruction_indv=[];
-%     reconstruction_contextual=[];
-%     reconstruction_reactive=[];
+    %     reconstruction_contextual=[];
+    %     reconstruction_reactive=[];
     data_shifted =[];
     NNMF=[]; NNMF2=[];
     
     for muscle=1:28
-%         yContextCurr=[];
-%         yReactiveCurr=[];
+        %         yContextCurr=[];
+        %         yReactiveCurr=[];
         
         EMG_coef(:,:,muscle)=Coefficients_m(:,:,muscle)'./vecnorm(Coefficients_m(:,:,muscle)'); %Getting the unit vector of the regressors
         
@@ -262,43 +265,43 @@ for subj=1:n_sub
         %         c = abs(nanmin(yContextCurr)); %contextual min
         
         reconstruction_indv =[ reconstruction_indv ; EMG_estimated(:,:,muscle)]; % Concatenating the data reconstructed and adding the minimium of the reactive and the contextual
-%         reconstruction_contextual=[reconstruction_contextual; yContextCurr];
-%         reconstruction_reactive=[reconstruction_reactive; yReactiveCurr];
+        %         reconstruction_contextual=[reconstruction_contextual; yContextCurr];
+        %         reconstruction_reactive=[reconstruction_reactive; yReactiveCurr];
         data_shifted =[ data_shifted ; EMGobserved(:,:,muscle)'];
         data =[ data ; EMGobserved(:,:,muscle)'];  % Concatenating the data
         
         
         % Non-negative matrix factorization (NNMF)
         if indv==0 %tyou can have errors if run in individual participants
-%         YA=[EMGobserved(1:70,:,muscle)' EMGobserved(end-70:end,:,muscle)']; % We only give the algortim data during the transitions
-%         swift=abs(min(EMGobserved(:,:,muscle)',[],'all')); %Finding the most negative value 
-%         dataNNMF=YA+swift; %Swifting the data becasue NNMF cant have negative values 
-%         data2=EMGobserved(:,:,muscle)';%+swift;
-%         [W2,H] = nnmf(dataNNMF,2);
-%         Casym = W2(:,1:2)';
-%         Cinv=pinv(Casym); %Getting the pseudoinverse of the EMGreactive and EMGcontext
-%         Wasym_NNMF = Cinv'*data2; %x= y/C
-%         NNMF_muscle= ( Casym' * Wasym_NNMF) - swift; %yhat = C
-%         aux1= nanmean(Wasym_NNMF,2).*ones(size(Wasym_NNMF));
-%         NNMF_lower= (Casym' * aux1)- swift; %yhat = C
-% 
-%        NNMF=[NNMF ; NNMF_muscle];
-%        NNMF2=[NNMF2 ; NNMF_lower];
-
-       % if you want to plot the results of the NNMF - Off for now 
-
-%        figure(muscle+20)
-%        subplot 211
-%        plot(W(:,1,muscle))
-%        hold on
-%        plot(aux1(1,:))
-%        plot(Wasym_NNMF(1,:))
-% 
-%        subplot 212
-%        plot(W(:,2,muscle))
-%        hold on
-%        plot(aux1(2,:))
-%        plot(Wasym_NNMF(2,:))
+            %         YA=[EMGobserved(1:70,:,muscle)' EMGobserved(end-70:end,:,muscle)']; % We only give the algortim data during the transitions
+            %         swift=abs(min(EMGobserved(:,:,muscle)',[],'all')); %Finding the most negative value
+            %         dataNNMF=YA+swift; %Swifting the data becasue NNMF cant have negative values
+            %         data2=EMGobserved(:,:,muscle)';%+swift;
+            %         [W2,H] = nnmf(dataNNMF,2);
+            %         Casym = W2(:,1:2)';
+            %         Cinv=pinv(Casym); %Getting the pseudoinverse of the EMGreactive and EMGcontext
+            %         Wasym_NNMF = Cinv'*data2; %x= y/C
+            %         NNMF_muscle= ( Casym' * Wasym_NNMF) - swift; %yhat = C
+            %         aux1= nanmean(Wasym_NNMF,2).*ones(size(Wasym_NNMF));
+            %         NNMF_lower= (Casym' * aux1)- swift; %yhat = C
+            %
+            %        NNMF=[NNMF ; NNMF_muscle];
+            %        NNMF2=[NNMF2 ; NNMF_lower];
+            
+            % if you want to plot the results of the NNMF - Off for now
+            
+            %        figure(muscle+20)
+            %        subplot 211
+            %        plot(W(:,1,muscle))
+            %        hold on
+            %        plot(aux1(1,:))
+            %        plot(Wasym_NNMF(1,:))
+            %
+            %        subplot 212
+            %        plot(W(:,2,muscle))
+            %        hold on
+            %        plot(aux1(2,:))
+            %        plot(Wasym_NNMF(2,:))
             YA=[EMGobserved(:,:,muscle)']; % We only give the algortim data during the transitions
             
             [pp,cc_,aa_]=pca(YA');
@@ -309,32 +312,32 @@ for subj=1:n_sub
             aux1= nanmean(dynamics).*ones(size(dynamics));
             PCA_lower= (Wpca * aux1'); %yhat = C
         end
-       %%
+        %%
         % Checking for colinearity and correlation between the regresssions
-         R=corrcoef(model{muscle}.C); % correlation coeficient
+        R=corrcoef(model{muscle}.C); % correlation coeficient
         correlation(muscle,1)=R(2);
         aftereffects= mean(EMGobserved(41:45,:,muscle),"omitnan")';
         estimated =mean(EMG_estimated(:,41:45,muscle)',"omitnan")';
-%         PCA_upper=mean(rmmissing(PC(:,41:45))')';
-%         PCA_l=mean(rmmissing(PCA_lower(:,41:45))')';
-%         VIF_F(muscle,:)=vif([model{muscle}.C aftereffects]); %Variance inflation
-%         VIF_F(muscle,:)=vif([model{muscle}.C]); %Variance inflation
+        %         PCA_upper=mean(rmmissing(PC(:,41:45))')';
+        %         PCA_l=mean(rmmissing(PCA_lower(:,41:45))')';
+        %         VIF_F(muscle,:)=vif([model{muscle}.C aftereffects]); %Variance inflation
+        %         VIF_F(muscle,:)=vif([model{muscle}.C]); %Variance inflation
         R0 = corrcoef(model{muscle}.C);
         temp=diag(inv(R0))';
         
         VIF_F(muscle,subj) = temp(1);
         
-
-            R2(muscle,subj) = my_Rsquared_coeff(aftereffects,estimated,1);
-
-%         R2_upper(muscle,1) = my_Rsquared_coeff(aftereffects,PCA_upper,1);
-%         R2_lower(muscle,1) = my_Rsquared_coeff(aftereffects,PCA_l,1);
+        
+        R2(muscle,subj) = my_Rsquared_coeff(aftereffects,estimated,1);
+        
+        %         R2_upper(muscle,1) = my_Rsquared_coeff(aftereffects,PCA_upper,1);
+        %         R2_lower(muscle,1) = my_Rsquared_coeff(aftereffects,PCA_l,1);
         
         %fit linear model for post-adaptation - the intercept is off. We
-        %can use this to get the CI of the data. 
-       
+        %can use this to get the CI of the data.
+        
         %%TODO: Check why we have the same values for both regressors
-       
+        
         mdl{subj,muscle}= fitlm(EMG_coef(:,:,muscle),aftereffects,'VarNames',{'Reactive','Contextual', labels(muscle).Data(1:end-1)},'Intercept',false);
         
         if mdl{subj,muscle}.Coefficients.Estimate(2)+mdl{subj,muscle}.Coefficients.SE(2)>0 &&  mdl{subj,muscle}.Coefficients.Estimate(2)-mdl{subj,muscle}.Coefficients.SE(2)<0
@@ -346,7 +349,7 @@ for subj=1:n_sub
         end
         
         if plot_visual==1
-%             figure(1)
+            %             figure(1)
             subplot 311
             hold on
             li{subj}=scatter(muscle,squeeze(mean((W_transpose(41:45,1,muscle)),"omitnan")),25,"filled",'MarkerFaceColor', color(subj,:));
@@ -357,10 +360,10 @@ for subj=1:n_sub
             li2{subj}=scatter(muscle,squeeze(mean((W_transpose(41:45,2,muscle)),"omitnan")),25,"filled",'MarkerFaceColor', color(subj,:));
             errorbar(muscle,mdl{subj,muscle}.Coefficients.Estimate(2),mdl{subj,muscle}.Coefficients.SE(2),'k')
             
-           subplot 313
+            subplot 313
             hold on
             li3{subj}=scatter(muscle,R2(muscle,subj) ,25,"filled",'MarkerFaceColor', color(subj,:));
-
+            
             
             if plotindv==1
                 subplot 311
@@ -374,14 +377,14 @@ for subj=1:n_sub
                 ylabel({'Contextual';'AU'})
                 yline(0)
                 set(gca,'XTick',yt,'XTickLabel',ytl,'FontSize',10)
-%                 lgd=legend([li2{:}],subID{:},'location','Best');
+                %                 lgd=legend([li2{:}],subID{:},'location','Best');
                 set(gcf,'color','w')
                 
                 subplot 313
                 ylabel({'R^2'})
                 yline(0)
                 set(gca,'XTick',yt,'XTickLabel',ytl,'FontSize',10)
-%                 lgd=legend([li3{:}],subID{:},'location','Best');
+                %                 lgd=legend([li3{:}],subID{:},'location','Best');
                 set(gcf,'color','w')
                 ylim([-1 1])
                 yline(.5)
@@ -393,7 +396,7 @@ for subj=1:n_sub
         
     end
     
-    %% This section is for analysis done for the R01 - ignore for now 
+    %% This section is for analysis done for the R01 - ignore for now
     %     data_shifted=nanmean(data_shifted(:,41:45),2);
     %     data_shifted = data_shifted(~isnan(data_shifted));
     %
@@ -434,18 +437,18 @@ for subj=1:n_sub
         legend([li2{:}],subID,'location','Best')
         set(gcf,'color','w')
     end
-%     if plot_visual==1
-%         model2{1}.C=Regressors_indv; %Save regressors for model
-%         model2{1}.Out= reconstruction_indv; %Save reconstruction of the indiivudal muscles to the model format for plotting
-%         model2{1}.NNMF=NNMF;
-%         model2{1}.NNMF_lower=NNMF2;
-%         analysis=0; %Flag asking if you want to run the analysis
-%         isF=0; %Flag for fast leg
-%         
-%         
-% %             vizSingleModel_IndvLeg_YoungAdults(model2{1},data,Uf,analysis,[],isF)
-%         % legacy_vizSingleModel_FreeModel_ShortAdaptation_IndvLeg(model2{1},data,Uf,analysis,[],isF)
-%     end
+    %     if plot_visual==1
+    %         model2{1}.C=Regressors_indv; %Save regressors for model
+    %         model2{1}.Out= reconstruction_indv; %Save reconstruction of the indiivudal muscles to the model format for plotting
+    %         model2{1}.NNMF=NNMF;
+    %         model2{1}.NNMF_lower=NNMF2;
+    %         analysis=0; %Flag asking if you want to run the analysis
+    %         isF=0; %Flag for fast leg
+    %
+    %
+    % %             vizSingleModel_IndvLeg_YoungAdults(model2{1},data,Uf,analysis,[],isF)
+    %         % legacy_vizSingleModel_FreeModel_ShortAdaptation_IndvLeg(model2{1},data,Uf,analysis,[],isF)
+    %     end
 end
 
 %% saving data
@@ -459,12 +462,12 @@ end
 
 %% Plot group mean and standart error of the recruitment of the reactive and contextual patterns
 
-reconstruction_contextual=squeeze(mean(rmmissing(contextual_trace(41:45,:,:)),1))'; %contextual 
+reconstruction_contextual=squeeze(mean(rmmissing(contextual_trace(41:45,:,:)),1))'; %contextual
 reconstruction_reactive=squeeze(mean(rmmissing(reactive_trace(41:45,:,:)),1))'; % reactive
 
 figure
 hold on
-for m=1:28 %plotting of all the muscles 
+for m=1:28 %plotting of all the muscles
     
     subplot 211;hold on
     plot(m,mean(reconstruction_reactive(m,:)),'ok')
@@ -477,13 +480,13 @@ for m=1:28 %plotting of all the muscles
 end
 
 
-%% Plotting time course for individual muscle recruitment 
+%% Plotting time course for individual muscle recruitment
 
 for m=11 %pick the muscle that you want
     
     % Pick the data that you want to plot
     W=W_transpose(40:end,:,m);
-   
+    
     figure
     subplot(2,1,1)
     hold on
@@ -495,25 +498,25 @@ for m=11 %pick the muscle that you want
     uistack(pp,'bottom')
     yline(0)
     ylabel({'Reactive';'(A.U)'})
-
+    
     xlabel('strides')
     
     if size(W_transpose(:,:,m),2)>=2
-  
+        
         subplot(2,1,1)
         
         hold on
         scatter(1:length(movmean(W(:,2),binwith)), movmean(W(:,2),binwith),'filled','MarkerFaceColor'," #00008B")
         
-        legend('Contextual','AutoUpdate','off')  
+        legend('Contextual','AutoUpdate','off')
         pp=patch([0 300 300 0],[-0.5 -0.5 1 1],.7*ones(1,3),'FaceAlpha',.2,'EdgeColor','none');
         uistack(pp,'bottom')
         yline(0)
         ylabel({'Contextual';'(A.U)'})
         xlabel('strides')
-    
+        
     end
-    set(gcf,'color','w') 
+    set(gcf,'color','w')
 end
 
 %%
