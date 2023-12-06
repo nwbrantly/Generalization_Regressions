@@ -1,6 +1,7 @@
 % Grouping muscle by joint bar plots
 clear all
-% load('BATS_post-adaptation_01-December-2023.mat')
+% load('BATS_post-adaptationAdaptation_01-December-2023.mat')
+% load('CTS_post-adaptation_04-December-2023.mat')
 % load('BATR_post-adaptation_29-November-2023.mat')
 load('AUF_post-adaptation_30-November-2023.mat')
 
@@ -11,7 +12,7 @@ load('AUF_post-adaptation_30-November-2023.mat')
 [muscle_s,subj_s]=find(VIF_F>=5); %finding muscle with colinearity
 idx=[];
 for i=1:length(muscle_s) %finding the index for muscles with colinearity
-    
+
     idx=[idx, find(sum(eq([muscle_s(i),subj_s(i)],[muscle,subj]),2)==2)];
 end
 
@@ -97,7 +98,7 @@ for c=1:2
     figure(c)
     hold on
     bar([1 4], [median(ship(:,c)) median(fhip(:,c))],.2,'FaceColor',colors(1))
-    errorbar([1 4],[median(ship(:,c)) median(fhip(:,c))],[iqr(ship(:,c))/sqrt(length(ship)) iqr(fhip(:,c))/sqrt(length(ship))] ,'.k')
+    errorbar([1 4],[median(ship(:,c)) median(fhip(:,c))],[iqr(ship(:,c)) iqr(fhip(:,c))] ,'.k')
     [p.ship(c,1),h.ship(c,1),stats.ship(c,1)] = signrank(ship(:,c));
     [p.fhip(c,1),h.fhip(c,1),stats.fhip(c,1)] = signrank(fhip(:,c));
     if p.ship(c)<0.05
@@ -113,7 +114,7 @@ for c=1:2
     %     plot(4.1,fhip(:,c),'*k')
 
     bar([2 5], [median(sknee(:,c)) median(fknee(:,c))],.2,'FaceColor',colors(2))
-    errorbar([2 5],[median(sknee(:,c)) median(fknee(:,c))],[iqr(sknee(:,c))/sqrt(length(sknee)) iqr(fknee(:,c))/sqrt(length(sknee))] ,'.k')
+    errorbar([2 5],[median(sknee(:,c)) median(fknee(:,c))],[iqr(sknee(:,c)) iqr(fknee(:,c))] ,'.k')
     [p.sknee(c,1),h.sknee(c,1),stats.sknee(c,1)] = signrank(sknee(:,c));
     [p.fknee(c,1),h.fknee(c,1),stats.fknee(c,1)] = signrank(fknee(:,c));
 
@@ -214,4 +215,144 @@ for c=1:2
 end
 
 
+%% Separating by anterior and posterior muscles 
 
+data_slow= [ship; sknee; sank];
+data_fast= [fhip; fknee; fank];
+
+% anterior = {'TA', 'VM', 'VL', 'RF', 'TFL','HIP'};
+% posterior = {'LG','MG','SOL','PER','SEMT','SEMB','BF', 'GLU'};
+
+% groupong by flexors and extensor
+extensors={'LG','MG','SOL','PER','VM','VL','RF',};
+flexors = {'TA','SEMT','SEMB','BF','HIP','TFL','GLU'};
+
+anterior = extensors;
+posterior= flexors;
+
+anterior_list=([strcat('f',anterior) strcat('s',anterior)]);  %List of muscle
+anterior_list(end:-1:1) =anterior_list(:);
+anterior_list=anterior_list';
+
+posterior_list =([strcat('f',posterior) strcat('s',posterior)]);  %List of muscle
+posterior_list(end:-1:1) =posterior_list(:);
+posterior_list=posterior_list';
+
+anterior_muscles_slow=[];
+anterior_muscles_fast=[];
+for ant= 1:length(anterior_list)
+    
+idx= find(strcmp( [ytl(:)], anterior_list{ant} ));
+
+idx_muscle_s= find(idx==data_slow(:,3));
+idx_muscle_f= find(idx==data_fast(:,3));
+
+anterior_muscles_slow= [anterior_muscles_slow;data_slow(idx_muscle_s,:) ];
+anterior_muscles_fast= [anterior_muscles_fast;data_fast(idx_muscle_f,:) ];
+end
+
+posterior_muscles_slow=[];
+posterior_muscles_fast=[];
+for ant= 1:length(posterior_list)
+    
+idx= find(strcmp( [ytl(:)], posterior_list{ant} ));
+
+idx_muscle_s= find(idx==data_slow(:,3));
+idx_muscle_f= find(idx==data_fast(:,3));
+
+posterior_muscles_slow= [posterior_muscles_slow;data_slow(idx_muscle_s,:) ];
+posterior_muscles_fast= [posterior_muscles_fast;data_fast(idx_muscle_f,:) ];
+
+end
+
+colors=["#77AC30";"#7E2F8E";"#D95319"];
+for c=1:2
+    figure(c)
+    hold on
+    bar([1 3], [median(anterior_muscles_slow(:,c)) median(anterior_muscles_fast(:,c))],.2,'FaceColor',colors(1))
+    errorbar([1 3],[median(anterior_muscles_slow(:,c)) median(anterior_muscles_fast(:,c))],[iqr(anterior_muscles_slow(:,c)) iqr(anterior_muscles_fast(:,c))] ,'.k')
+    [p.anteriorslow(c,1),h.anteriorslow(c,1),] = signrank(anterior_muscles_slow(:,c));
+    [p.anteriorfast(c,1),h.fhip(c,1),stats.anteriorfast(c,1)] = signrank(anterior_muscles_fast(:,c));
+    if p.anteriorslow(c)<0.05
+        plot(1,2,'*r','MarkerSize',15)
+        %         text(1,2.05,num2str(round(p.ship(c),2)))
+    end
+
+    if p.anteriorfast(c)<0.05
+        plot(3,2,'*r','MarkerSize',15)
+        %         text(4,2.05,num2str(round(p.fhip(c),2)))
+    end
+    %     plot(1.1,ship(:,c),'*k')
+    %     plot(4.1,fhip(:,c),'*k')
+
+    bar([2 4], [median(posterior_muscles_slow(:,c)) median(posterior_muscles_fast(:,c))],.2,'FaceColor',colors(2))
+    errorbar([2 4],[median(posterior_muscles_slow(:,c)) median(posterior_muscles_fast(:,c))],[iqr(posterior_muscles_slow(:,c)) iqr(posterior_muscles_fast(:,c))] ,'.k')
+    [p.posterior_muscles_slow(c,1),h.posterior_muscles_slow(c,1),stats.posterior_muscles_slow(c,1)] = signrank(posterior_muscles_slow(:,c));
+    [p.posterior_muscles_fast(c,1),h.posterior_muscles_fast(c,1),stats.posterior_muscles_fast(c,1)] = signrank(posterior_muscles_fast(:,c));
+
+    if p.posterior_muscles_slow(c)<0.05
+        plot(2,2,'*r','MarkerSize',15);
+        %         text(2,2.05,num2str(round(p.sknee(c),2)))
+
+    end
+
+    if p.posterior_muscles_fast(c)<0.05
+        plot(4,2,'*r','MarkerSize',15)
+        %         text(5,2.05,num2str(round(p.posterior_muscles_fast(c),2)))
+    end
+
+
+    xlim([0 5])
+%     set(gca,'XTick',[1:4],'XTickLabel',{'slow_{anterior}','fast_{anterior}','slow_{posterior}','fast_{posterior}'},'FontSize',10)
+  set(gca,'XTick',[1:4],'XTickLabel',{'slow_{extensor}','fast_{extensor}','slow_{flexor}','fast_{flexor}'},'FontSize',10)
+xline(2.5)
+
+    if c==1
+        ylabel('W_{reactive}')
+    else
+        ylabel('W_{contextual}')
+
+    end
+    set(gcf,'color','w')
+end
+
+
+color=colormap(turbo(max(subj))) ; % Each participant is a color
+
+for c=1:2
+    figure(c);
+    hold on
+    for s=1:max(subj)
+        idx_anterior_muscles_slow= find(s==anterior_muscles_slow(:,4));
+        idx_anterior_muscles_fast= find(s==anterior_muscles_fast(:,4));
+        idx_posterior_muscles_slow= find(s==posterior_muscles_slow(:,4));
+        idx_posterior_muscles_fast= find(s==posterior_muscles_fast(:,4));
+
+
+        li{s} = scatter([],[],50,'filled','MarkerFaceColor',color(s,:));
+
+        if ~isempty(idx_anterior_muscles_slow)
+            li{s}=scatter(1.1,anterior_muscles_slow(idx_anterior_muscles_slow,c),50,'filled','MarkerFaceColor',color(s,:));
+            %             plot(1.1,anterior_muscles_slow(idx_anterior_muscles_slow,c),'.','MarkerFaceColor',color(s,:),'MarkerSize',25)
+        end
+
+        if ~isempty(idx_anterior_muscles_fast)
+            li{s}=scatter(3.1,anterior_muscles_fast(idx_anterior_muscles_fast,c),50,'filled','MarkerFaceColor',color(s,:));
+            %             plot(4.1,anterior_muscles_fast(idx_anterior_muscles_fast,c),'.','MarkerFaceColor',color(s,:),'MarkerSize',25)
+        end
+
+        if ~isempty(idx_posterior_muscles_slow)
+            li{s}=scatter(2.1,posterior_muscles_slow(idx_posterior_muscles_slow,c),50,'filled','MarkerFaceColor',color(s,:));
+            %             plot(1.1,anterior_muscles_slow(idx_anterior_muscles_slow,c),'.','MarkerFaceColor',color(s,:),'MarkerSize',25)
+        end
+
+        if ~isempty(idx_posterior_muscles_fast)
+            li{s}= scatter(4.1,posterior_muscles_fast(idx_posterior_muscles_fast,c),50,'filled','MarkerFaceColor',color(s,:));
+            %             plot(4.1,anterior_muscles_fast(idx_anterior_muscles_fast,c),'.','MarkerFaceColor',color(s,:),'MarkerSize',25)
+        end
+
+
+        data{s}=li{s}(1);
+    end
+    legend([data{:}],subID,'Location','best');
+end
