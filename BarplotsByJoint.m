@@ -1,9 +1,13 @@
 % Grouping muscle by joint bar plots
 clear all
 % load('BATS_post-adaptationAdaptation_01-December-2023.mat')
-% load('CTS_post-adaptation_04-December-2023.mat')
+% load('NTS_post-adaptation_04-December-2023.mat')
 % load('BATR_post-adaptation_29-November-2023.mat')
-load('AUF_post-adaptation_30-November-2023.mat')
+% load('AUF_post-adaptation_30-November-2023.mat')
+% load BATS_post-adaptation_unitvectors__05-December-2023.mat
+% load AUF_post-adaptation_unitvectors__06-December-2023.mat
+% load CTS_post-adaptation_unitvectors__06-December-2023.mat
+load NTS_post-adaptation_unitvectors__06-December-2023.mat
 
 % 4
 [muscle,subj]=find(R2>=0.5); % At the momment of cuttoff values in 50% of variance.
@@ -90,12 +94,12 @@ end
 
 
 %% % bar plot by muscle group
-close all
+% close all
 colors=["#77AC30";"#7E2F8E";"#D95319"];
 
 
 for c=1:2
-    figure(c)
+    figure(c+2)
     hold on
     bar([1 4], [median(ship(:,c)) median(fhip(:,c))],.2,'FaceColor',colors(1))
     errorbar([1 4],[median(ship(:,c)) median(fhip(:,c))],[iqr(ship(:,c)) iqr(fhip(:,c))] ,'.k')
@@ -167,7 +171,7 @@ end
 color=colormap(turbo(max(subj))) ; % Each participant is a color
 
 for c=1:2
-    figure(c);
+    figure(c+2);
     hold on
     for s=1:max(subj)
         idx_ship= find(s==ship(:,4));
@@ -327,14 +331,56 @@ end
 
 color=colormap(turbo(max(subj))) ; % Each participant is a color
 
+% for c=1:2
+%     figure(c);
+%     hold on
+%     for s=1:max(subj)
+%         idx_anterior_muscles_slow= find(s==anterior_muscles_slow(:,4));
+%         idx_anterior_muscles_fast= find(s==anterior_muscles_fast(:,4));
+%         idx_posterior_muscles_slow= find(s==posterior_muscles_slow(:,4));
+%         idx_posterior_muscles_fast= find(s==posterior_muscles_fast(:,4));
+%         
+%         
+%         li{s} = scatter([],[],50,'filled','MarkerFaceColor',color(s,:));
+%         
+%         if ~isempty(idx_anterior_muscles_slow)
+%             li{s}=scatter(1.1,anterior_muscles_slow(idx_anterior_muscles_slow,c),50,'filled','MarkerFaceColor',color(s,:));
+%             %             plot(1.1,anterior_muscles_slow(idx_anterior_muscles_slow,c),'.','MarkerFaceColor',color(s,:),'MarkerSize',25)
+%         end
+%         
+%         if ~isempty(idx_anterior_muscles_fast)
+%             li{s}=scatter(3.1,anterior_muscles_fast(idx_anterior_muscles_fast,c),50,'filled','MarkerFaceColor',color(s,:));
+%             %             plot(4.1,anterior_muscles_fast(idx_anterior_muscles_fast,c),'.','MarkerFaceColor',color(s,:),'MarkerSize',25)
+%         end
+%         
+%         if ~isempty(idx_posterior_muscles_slow)
+%             li{s}=scatter(2.1,posterior_muscles_slow(idx_posterior_muscles_slow,c),50,'filled','MarkerFaceColor',color(s,:));
+%             %             plot(1.1,anterior_muscles_slow(idx_anterior_muscles_slow,c),'.','MarkerFaceColor',color(s,:),'MarkerSize',25)
+%         end
+%         
+%         if ~isempty(idx_posterior_muscles_fast)
+%             li{s}= scatter(4.1,posterior_muscles_fast(idx_posterior_muscles_fast,c),50,'filled','MarkerFaceColor',color(s,:));
+%             %             plot(4.1,anterior_muscles_fast(idx_anterior_muscles_fast,c),'.','MarkerFaceColor',color(s,:),'MarkerSize',25)
+%         end
+%         
+%         
+%         data{s}=li{s}(1);
+%     end
+%     legend([data{:}],subID,'Location','best');
+% end
+
+    poster_colors;
+    colorOrder=[p_red; p_orange; p_fade_green; p_fade_blue; p_plum; p_green; p_blue; p_fade_red; p_lime; p_yellow; [0 0 0];[0 1 1];[0.6350 0.0780 0.1840];[0.4940 0.1840 0.5560]];
+%      colorOrder=[ colorOrder; colorOrder;colorOrder];; % Each muscle is a color
+color= [colorOrder(1:14,:) ;colorOrder(1:14,:)];
 for c=1:2
     figure(c);
     hold on
-    for s=1:max(subj)
-        idx_anterior_muscles_slow= find(s==anterior_muscles_slow(:,4));
-        idx_anterior_muscles_fast= find(s==anterior_muscles_fast(:,4));
-        idx_posterior_muscles_slow= find(s==posterior_muscles_slow(:,4));
-        idx_posterior_muscles_fast= find(s==posterior_muscles_fast(:,4));
+    for s=1:length(ytl);
+        idx_anterior_muscles_slow= find(s==anterior_muscles_slow(:,3));
+        idx_anterior_muscles_fast= find(s==anterior_muscles_fast(:,3));
+        idx_posterior_muscles_slow= find(s==posterior_muscles_slow(:,3));
+        idx_posterior_muscles_fast= find(s==posterior_muscles_fast(:,3));
         
         
         li{s} = scatter([],[],50,'filled','MarkerFaceColor',color(s,:));
@@ -362,5 +408,5 @@ for c=1:2
         
         data{s}=li{s}(1);
     end
-    legend([data{:}],subID,'Location','best');
+    legend([data{:}],ytl,'Location','best');
 end
