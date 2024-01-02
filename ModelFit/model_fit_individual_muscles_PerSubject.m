@@ -21,31 +21,34 @@
 main='/Users/dulcemariscal/Documents/GitHub/'; %Choose your path
 addpath(genpath([main, 'Generalization_Regressions'])) % code for the muscle activity regression
 addpath(genpath([main,'labTools'])) % Labtools code - this is the spinal cord of the enitre analysis
-% addpath(genpath([main,'splitbelt-EMG-adaptation']))
-% addpath(genpath([main,'EMG-LTI-SSM']))
-% addpath(genpath([main,'matlab-linsys']))
+addpath(genpath([main,'splitbelt-EMG-adaptation']))
+addpath(genpath([main,'EMG-LTI-SSM']))
+addpath(genpath([main,'matlab-linsys']))
 
 %% Load real data:
-clear all;clc;
+% clear all;clc;
 
 %% This is just the saved data - Update accrodingly
 
-c_constant=0; %1 if you want to use the same regressors for all the participants
+c_constant=1; %1 if you want to use the same regressors for all the participants
 plot_visual=1; % 1 if you want to see the results
 plotindv=0; % 1 plot individual subjects
-indv=1; % 1 individual subjects analsyis; 0 group analysis
+indv=0; % 1 individual subjects analsyis; 0 group analysis
 adapt=0; % 1 you are looking at data during adaptation; 0 post-adaptation
-groupID='NTS' %ID of the group of interest
-savedata=1
+groupID='BATS' %ID of the group of interest
+savedata=0
+unitvector=0
 
 if contains(groupID,'BAT')
     
     if adapt==1 % For adaptation we are pooling together the data of all 24 participants
         
         fname='dynamicsData_BAT_subj_24_Session_1_RemoveBadMuscles_1_07-August-2023_Adaptation.h5'
+       
     else %Post-adaptation we do it by condiition
         %         fname=['dynamicsData_',groupID,'_subj_12_RemoveBadMuscles_1_PostAdaptation.h5']
-        fname=['dynamicsData_',groupID,'_subj_12_Session_1_RemoveBadMuscles_1_01-December-2023_Post-Adaptation.h5']
+        fname=['dynamicsData_',groupID,'_subj_12_Session_1_RemoveBadMuscles_1_19-December-2023_Post-Adaptation.h5']
+        steps=41:45;
     end
     
 elseif contains(groupID,'CTS') ||  contains(groupID,'NTS')  %TO DO: Add conditions to look at the adaptation
@@ -115,7 +118,7 @@ reactive_trace= zeros(size(indvEMGdata,1),28,n_sub,'double');
 contextual_trace= zeros(size(indvEMGdata,1),28,n_sub,'double');
 VIF_F= zeros(28,2,'double');
 correlation= zeros(28,1,'double');
-
+figure()
 %% Loop for analysis
 for subj=1:n_sub
     
@@ -146,7 +149,8 @@ for subj=1:n_sub
             %             context= find(strcmp(epochOfInterest,'Adaptation')==1);
             reactive2=find(strcmp(epochOfInterest,'NegShort_{late}')==1);
             tmbase=find(strcmp(epochOfInterest,'TM base')==1);
-            reactive=find(strcmp(epochOfInterest,'Ramp')==1);
+%             reactive=find(strcmp(epochOfInterest,'Ramp')==1);
+            reactive=find(strcmp(epochOfInterest,'PosShort_{late}')==1);
         elseif contains(groupID,'CTS') || contains(groupID,'NTS')
             reactive=find(strcmp(epochOfInterest,'SplitPos')==1);
             context= find(strcmp(epochOfInterest,'Adaptation')==1);
@@ -173,10 +177,11 @@ for subj=1:n_sub
         
         if contains(groupID,'BAT')
             %             context= find(strcmp(epochOfInterest,'Optimal')==1);
-            context= find(strcmp(epochOfInterest,'Adaptation')==1);
+            context= find(strcmp(epochOfInterest,'Optimal')==1);
             reactive2=find(strcmp(epochOfInterest,'NegShort_{late}')==1);
             tmbase=find(strcmp(epochOfInterest,'TM base')==1);
-            reactive=find(strcmp(epochOfInterest,'Ramp')==1);
+%             reactive=find(strcmp(epochOfInterest,'Ramp')==1);
+            reactive=find(strcmp(epochOfInterest,'PosShort_{late}')==1);
         elseif contains(groupID,'CTS') || contains(groupID,'NTS')
             reactive=find(strcmp(epochOfInterest,'SplitPos')==1);
             context= find(strcmp(epochOfInterest,'Adaptation')==1);
@@ -220,6 +225,7 @@ for subj=1:n_sub
     Coefficients_m=reshape(C_regressors',2,12,size(EMGdata,2)/12); %muscles for regressors 2 number of regressors, 12 number of phase of the gait cycle
     EMGobserved=reshape(EMGmodel(:,1:size(EMGmodel,2))',size(EMGmodel,2),12,size(EMGdata,2)/12); %data
     
+
     %% Linear regression individual muscles
     
     data=[];
@@ -230,18 +236,36 @@ for subj=1:n_sub
     data_shifted =[];
     NNMF=[]; NNMF2=[];
     
-    for muscle=1:28
+     for muscle=1:28
+            %Detemine VIF 
+            R0 = corrcoef(Coefficients_m(:,:,muscle)');
+            temp=diag(inv(R0))';
+            VIF_F(muscle,subj) = temp(1);
+     
+     end
+    
+     muscle_idx=find(VIF_F(:,1)<5);
+     ytl=ytl(muscle_idx);
+    for m=1:length(muscle_idx)
         %         yContextCurr=[];
         %         yReactiveCurr=[];
-        
+        muscle=muscle_idx(m);
         EMG_coef(:,:,muscle)=Coefficients_m(:,:,muscle)'./vecnorm(Coefficients_m(:,:,muscle)'); %Getting the unit vector of the regressors
+        
+
+            
+
+          
+            
         
         if all(isnan(EMG_coef(:,:,muscle)))
             invEMG_m(:,:,muscle)=(EMG_coef(:,:,muscle)); %if nan can't get inverse, carry the nan alone.
         else
             invEMG_m(:,:,muscle)=pinv(EMG_coef(:,:,muscle)'); % Getting the inverse, if data is not nan.
         end
-        
+        if unitvector==1
+        EMGobserved(:,:,muscle)=(EMGobserved(:,:,muscle)'./vecnorm(EMGobserved(:,:,muscle)'))';
+        end
         W(:,:,muscle) =invEMG_m(:,:,muscle)'*EMGobserved(:,:,muscle)'; % W = EMG^-1 * EMGdata^m
         EMG_estimated(:,:,muscle)=  EMG_coef(:,:,muscle)* W(:,:,muscle) ; %EMGhat = estimated muscle activity
         
@@ -249,7 +273,7 @@ for subj=1:n_sub
         %         EMGreactive(:,:,i)=  invEMG_m(:,1,i)* W1,:,i) ; %yhat_contextual
         
         W_transpose(:,:,muscle)=W(:,:,muscle)'; % transposing the dynamics vector
-        model{muscle}.C=EMG_coef(:,:,muscle); %saving the regressors. Yhis is necesary for the plotting funciton
+        model{m}.C=EMG_coef(:,:,muscle); %saving the regressors. Yhis is necesary for the plotting funciton
         Regressors_indv=[Regressors_indv;EMG_coef(:,:,muscle)];  % Concatenating the regressors for each muscles
         
         %         yContextCurr = EMG_coef(:,2,muscle)* W(2,:,muscle);
@@ -314,21 +338,22 @@ for subj=1:n_sub
         end
         %%
         % Checking for colinearity and correlation between the regresssions
-        R=corrcoef(model{muscle}.C); % correlation coeficient
-        correlation(muscle,1)=R(2);
-        aftereffects= mean(EMGobserved(41:45,:,muscle),"omitnan")';
-        estimated =mean(EMG_estimated(:,41:45,muscle)',"omitnan")';
-        %         PCA_upper=mean(rmmissing(PC(:,41:45))')';
-        %         PCA_l=mean(rmmissing(PCA_lower(:,41:45))')';
+        R=corrcoef(model{m}.C); % correlation coeficient
+        correlation(m,1)=R(2);
+        steps=41:45;
+%         steps= length(EMGobserved)-45: length(EMGobserved)-5;
+%         steps= 250-45:  250-5;
+        
+        aftereffects= mean(EMGobserved(steps,:,muscle),"omitnan")';
+        estimated =mean(EMG_estimated(:,steps,muscle)',"omitnan")';
+        %         PCA_upper=mean(rmmissing(PC(:,steps))')';
+        %         PCA_l=mean(rmmissing(PCA_lower(:,steps))')';
         %         VIF_F(muscle,:)=vif([model{muscle}.C aftereffects]); %Variance inflation
         %         VIF_F(muscle,:)=vif([model{muscle}.C]); %Variance inflation
-        R0 = corrcoef(model{muscle}.C);
-        temp=diag(inv(R0))';
-        
-        VIF_F(muscle,subj) = temp(1);
+
         
         
-        R2(muscle,subj) = my_Rsquared_coeff(aftereffects,estimated,1);
+        R2(m,subj) = my_Rsquared_coeff(aftereffects,estimated,1);
         
         %         R2_upper(muscle,1) = my_Rsquared_coeff(aftereffects,PCA_upper,1);
         %         R2_lower(muscle,1) = my_Rsquared_coeff(aftereffects,PCA_l,1);
@@ -338,75 +363,91 @@ for subj=1:n_sub
         
         %%TODO: Check why we have the same values for both regressors
         
-        mdl{subj,muscle}= fitlm(EMG_coef(:,:,muscle),aftereffects,'VarNames',{'Reactive','Contextual', labels(muscle).Data(1:end-1)},'Intercept',false);
+        mdl{subj,m}= fitlm(EMG_coef(:,:,muscle),aftereffects,'VarNames',{'Reactive','Contextual', labels(muscle).Data(1:end-1)},'Intercept',false);
         
-        if mdl{subj,muscle}.Coefficients.Estimate(2)+mdl{subj,muscle}.Coefficients.SE(2)>0 &&  mdl{subj,muscle}.Coefficients.Estimate(2)-mdl{subj,muscle}.Coefficients.SE(2)<0
+        if mdl{subj,m}.Coefficients.Estimate(2)+mdl{subj,m}.Coefficients.SE(2)>0 &&  mdl{subj,m}.Coefficients.Estimate(2)-mdl{subj,m}.Coefficients.SE(2)<0
             counter(2,subj)=counter(2,subj)+1;
         end
         
-        if mdl{subj,muscle}.Coefficients.Estimate(1)+mdl{subj,muscle}.Coefficients.SE(1)>0 &&  mdl{subj,muscle}.Coefficients.Estimate(1)-mdl{subj,muscle}.Coefficients.SE(1)<0
+        if mdl{subj,m}.Coefficients.Estimate(1)+mdl{subj,m}.Coefficients.SE(1)>0 &&  mdl{subj,m}.Coefficients.Estimate(1)-mdl{subj,m}.Coefficients.SE(1)<0
             counter(1,subj)=counter(1,subj)+1;
         end
         
-        if plot_visual==1
-            %             figure(1)
-            subplot 311
-            hold on
-            li{subj}=scatter(muscle,squeeze(mean((W_transpose(41:45,1,muscle)),"omitnan")),25,"filled",'MarkerFaceColor', color(subj,:));
-            errorbar(muscle,mdl{subj,muscle}.Coefficients.Estimate(1),mdl{subj,muscle}.Coefficients.SE(1),'k')
+        if VIF_F(muscle,subj) < 5
             
-            subplot 312
-            hold on
-            li2{subj}=scatter(muscle,squeeze(mean((W_transpose(41:45,2,muscle)),"omitnan")),25,"filled",'MarkerFaceColor', color(subj,:));
-            errorbar(muscle,mdl{subj,muscle}.Coefficients.Estimate(2),mdl{subj,muscle}.Coefficients.SE(2),'k')
-            
-            subplot 313
-            hold on
-            li3{subj}=scatter(muscle,R2(muscle,subj) ,25,"filled",'MarkerFaceColor', color(subj,:));
-            
-            
-            if plotindv==1
+            if plot_visual==1
+                
+                
+%                             figure()
                 subplot 311
-                ylabel({'Reactive';'AU'})
-                yline(0)
-                set(gca,'XTick',yt,'XTickLabel',ytl,'FontSize',10)
-                legend([li{subj}],subID{subj},'location','Best');
-                set(gcf,'color','w')
+                hold on
+                li{subj}=scatter(m,squeeze(mean((W_transpose(steps,1,muscle)),"omitnan")),25,"filled",'MarkerFaceColor', color(subj,:));
+                errorbar(m,mdl{subj,m}.Coefficients.Estimate(1),mdl{subj,m}.Coefficients.SE(1),'k')
                 
                 subplot 312
-                ylabel({'Contextual';'AU'})
-                yline(0)
-                set(gca,'XTick',yt,'XTickLabel',ytl,'FontSize',10)
-                %                 lgd=legend([li2{:}],subID{:},'location','Best');
-                set(gcf,'color','w')
+                hold on
+                li2{subj}=scatter(m,squeeze(mean((W_transpose(steps,2,muscle)),"omitnan")),25,"filled",'MarkerFaceColor', color(subj,:));
+                errorbar(m,mdl{subj,m}.Coefficients.Estimate(2),mdl{subj,m}.Coefficients.SE(2),'k')
                 
                 subplot 313
-                ylabel({'R^2'})
-                yline(0)
-                set(gca,'XTick',yt,'XTickLabel',ytl,'FontSize',10)
-                %                 lgd=legend([li3{:}],subID{:},'location','Best');
-                set(gcf,'color','w')
-                ylim([-1 1])
-                yline(.5)
+                hold on
+                li3{subj}=scatter(m,R2(m,subj) ,25,"filled",'MarkerFaceColor', color(subj,:));
+
+                
+                if R2(m,subj)>=0.5
+                    subplot 311
+                    hold on
+                    plot(m,1,'*r')
+                    
+                    subplot 312
+                    hold on
+                    plot(m,1,'*r')
+                end
+                
+                
+                if plotindv==1
+                    subplot 311
+                    ylabel({'Reactive';'AU'})
+                    yline(0)
+                    set(gca,'XTick',yt,'XTickLabel',ytl,'FontSize',10)
+                    legend([li{subj}],subID{subj},'location','Best');
+                    set(gcf,'color','w')
+                    
+                    subplot 312
+                    ylabel({'Contextual';'AU'})
+                    yline(0)
+                    set(gca,'XTick',yt,'XTickLabel',ytl,'FontSize',10)
+                    %                 lgd=legend([li2{:}],subID{:},'location','Best');
+                    set(gcf,'color','w')
+                    
+                    subplot 313
+                    ylabel({'R^2'})
+                    yline(0)
+                    set(gca,'XTick',yt,'XTickLabel',ytl,'FontSize',10)
+                    %                 lgd=legend([li3{:}],subID{:},'location','Best');
+                    set(gcf,'color','w')
+                    ylim([-1 1])
+                    yline(.5)
+                end
             end
         end
         
-        reactive_trace(:,muscle,subj)= W_transpose(:,1,muscle);
-        contextual_trace(:,muscle,subj)= W_transpose(:,2,muscle);
+        reactive_trace(:,m,subj)= W_transpose(:,1,muscle);
+        contextual_trace(:,m,subj)= W_transpose(:,2,muscle);
         
     end
     
     %% This section is for analysis done for the R01 - ignore for now
-    %     data_shifted=nanmean(data_shifted(:,41:45),2);
+    %     data_shifted=nanmean(data_shifted(:,steps),2);
     %     data_shifted = data_shifted(~isnan(data_shifted));
     %
-    %     reconstruction_indv=nanmean(reconstruction_indv(:,41:45),2);
+    %     reconstruction_indv=nanmean(reconstruction_indv(:,steps),2);
     %     reconstruction_indv=reconstruction_indv(~isnan(reconstruction_indv));
     %
-    %     reconstruction_contextual=nanmean(reconstruction_contextual(:,41:45),2);
+    %     reconstruction_contextual=nanmean(reconstruction_contextual(:,steps),2);
     %     reconstruction_contextual=reconstruction_contextual(~isnan(reconstruction_contextual));
     %
-    %     reconstruction_reactive=nanmean(reconstruction_reactive(:,41:45),2);
+    %     reconstruction_reactive=nanmean(reconstruction_reactive(:,steps),2);
     %     reconstruction_reactive=reconstruction_reactive(~isnan(reconstruction_reactive));
     %
     %     r2.total(subj,1)=my_Rsquared_coeff(data_shifted,reconstruction_indv,1);
@@ -436,19 +477,28 @@ for subj=1:n_sub
         set(gca,'XTick',yt,'XTickLabel',ytl,'FontSize',10)
         legend([li2{:}],subID,'location','Best')
         set(gcf,'color','w')
+        
+                subplot 313
+        ylabel({'R^2'})
+        yline(0)
+        set(gca,'XTick',yt,'XTickLabel',ytl,'FontSize',10)
+        legend([li2{:}],subID,'location','Best')
+        set(gcf,'color','w')
+                        yline(0.5,'--r')
+                yline(0)
     end
-    %     if plot_visual==1
-    %         model2{1}.C=Regressors_indv; %Save regressors for model
-    %         model2{1}.Out= reconstruction_indv; %Save reconstruction of the indiivudal muscles to the model format for plotting
-    %         model2{1}.NNMF=NNMF;
-    %         model2{1}.NNMF_lower=NNMF2;
-    %         analysis=0; %Flag asking if you want to run the analysis
-    %         isF=0; %Flag for fast leg
-    %
-    %
-    % %             vizSingleModel_IndvLeg_YoungAdults(model2{1},data,Uf,analysis,[],isF)
-    %         % legacy_vizSingleModel_FreeModel_ShortAdaptation_IndvLeg(model2{1},data,Uf,analysis,[],isF)
-    %     end
+        if plot_visual==1
+            model2{1}.C=Regressors_indv; %Save regressors for model
+            model2{1}.Out= reconstruction_indv; %Save reconstruction of the indiivudal muscles to the model format for plotting
+            model2{1}.NNMF=NNMF;
+            model2{1}.NNMF_lower=NNMF2;
+            analysis=0; %Flag asking if you want to run the analysis
+            isF=0; %Flag for fast leg
+    
+    
+                vizSingleModel_IndvLeg_YoungAdults(model2{1},data,Uf,analysis,ytl,isF)
+%             legacy_vizSingleModel_FreeModel_ShortAdaptation_IndvLeg(model2{1},data,Uf,analysis,[],isF)
+        end
 end
 
 %% saving data
@@ -456,14 +506,14 @@ if adapt==1 && savedata==1
     
     save([groupID, '_adaptation','_',datestr(now,'dd-mmmm-yyyy'),'.mat'], 'reactive_trace','contextual_trace','R2','fname','subID','mdl','VIF_F')
 else
-    save([groupID, '_post-adaptation','_',datestr(now,'dd-mmmm-yyyy'),'.mat'], 'reactive_trace','contextual_trace','R2','fname','subID','mdl','VIF_F')
+    save([groupID, '_post-adaptation_unitvectors_','_',datestr(now,'dd-mmmm-yyyy'),'.mat'], 'reactive_trace','contextual_trace','R2','fname','subID','mdl','VIF_F')
     
 end
 
 %% Plot group mean and standart error of the recruitment of the reactive and contextual patterns
 
-reconstruction_contextual=squeeze(mean(rmmissing(contextual_trace(41:45,:,:)),1))'; %contextual
-reconstruction_reactive=squeeze(mean(rmmissing(reactive_trace(41:45,:,:)),1))'; % reactive
+reconstruction_contextual=squeeze(mean(rmmissing(contextual_trace(steps,:,:)),1))'; %contextual
+reconstruction_reactive=squeeze(mean(rmmissing(reactive_trace(steps,:,:)),1))'; % reactive
 
 figure
 hold on
