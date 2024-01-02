@@ -1,7 +1,7 @@
 %%
 clear; close all; clc;
 %%
-groupID ='BAT'; %Group of interest 
+groupID ='BATR'; %Group of interest 
 [group2, newLabelPrefix,n,subID]=creatingGroupdataWnormalizedEMG(groupID,1); % Creating the groupData normalized
 
 sesion1=1;
@@ -32,9 +32,12 @@ if contains(groupID,'BAT')
     if adaptation==1
         strides=[-40 450]; %Number per strides per condition
         cond={'TM base','Adaptation'}; %Conditions for this group
-    else
+    elseif  contains(groupID,'BATR')
         strides=[-40 300]; %Number per strides per condition
         cond={'TM base','Post 1'}; %Conditions for this group
+    elseif  contains(groupID,'BATS')
+        strides=[-40 300]; %Number per strides per condition
+        cond={'OG base','Post 1'}; %Conditions for this group
         
     end
     exemptFirst=[1]; %ignore inital strides
@@ -100,7 +103,7 @@ end
 %% 
 if contains(groupID,'BAT')
     ep=defineRegressorsDynamicsFeedback('nanmean');
-    epochOfInterest={'Ramp','PosShort_{late}','Adaptation_{early}','Optimal','NegShort_{late}','TM base'};
+    epochOfInterest={'Ramp','PosShort_{late}','Adaptation_{early}','Adaptation','Optimal','NegShort_{late}','NegShort_{early}','TM base'};
 elseif contains(groupID,'CTS') || contains(groupID,'CTR') || contains(groupID,'NTS') || contains(groupID,'NTR')
     ep=defineEpochNimbusShoes('nanmean');
     epochOfInterest={'SplitNeg','Adaptation','SplitPos','OGNimbus'};
