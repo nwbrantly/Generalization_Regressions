@@ -4,8 +4,8 @@ groupID ='NTS'; %name of the groups that you want to plot
 
 %% Defining the epoch that we are going to use for data normalization
 
-epochNames={'TR base'};
-condition= {'TR base'}; %Change conditions names to your own! 
+epochNames={'TM base'};
+condition= {'TM base'}; %Change conditions names to your own! 
 strideNo=[-40]; %Positive vaues define inital; negative values define # strides at end of that condition
 exemptFirst=0; %Number of strides you want to ignore at the beginning of the condition
 exemptLast=5; %Number of strides you want to ignore at the end of the condition
