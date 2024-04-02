@@ -1,11 +1,11 @@
 %%
 clear; close all; clc;
 %%
-groupID ='BATR'; %Group of interest 
-[group2, newLabelPrefix,n,subID]=creatingGroupdataWnormalizedEMG(groupID,1); % Creating the groupData normalized
-
+groupID ='C3S01'; %Group of interest 
+[group, newLabelPrefix,n,subID]=creatingGroupdataWnormalizedEMG(groupID,1); % Creating the groupData normalized
 sesion1=1;
 adaptation=0;
+negative=0;
 if strcmp(groupID,'C3')
     sesion1  = questdlg('Is this session 1?', ...
         'Session of interest', ...
@@ -23,7 +23,7 @@ end
 %different analysis 
 removeBadmuscles=1;
 if removeBadmuscles==1
-group2= RemovingBadMuscleToSubj(group2);
+group= RemovingBadMuscleToSubj(group);
 end
 %% Define epochs depending on the group data
 
@@ -44,8 +44,14 @@ if contains(groupID,'BAT')
     exemptLast=[5]; %Strides needed
     
 
-elseif contains(groupID,'CTS') || contains(groupID,'CTR') || contains(groupID,'NTS') || contains(groupID,'NTR')
-    strides=[-40 300]; %Number per strides per condition
+elseif contains(groupID,'CTS') || contains(groupID,'NTS') || contains(groupID,'VATS')
+    strides=[-40 150]; %Number per strides per condition
+    cond={'OG base','Post 1'}; %Conditions for this group
+    exemptFirst=[1]; %ignore inital strides
+    exemptLast=[5]; %Strides needed
+    
+elseif contains(groupID,'CTR') || contains(groupID,'NTR') || contains(groupID,'VATR')
+     strides=[-40 150]; %Number per strides per condition
     cond={'TR base','Post 1'}; %Conditions for this group
     exemptFirst=[1]; %ignore inital strides
     exemptLast=[5]; %Strides needed
@@ -67,7 +73,27 @@ elseif contains(groupID,'C3')
     end
 
     exemptFirst=[1]; %ignore inital strides
-    exemptLast=[5]; %Strides needed    
+    exemptLast=[5]; %Strides needed   
+    
+elseif contains(groupID,'MWS')
+    if  adaptation==1
+        strides=[-40 900]; %Number per strides per condition
+        cond={'NIM base','Adaptation'}; %Conditions for this group
+    elseif negative==1
+        strides=[-40 900]; %Number per strides per condition
+          cond={'NIM base','OG Tied'};  %Conditions for this group
+           strides=[-40 20]; %Number per strides per condition
+    
+    else
+        cond={'OG base','Post 1'}; %Conditions for this group
+        
+        strides=[-40 200]; %Number per strides per condition
+        
+    end
+    
+    exemptFirst=[1]; %ignore inital strides
+    exemptLast=[5]; %Strides needed
+    
 end
 
 ep=defineEpochs(cond,cond,strides,exemptFirst,exemptLast,'nanmean',{'Base','Post1'}); %epochs
@@ -88,7 +114,7 @@ end
  newLabelPrefix= wanted_Muscles;
 %% get data:
 padWithNaNFlag=true;
-[dataEMG,labels,allDataEMG2]=group2.getPrefixedEpochData(newLabelPrefix,ep,padWithNaNFlag); 
+[dataEMG,labels,allDataEMG2]=group.getPrefixedEpochData(newLabelPrefix,ep,padWithNaNFlag); 
 
 %Flipping EMG:
 for i=1:length(allDataEMG2)
@@ -96,7 +122,7 @@ for i=1:length(allDataEMG2)
     allDataEMG2{i}=reshape(flipEMGdata(aux,2,3),size(aux,1),numel(labels),size(aux,4));
 end
 
-[~,~,dataContribs]=group2.getEpochData(ep,{'netContributionNorm2'},padWithNaNFlag);
+[~,~,dataContribs]=group.getEpochData(ep,{'netContributionNorm2'},padWithNaNFlag);
 
 
 %% Getting the regressors values
@@ -104,12 +130,15 @@ end
 if contains(groupID,'BAT')
     ep=defineRegressorsDynamicsFeedback('nanmean');
     epochOfInterest={'Ramp','PosShort_{late}','Adaptation_{early}','Adaptation','Optimal','NegShort_{late}','NegShort_{early}','TM base'};
-elseif contains(groupID,'CTS') || contains(groupID,'CTR') || contains(groupID,'NTS') || contains(groupID,'NTR')
+elseif contains(groupID,'CTS') || contains(groupID,'CTR') || contains(groupID,'NTS') || contains(groupID,'NTR') || contains(groupID,'VATS') || contains(groupID,'VATR')
     ep=defineEpochNimbusShoes('nanmean');
-    epochOfInterest={'SplitNeg','Adaptation','SplitPos','OGNimbus'};
+    epochOfInterest={'SplitNeg','Adaptation','SplitPos','TRbase','OGbase'};
 elseif contains(groupID,'C3') 
     ep=defineRegressors_StrokeC3('nanmean');
     epochOfInterest={'PosShort_{late}','Adaptation_{early}','Adaptation','NegShort_{late}','TM base','OG base'};
+elseif contains(groupID,'MWS') 
+   ep= defineEpochMW('nanmean');
+   epochOfInterest={'NIMbase','OGbase','Adaptation_{early}','Adaptation_{late}','NegShort','Post1_{early}'}; 
 end
 
 
@@ -118,7 +147,7 @@ for l=1:length(epochOfInterest)
    
     ep2=defineReferenceEpoch(epochOfInterest{l},ep);
     
-    [dataEMG,labels,allDataEMG]=group2.getPrefixedEpochData(newLabelPrefix,ep2,padWithNaNFlag); %Getting the data
+    [dataEMG,labels,allDataEMG]=group.getPrefixedEpochData(newLabelPrefix,ep2,padWithNaNFlag); %Getting the data
     
     %Flipping EMG:0
     for i=1:length(allDataEMG)
@@ -136,8 +165,8 @@ end
 EMGdata=cell2mat(allDataEMG2);
 regressors=cell2mat(regressors');
 
-%%
-%%Save to hdf5 format for sharing with non-Matlab users
+%% Save to hdf5 format for sharing with non-Matlab users
+
 if adaptation==1
     name=['dynamicsData_',groupID,'_subj_', num2str(n),'_Session_',num2str(sesion1),'_RemoveBadMuscles_', num2str(removeBadmuscles),'_',datestr(now,'dd-mmmm-yyyy'),'_Adaptation','.h5'];
 else
