@@ -12,20 +12,23 @@
 % 6) Saving params file 
 clear; clc; close all
 %% Define conditions
+
 saveData=0 %if you want to save your data 
 %% load subjects  and prep data (Step 1 and 2)
-
-
 groupID = {'BATR03'};
 scriptDir = cd;
 [normalizedGroupData, newLabelPrefix,n_subjects,subID]=creatingGroupdataWnormalizedEMG(groupID{1},0,[]);
 removeMuscles=1;
 %% Removing bad muscles (Step 3) 
 %This script make sure that we always remove the same muscle for the
-%different analysis
+%different analysis. 
+% NOTE: THIS IS HARD CODE PLEASE UPDATE YOUR CODE
+
 if removeMuscles==1
     normalizedGroupData= RemovingBadMuscleToSubj(normalizedGroupData);
 end
+
+%% Compute bias, unbias and individual muscle stride by stride norm (Step 4 and 5)
 
 [normalizedGroupData]=AddingNorm(normalizedGroupData,subID,newLabelPrefix,groupID);
 
