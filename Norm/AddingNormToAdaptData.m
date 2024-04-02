@@ -15,9 +15,20 @@ clear; clc; close all
 saveData=0 %if you want to save your data 
 
 %% load subjects  and prep data (Step 1 and 2)
+
+
+epochNames={'TR base'};
+condition= {'TR base'}; %Change conditions names to your own! 
+strideNo=[-40]; %Positive vaues define inital; negative values define # strides at end of that condition
+exemptFirst=0; %Number of strides you want to ignore at the beginning of the condition
+exemptLast=5; %Number of strides you want to ignore at the end of the condition
+summaryMethod={'nanmean'}; %Method to analyze bar plots 
+shortName=[];
+[refEpForNormalization] = defineEpochs(epochNames,condition,strideNo,exemptFirst,exemptLast,summaryMethod,shortName);
+
 groupID = {'BATR03'};
 scriptDir = cd;
-[normalizedGroupData, newLabelPrefix,n_subjects,subID]=creatingGroupdataWnormalizedEMG(groupID{1},0,[]);
+[normalizedGroupData, newLabelPrefix,n_subjects,subID]=creatingGroupdataWnormalizedEMG(groupID{1},0,refEpForNormalization);
 removeMuscles=1;
 %% Removing bad muscles (Step 3) 
 
