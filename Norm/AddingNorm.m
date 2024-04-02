@@ -98,7 +98,7 @@ for idx = 1:numel(subID) %Loop across participant
         for i = 1:numel(newLabelPrefix)
             DataIdx=find(cellfun(@(x) ~isempty(x),regexp(Subj.data.labels,['^' newLabelPrefix{i} '[ ]?\d+$'])));      %Finding the columns of the data       
                         
-            m_data=[m_data Subj.data.Data(:,DataIdx)]; ; %concatenating the data 
+            m_data=[m_data Subj.data.Data(:,DataIdx)]; %concatenating the data 
             m_data(isnan(m_data))=0; %nan are made zero to computer the norm 
 
         end    

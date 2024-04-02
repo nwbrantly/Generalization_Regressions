@@ -1,8 +1,21 @@
 %%
 clear; close all; clc;
+
 %%
+
+%% Defining the epoch that we are going to use for data normalization
+epochNames={'TM base'};
+condition= {'TM base'}; %Change conditions names to your own! 
+strideNo=[-40]; %Positive vaues define inital; negative values define # strides at end of that condition
+exemptFirst=0; %Number of strides you want to ignore at the beginning of the condition
+exemptLast=5; %Number of strides you want to ignore at the end of the condition
+summaryMethod={'nanmean'}; %Method to analyze bar plots 
+shortName=[];
+[refEpForNormalization] = defineEpochs(epochNames,condition,strideNo,exemptFirst,exemptLast,summaryMethod,shortName);
+
+%% 
 groupID ='C3S01'; %Group of interest 
-[group, newLabelPrefix,n,subID]=creatingGroupdataWnormalizedEMG(groupID,1); % Creating the groupData normalized
+[group, newLabelPrefix,n,subID]=creatingGroupdataWnormalizedEMG(groupID,1,refEpForNormalization); % Creating the groupData normalized
 sesion1=1;
 adaptation=0;
 negative=0;
@@ -112,6 +125,7 @@ end
 
  wanted_Muscles= newLabelPrefix(sort(idx)); %It needs to be the muscle form the slow leg first
  newLabelPrefix= wanted_Muscles;
+ 
 %% get data:
 padWithNaNFlag=true;
 [dataEMG,labels,allDataEMG2]=group.getPrefixedEpochData(newLabelPrefix,ep,padWithNaNFlag); 
