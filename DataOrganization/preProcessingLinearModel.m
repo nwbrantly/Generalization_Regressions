@@ -1,24 +1,25 @@
 %%
+%% Script to extract the data from adaptData or groupAdaptation data 
 clear; close all; clc;
-
-%%
 
 %% Defining the epoch that we are going to use for data normalization
 epochNames={'TM base'};
-condition= {'TM base'}; %Change conditions names to your own! 
+condition= {'TM base'}; %Change conditions names to your own!
 strideNo=[-40]; %Positive vaues define inital; negative values define # strides at end of that condition
 exemptFirst=0; %Number of strides you want to ignore at the beginning of the condition
 exemptLast=5; %Number of strides you want to ignore at the end of the condition
-summaryMethod={'nanmean'}; %Method to analyze bar plots 
+summaryMethod={'nanmean'}; %Method to analyze bar plots
 shortName=[];
 [refEpForNormalization] = defineEpochs(epochNames,condition,strideNo,exemptFirst,exemptLast,summaryMethod,shortName);
 
-%% 
-groupID ='C3S01'; %Group of interest 
+%% Normalizing data 
+groupID ='C3S01'; %Group of interest
 [group, newLabelPrefix,n,subID]=creatingGroupdataWnormalizedEMG(groupID,1,refEpForNormalization); % Creating the groupData normalized
 sesion1=1;
 adaptation=0;
 negative=0;
+
+%% This is important for the C3 stroke study to identify the correct session 
 if strcmp(groupID,'C3')
     sesion1  = questdlg('Is this session 1?', ...
         'Session of interest', ...
@@ -31,17 +32,17 @@ if strcmp(groupID,'C3')
     end
 end
 
-%% Removing bad muscles 
+%% Removing bad muscles
 %This script make sure that we always remove the same muscle for the
-%different analysis 
+%different analysis (hard coded)
 removeBadmuscles=1;
 if removeBadmuscles==1
-group= RemovingBadMuscleToSubj(group);
+    group= RemovingBadMuscleToSubj(group);
 end
-%% Define epochs depending on the group data
+%% Define epochs depending on the group data - Notice that you need to define the epoch for your data
 
 if contains(groupID,'BAT')
-
+    
     if adaptation==1
         strides=[-40 450]; %Number per strides per condition
         cond={'TM base','Adaptation'}; %Conditions for this group
@@ -56,7 +57,7 @@ if contains(groupID,'BAT')
     exemptFirst=[1]; %ignore inital strides
     exemptLast=[5]; %Strides needed
     
-
+    
 elseif contains(groupID,'CTS') || contains(groupID,'NTS') || contains(groupID,'VATS')
     strides=[-40 150]; %Number per strides per condition
     cond={'OG base','Post 1'}; %Conditions for this group
@@ -64,29 +65,30 @@ elseif contains(groupID,'CTS') || contains(groupID,'NTS') || contains(groupID,'V
     exemptLast=[5]; %Strides needed
     
 elseif contains(groupID,'CTR') || contains(groupID,'NTR') || contains(groupID,'VATR')
-     strides=[-40 150]; %Number per strides per condition
+    strides=[-40 150]; %Number per strides per condition
     cond={'TR base','Post 1'}; %Conditions for this group
     exemptFirst=[1]; %ignore inital strides
     exemptLast=[5]; %Strides needed
-
+    
 elseif contains(groupID,'C3')
     
-    if  adaptation==1 
+    if  adaptation==1
         strides=[-40 900]; %Number per strides per condition
         cond={'TM base','Adaptation'}; %Conditions for this group
     else
-    if sesion1==1    
-        cond={'OG base','Post 1'}; %Conditions for this group
-    elseif sesion1==2
-        cond={'TM base','Post 1'}; %Conditions for this group
+        
+        if sesion1==1
+            cond={'OG base','Post 1'}; %Conditions for this group
+        elseif sesion1==2
+            cond={'TM base','Post 1'}; %Conditions for this group
+        end
+        
+        strides=[-40 350]; %Number per strides per condition
+        
     end
     
-    strides=[-40 350]; %Number per strides per condition
-
-    end
-
     exemptFirst=[1]; %ignore inital strides
-    exemptLast=[5]; %Strides needed   
+    exemptLast=[5]; %Strides needed
     
 elseif contains(groupID,'MWS')
     if  adaptation==1
@@ -94,9 +96,9 @@ elseif contains(groupID,'MWS')
         cond={'NIM base','Adaptation'}; %Conditions for this group
     elseif negative==1
         strides=[-40 900]; %Number per strides per condition
-          cond={'NIM base','OG Tied'};  %Conditions for this group
-           strides=[-40 20]; %Number per strides per condition
-    
+        cond={'NIM base','OG Tied'};  %Conditions for this group
+        strides=[-40 20]; %Number per strides per condition
+        
     else
         cond={'OG base','Post 1'}; %Conditions for this group
         
@@ -110,25 +112,23 @@ elseif contains(groupID,'MWS')
 end
 
 ep=defineEpochs(cond,cond,strides,exemptFirst,exemptLast,'nanmean',{'Base','Post1'}); %epochs
-%% Pick muscles that you wanted to get the data from 
-%%%% load and prep data
-% muscleOrder={'SOL', 'LG', 'MG', 'BF', 'SEMB', 'SEMT'};
+%% Pick muscles that you wanted to get the data from
 muscleOrder={'TA','PER', 'SOL', 'LG', 'MG', 'BF', 'SEMB', 'SEMT', 'VM', 'VL', 'RF', 'HIP','TFL', 'GLU'};
 newLabelPrefix2 = defineMuscleList(muscleOrder); %List of muscle
 newLabelPrefix2 = regexprep(newLabelPrefix2,'_s','s'); %removing the underscore "_"
 
 for m=1:length(newLabelPrefix2)
-
+    
     idx(m)=find(strcmp(newLabelPrefix,newLabelPrefix2(m))); %getting the index of the muscles
-
+    
 end
 
- wanted_Muscles= newLabelPrefix(sort(idx)); %It needs to be the muscle form the slow leg first
- newLabelPrefix= wanted_Muscles;
- 
+wanted_Muscles= newLabelPrefix(sort(idx)); %It needs to be the muscle form the slow leg first
+newLabelPrefix= wanted_Muscles;
+
 %% get data:
 padWithNaNFlag=true;
-[dataEMG,labels,allDataEMG2]=group.getPrefixedEpochData(newLabelPrefix,ep,padWithNaNFlag); 
+[dataEMG,labels,allDataEMG2]=group.getPrefixedEpochData(newLabelPrefix,ep,padWithNaNFlag);
 
 %Flipping EMG:
 for i=1:length(allDataEMG2)
@@ -140,26 +140,27 @@ end
 
 
 %% Getting the regressors values
-%% 
+
 if contains(groupID,'BAT')
     ep=defineRegressorsDynamicsFeedback('nanmean');
     epochOfInterest={'Ramp','PosShort_{late}','Adaptation_{early}','Adaptation','Optimal','NegShort_{late}','NegShort_{early}','TM base'};
 elseif contains(groupID,'CTS') || contains(groupID,'CTR') || contains(groupID,'NTS') || contains(groupID,'NTR') || contains(groupID,'VATS') || contains(groupID,'VATR')
     ep=defineEpochNimbusShoes('nanmean');
     epochOfInterest={'SplitNeg','Adaptation','SplitPos','TRbase','OGbase'};
-elseif contains(groupID,'C3') 
+elseif contains(groupID,'C3')
     ep=defineRegressors_StrokeC3('nanmean');
     epochOfInterest={'PosShort_{late}','Adaptation_{early}','Adaptation','NegShort_{late}','TM base','OG base'};
-elseif contains(groupID,'MWS') 
-   ep= defineEpochMW('nanmean');
-   epochOfInterest={'NIMbase','OGbase','Adaptation_{early}','Adaptation_{late}','NegShort','Post1_{early}'}; 
+elseif contains(groupID,'MWS')
+    ep= defineEpochMW('nanmean');
+    epochOfInterest={'NIMbase','OGbase','Adaptation_{early}','Adaptation_{late}','NegShort','Post1_{early}'};
 end
 
 
-    padWithNaNFlag=true; %If no enough steps fill with nan, let this on
-for l=1:length(epochOfInterest)
-   
-    ep2=defineReferenceEpoch(epochOfInterest{l},ep);
+padWithNaNFlag=true; %If no enough steps fill with nan, let this on if not you wont be able to contatenate your data
+
+for l=1:length(epochOfInterest) %Loop over defined epoch of interest
+    
+    ep2=defineReferenceEpoch(epochOfInterest{l},ep); 
     
     [dataEMG,labels,allDataEMG]=group.getPrefixedEpochData(newLabelPrefix,ep2,padWithNaNFlag); %Getting the data
     
@@ -170,9 +171,9 @@ for l=1:length(epochOfInterest)
         
     end
     
-  regressors{l}=nanmean(allDataEMG{:},1);
-
-
+    regressors{l}=nanmean(allDataEMG{:},1); 
+    
+    
 end
 
 %% Reorganize data
