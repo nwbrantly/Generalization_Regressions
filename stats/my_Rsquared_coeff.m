@@ -1,5 +1,6 @@
 function Rsquared = my_Rsquared_coeff(data,data_fit,relativeToMean)
     % R2 correlation coefficient computation
+    % Code developed by Shuqi Liu 
     
     % The total sum of squares
     if relativeToMean
