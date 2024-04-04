@@ -1,15 +1,15 @@
 %% Script to plot the reactive and contexutal recruitment time courses and the model R2 
 %% This script needs the input that it is save from model_fit_individual_muscle_PerSubject.m 
 
-binwith=5; % Running windown length 
-analysis=0;isF=0; 
-
 % Define which group you want to plot
 % groupID={'VATR','VATS'};
 % groupID={'NTR','NTS'};
 %  groupID={'CTR','CTS'};
 groupID={'BATR','BATS'}; 
+
 f=[1:14 1:14;1:14 1:14]; %Hard coded to make it look cute! 
+
+binwith=5; % Running windown length 
 
 for g=1:length(groupID) %Group loop (Device or W/O device)
     
@@ -19,8 +19,7 @@ for g=1:length(groupID) %Group loop (Device or W/O device)
     else
         load([groupID{g},'_post-adaptation_Indv_0_08-March-2024.mat'])
     end
-    
-    
+        
     for muscle=1:length(labels) %% Define muscles to plot (This data set has a total of 28 muscles)
         
         r2 = my_Rsquared_coeff(model{muscle}.EMGobserved', model{muscle}.EMGestimated',1); % Compute the R2 throuhgtout the data
@@ -102,12 +101,9 @@ end
 
 %% Plot of the data and reconstruction per muscle 
 
-% Define which group you want to plot
-groupID={'BATR'};
+groupID={'BATR'}; % Define which group you want to plot
+analysis=0; %Define type analysis: 0 linear regression 
 
-
-analysis=0;
-isF=0;
 
 % Load data
 if strncmpi(groupID{g},'BAT',3) %See if the first letters of the group are BAT
@@ -119,9 +115,9 @@ end
 for muscle=1  %% Define muscles to plot (This data set has a total of 28 muscles)
     
     if muscle<=14
-        isF=0;
-    else
-        isF=1;
+        isF=0; % Slow leg
+    else 
+        isF=1; % Fast leg
     end
     
     % Plot the time course plus the regressors
