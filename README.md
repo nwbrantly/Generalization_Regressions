@@ -10,7 +10,7 @@ We hypothesize that at least two processes with distinct dynamics underlie the c
 Our analysis showed that the reactive and contextual processes contribute to the adaptation and post-adaptation of muscle activity on the treadmill. However, during overground post-adaptation, 2 out of the 28 muscles generalized the contextual pattern, and all other muscles exhibited the reactive pattern, suggesting that the kinematic effects previously reported overground are mostly induced by reactive processes in response to a small number of muscles generalizing the split pattern. These findings provide insights into locomotor adaptation features beyond those drawn from traditional kinetic or kinematic analyses, which can be leveraged to study the effect of aging and brain lesions on the carryover of muscle activity.
 
 
-How to process the data (step-by-step)
+**How to process the data (step-by-step)**
 1. To plot the EMGnorm please refer to AddingNormToAdaptData.m
 2. To compute the EMG dynamics, you need:
 3. Use preProcessingLinearModel.m to extract the data from the param files 
