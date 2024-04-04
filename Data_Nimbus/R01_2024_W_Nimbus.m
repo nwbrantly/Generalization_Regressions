@@ -1,6 +1,9 @@
-    
-steps=41:45;
+% Plotting the value of the initial aftereffect for the reactive and
+% contextual process. We are eliminating muscles with VIF> 5 (colinearily)
+% and R2<0.2 (bad reconstruction)  
 
+
+steps=41:45;
 groupID={'CTR','NTR','VATR','CTS','NTS','VATS'};
 
 figure
@@ -11,14 +14,14 @@ contextual=[];
 colors= [[0.8500 0.3250 0.0980];[0 0.4470 0.7410];[0.4660 0.6740 0.1880];[1 1 1];[1 1 1];[1 1 1]];
 colorEdge= [[1 1 1];[1 1 1];[1 1 1];[0.8500 0.3250 0.0980];[0 0.4470 0.7410];[0.4660 0.6740 0.1880]];
 
-for g=1:6
+for g=1:length(groupID) %loop across groups
     
     load([groupID{g},'_post-adaptation_22-February-2024.mat'])
-    reconstruction_contextual=squeeze(mean(contextual_trace(steps,:,:),'omitnan')); %contextual
-    reconstruction_reactive=squeeze(mean(reactive_trace(steps,:,:),'omitnan')); % reactive
+    reconstruction_contextual=squeeze(mean(contextual_trace(steps,:,:),'omitnan')); %Early aftereffect for the contextual 
+    reconstruction_reactive=squeeze(mean(reactive_trace(steps,:,:),'omitnan')); %Early aftereffect for the reactive
     
-    for s=1:size(reconstruction_contextual,2)
-        reconstruction_reactive(find(VIF_F(:,s)>5),s)=nan;
+    for s=1:size(reconstruction_contextual,2) %Loop across participants marking those muscles with VIF>5 and R2<0.2 as NaN
+        reconstruction_reactive(find(VIF_F(:,s)>5),s)=nan; 
         reconstruction_reactive(find(R2{s}(:,1)<0.2),s)=nan;
         reconstruction_contextual(find(VIF_F(:,s)>5),s)=nan;
         reconstruction_contextual(find(R2{s}(:,1)<0.2),s)=nan;
@@ -26,37 +29,47 @@ for g=1:6
         reconstruction_contextual(find(reconstruction_contextual(:,s)<0),s)=nan;
         
     end
-    
+     %reorgnanize the data as a vectors 
     reactive(:,g)= reshape(reconstruction_reactive,28*5,1);
-    contextual(:,g)= reshape(reconstruction_contextual,28*5,1);
+    contextual(:,g)= reshape(reconstruction_contextual,28*5,1); 
+    
+    % Addign the number of muscle that pass our criteria for reactive &
+    % contextual 
     n_muscle(g)=sum(~isnan(reactive(:,g)));
     n_muscle_C(g)=sum(~isnan(contextual(:,g)));
+    
+    
+    %Plot reactive data 
     subplot 211;hold on
-    scatter(g,reactive(:,g),'o','filled','MarkerFaceColor',[.7 .7 .7])
+    scatter(g,reactive(:,g),'o','filled','MarkerFaceColor',[.7 .7 .7]) %Plotting the individual muscle that pass the criteria  
+    %Plotting mean and standard desviation 
     plot(g+.1,mean(reactive(:,g),'omitnan'),'sk','MarkerFaceColor',colors(g,:),...
         'MarkerSize',15,'MarkerEdgeColor',colorEdge(g,:))
     errorbar(g+.1,mean(reactive(:,g),'omitnan'),std(reactive(:,g),'omitnan'),'k')
-    h= ttest(reactive(:,g));
+    
+    h= ttest(reactive(:,g)); %testing if the distribution is different from zero 
     
     
-    if h==1
-        plot(g, 2, '*m')
+    if h==1 % If the distribution is difference from zero. We plot a magenta * on top 
+        plot(g, 2, '*m') 
     end
     
+    %Plot contextual data 
     subplot 212 ;hold on
-    scatter(g,contextual(:,g),'o','filled','MarkerFaceColor',[.7 .7 .7])
+    scatter(g,contextual(:,g),'o','filled','MarkerFaceColor',[.7 .7 .7]) %Plotting the individual muscle that pass the criteria  
     plot(g+.1,mean(contextual(:,g),'omitnan'),'sk','MarkerFaceColor',colors(g,:),...
         'MarkerSize',15,'MarkerEdgeColor',colorEdge(g,:))
     errorbar(g+.1,mean(contextual(:,g),'omitnan'),std(contextual(:,g),'omitnan'),'k')
     h= ttest(contextual(:,g));
     
-    if h==1
+    if h==1 % If the distribution is difference from zero. We plot a magenta * on top 
         plot(g, 2, '*m')
     end
     
     
 end
 
+% Update x-label names to match the groups
 subplot 211;hold on
 set(gca,'XTick',1:6,'XTickLabel',groupID,'FontSize',10)
 yline(0)
@@ -67,9 +80,7 @@ set(gca,'XTick',1:6,'XTickLabel',groupID,'FontSize',10)
 yline(0)
 ylabel({'Contextual';'(A.U)'})
 set(gcf,'color','w')
-
-%%
-%number of muscle per group
+%% Number of muscle per group that pass our criteria VIF>5 and R2<0.2 - Needs input from aboce section 
 figure
 hold on
 
@@ -85,7 +96,7 @@ set(gca,'XTick',1:6,'XTickLabel',groupID,'FontSize',10)
 
 
 
-%% Number of muscle with reactive and contextual > 0
+%% Number of muscle with reactive and contextual > 0 - Needs inputs from the section 1 
 figure
 hold on
 
@@ -115,12 +126,14 @@ set(gcf,'color','w')
 
 
 
-%% ttest between conditions
+%% ttest between groups, you need to pic the groups - Needs inputs from the section 1
 
 [h_reactive,p_reactive] = ttest2(reactive(:,4),reactive(:,5))
 [h_contextual,p_contextual] = ttest2(contextual(:,4),contextual(:,5))
 
-%% Two-way ANOVA
+%% Two-way ANOVA - Needs inputs from the section 1
+
+ %Grouping data by adaptation condition 
 CT=[contextual(:,1);contextual(:,4)];
 NT=[contextual(:,2);contextual(:,5)];
 VAT=[contextual(:,3);contextual(:,6)];
@@ -129,32 +142,29 @@ g1 = [ones(1,28*5) 2*ones(1,28*5) 3*ones(1,28*5) 1*ones(1,28*5) 2*ones(1,28*5) 3
 g2=[ones(1,28*5*3) 2*ones(1,28*5*3)];
 
 % reactive
-c=reshape(reactive,28*5*6,1) ;
-[~,~,stats] = anovan(c,{g1 g2},"Model","interaction", ...
+c=reshape(reactive,28*5*6,1) ; %reshaping the data as a vector 
+[~,~,stats] = anovan(c,{g1 g2},"Model","interaction", ... %Using anovan since we have nan on the data 
     "Varnames",["Adaptation","PostAdaptation"]);
 
 %contextual
-c=reshape(contextual,28*5*6,1) ;
-[~,~,stats] = anovan(c,{g1 g2},"Model","interaction", ...
+c=reshape(contextual,28*5*6,1) ; %reshaping the data as a vector 
+[~,~,stats] = anovan(c,{g1 g2},"Model","interaction", ... %Using anovan since we have nan on the data 
     "Varnames",["Adaptation","PostAdaptation"]);
-%% Stroke Data
-%%
+%% Stroke Data 
+%% Data from C3S01 with and without the nimbus 
+%Same plot as above the costum part is the groups colors 
 
-steps=41:45;
-
-groupID={'C3TR_sub1','MWSTR_sub1','C3TS_sub1','MWSTS_sub1'};
+steps=41:45; %Steps that we want to look at 
+groupID={'C3TR_sub1','MWSTR_sub1','C3TS_sub1','MWSTS_sub1'}; %Grpups name 
 figure
-colors= [[1 1 1];[1 1 1];[0.8500 0.3250 0.0980];[0 0.4470 0.7410]];
-colorEdge= [[0.8500 0.3250 0.0980];;[0 0.4470 0.7410];[1 1 1];[1 1 1];];
+colors= [[1 1 1];[1 1 1];[0.8500 0.3250 0.0980];[0 0.4470 0.7410]]; %color per group 
+colorEdge= [[0.8500 0.3250 0.0980];;[0 0.4470 0.7410];[1 1 1];[1 1 1];]; %Colors per group 
 
 
 figure
 hold on
 reactive=[];
 contextual=[];
-
-% colors= [[1 1 1];[0 0.4470 0.7410];[0.8500 0.3250 0.0980]];
-% colorEdge= [[0.8500 0.3250 0.0980];[1 1 1];[1 1 1];];
 
 for g=1:length(groupID)
     
@@ -223,7 +233,7 @@ c=reshape(contextual,28*1*4,1) ;
 [~,~,stats] = anovan(c,{g1 g2},"Model","interaction", ...
     "Varnames",["Adaptation","PostAdaptation"]);
 
-%%
+%% First 9 participants of the C3 study data 
 
 steps=41:45;
 
@@ -401,8 +411,9 @@ yline(0)
 xline(0)
 set(gcf,'color','w')
 
+%% Number of muscles that are difference from zero 
+%- Using the SE form the regression, if cross zero than we do not count that muscle 
 %%
-
 
 groupID={'C3TR_sub1','MWSTR_sub1','C3TS_sub1','MWSTS_sub1'};
 figure
@@ -444,49 +455,75 @@ ylabel('# of muscle reactive ')
 subplot 212
 ylabel('#  of muscle contextual')
 set(gcf,'color','w')
-%% Time courses and R2
+
+%% Time courses and R2 
+%%
 
 binwith=5
 analysis=0;isF=0;
 
+% Define which group you want to plot
 % groupID={'VATR','VATS'};
 % groupID={'NTR','NTS'};
 %  groupID={'CTR','CTS'};
- groupID={'BAT'};
+groupID={'BATR','BATS'};
 f=[1:14 1:14;1:14 1:14];
 
-for g=1
-%     load([groupID{g},'_post-adaptation_Indv_0_11-March-2024.mat'])
-%  load([groupID{g},'_post-adaptation_Indv_0_13-March-2024.mat'])
-  load([groupID{g},'_adaptation_Indv_0_14-March-2024.mat'])
+for g=1:2 %Group loop (Device or W/O device)
     
-    for muscle=1:28
+    %Load data
+    if strncmpi(groupID{g},'BAT',3) %See if the first letters of the group are BAT
+        load([groupID{g},'_post-adaptation_Indv_0_13-March-2024.mat'])
+    else
+        load([groupID{g},'_post-adaptation_Indv_0_08-March-2024.mat'])
+    end
+    
+    
+    for muscle=1length(labels) %Define muscles to plot (This data set has a total of 28 muscles)
         
-        
+        r2 = my_Rsquared_coeff(model{muscle}.EMGobserved', model{muscle}.EMG_estimated,1); % Compute the R2 throuhgtout the data
         figure(f(g,muscle))
         
         % Pick the data that you want to plot
-        Wdata(:,1)=[reactive_trace(41:150,muscle)]';
-        Wdata(:,2)=[contextual_trace(41:150,muscle)]';
-%         Wdata(:,3)=[baseline_trace(41:end,muscle)]';
+        Wdata(:,1)=[reactive_trace(41:end,muscle)]'; %Data organization and selecting only the postadaptation data
+        Wdata(:,2)=[contextual_trace(41:end,muscle)]'; %Data organization and selecting only the postadaptation data
+        r2=[r2(:,41:end)];
         
-        if muscle<15
+        % Making indeces where r2 is negative nana
+        idx= find(r2<0); % finding when the r2 is negative
+        Wdata(idx,1)=nan; %reactive
+        Wdata(idx,2)=nan; %contextual
+        r2(:,idx)=nan;
+        
+        % Getting the average of the data while ignoting nan
+        avg(:,1)=movmean(Wdata(:,1),binwith,'omitnan'); %reactive
+        avg(:,2)=movmean(Wdata(:,2),binwith,'omitnan'); %contextual
+        r2_avg= movmean(r2,binwith,'omitnan');
+        
+        % Alternative: we get the average and then we mark data as NaN.
+        % This leads to more empty data points
+        %             idx= find(r2_avg<0);
+        %             avg(idx,:)=nan;
+        %             r2_avg(:,idx)=nan;
+        
+        
+        %Plot reactive time course 
+        if muscle<15 %Choosing where to plot the time course 
             subplot(size(Wdata,2)+1,2,1)
         else
             subplot(size(Wdata,2)+1,2,2)
         end
+        
         hold on
-        scatter(1:length(movmean(Wdata(:,1),binwith)), movmean(Wdata(:,1),binwith),'filled','DisplayName',groupID{g}); %"#77AC30" )%
-        
-        legend
-        
-        title(labels(muscle).Data)
-        
+        scatter(1:length(avg),avg(:,1),'filled','DisplayName',groupID{g}); %plot  
+        legend %Adding the groupID 
+        title(labels(muscle).Data) %adding muscle that we are looking at on the title 
         yline(0,'HandleVisibility','off')
         ylabel({'Reactive';'(A.U)'})
-        
         xlabel('strides')
         
+        
+        %Plot  contextual time course 
         if size(Wdata,2)>=2
             if muscle<15
                 subplot(size(Wdata,2)+1,2,3)
@@ -494,54 +531,30 @@ for g=1
                 subplot(size(Wdata,2)+1,2,4)
             end
             hold on
-            scatter(1:length(movmean(Wdata(:,2),binwith)), movmean(Wdata(:,2),binwith),'filled','DisplayName',groupID{g});
-            legend
+            scatter(1:length(avg),avg(:,2),'filled','DisplayName',groupID{g}); % plot 
+            legend  %Adding the groupID 
             yline(0,'HandleVisibility','off')
             ylabel({'Contextual';'(A.U)'})
             xlabel('strides')
         end
         
-        if size(Wdata,2)>=3
-            if muscle<15
-                subplot(size(Wdata,2)+1,2,5)
-            else
-                subplot(size(Wdata,2)+1,2,6)
-            end
-            hold on
-            scatter(1:length(movmean(Wdata(:,3),binwith)), movmean(Wdata(:,3),binwith),'filled','DisplayName',groupID{g});
-            legend
-            yline(0,'HandleVisibility','off')
-            ylabel({'Baseline';'(A.U)'})
-            xlabel('strides')
-            
-            
-            if muscle<15
-                subplot(size(Wdata,2)+1,2,7)
-            else
-                subplot(size(Wdata,2)+1,2,8)
-            end
 
-            
-        else      
-            
-            if muscle<15
-                subplot(size(Wdata,2)+1,2,5)
-            else
-                subplot(size(Wdata,2)+1,2,6)
-            end
-     
-   
-        end
+        
         % Plot the time course of the R2
-            r2 = my_Rsquared_coeff(model{muscle}.EMGobserved', model{muscle}.EMG_estimated,1);
-            hold on
-            plot(movmean(r2(41:150),binwith),'DisplayName',groupID{g})
-            ylim([-.5 1])
-            yline(0,'HandleVisibility','off')
-            legend
-            xlabel('strides')
-            ylabel('R^2')
-            set(gcf,'color','w')
+        if muscle<15
+            subplot(size(Wdata,2)+1,2,5)
+        else
+            subplot(size(Wdata,2)+1,2,6)
+        end
+        
+        hold on
+        plot(1:length(r2_avg),r2_avg,'DisplayName',groupID{g}); %plot 
+        ylim([-.5 1])
+        yline(0,'HandleVisibility','off')
+        legend
+        xlabel('strides')
+        ylabel('R^2')
+        set(gcf,'color','w')
         
         if muscle<=14
             isF=0;
@@ -554,3 +567,172 @@ for g=1
     end
     
 end
+
+
+%% Time courses and R2 - Organizaton similar to Adwoa's paper
+%%
+
+binwith=5;
+analysis=0;isF=0;
+
+%Organizing the data 
+groupID{1}={'VATR','VATS'}; % Very low contextual similarity 
+groupID{2}={'BATR','BATS'}; % Low contextual similarity 
+groupID{3}={'NTR','NTS'}; %High contextual similarity 
+
+
+colors= [[1 1 1];[0.4660 0.6740 0.1880]; ...
+    [1 1 1]; [0 0.4470 0.7410];...
+    [1 1 1];[0.8500 0.3250 0.0980]]; %Defining colors for the marker 
+colorEdge=[[0.4660 0.6740 0.1880];[0 0 0];...
+    [0 0.4470 0.7410];[0 0 0];...
+    [0.8500 0.3250 0.0980];[0 0 0]]; %Defining colors for the marker edge 
+i=0;
+
+ f=[1 5 9]; % hard code position of the plots 
+
+for muscle=[6 20]
+    counter=0; % This counter is use to determine the location of the plot 
+    i=0; % this counter is use for calling the color to be use 
+   
+    figure %Everytime that we plot a new muscle we create a figure 
+    
+    
+    for level=1:3
+       
+        counter=counter+1;   % This counter is use to determine the location of the plot 
+         
+        for g=1:2 % Groups (W device and W/O device) 
+            i=i+1; 
+            
+            if level==2 % loading the data - I keep track of the date to make sure I know wish changes were made 
+                load([groupID{level}{g},'_post-adaptation_Indv_0_13-March-2024.mat'])
+            else
+                load([groupID{level}{g},'_post-adaptation_Indv_0_08-March-2024.mat'])
+            end
+            labels(muscle).Data %Display for the use to know which muscle we are plotting
+            groupID{level}{g} %Display the name of the group for the user to know where we are in the loop 
+            
+            
+            r2 = my_Rsquared_coeff(model{muscle}.EMGobserved', model{muscle}.EMG_estimated,1); %Calculating the R2 time course 
+            
+            % Pick the data that you want to plot
+            Wdata(:,1)=[reactive_trace(44:150,muscle)]'; %Data organization and selecting only the postadaptation data 
+            Wdata(:,2)=[contextual_trace(44:150,muscle)]'; %Data organization and selecting only the postadaptation data 
+            r2=[r2(:,44:150)];
+
+            % Making indeces where r2 is negative nana 
+            idx= find(r2<0); % finding when the r2 is negative 
+            Wdata(idx,1)=nan; %reactive
+            Wdata(idx,2)=nan; %contextual 
+            r2(:,idx)=nan;
+            model{muscle}.EMG_estimated(:,idx)=nan;
+            model{muscle}.EMGobserved(idx,:)=nan;
+            
+            % Getting the average of the data while ignoting nan 
+            avg(:,1)=movmean(Wdata(:,1),binwith,'omitnan'); %reactive
+            avg(:,2)=movmean(Wdata(:,2),binwith,'omitnan'); %contextual 
+            r2_avg= movmean(r2,binwith,'omitnan');
+            
+            % Alternative: we get the average and then we mark data as NaN.
+            % This leads to more empty data points
+%             idx= find(r2_avg<0);
+%             avg(idx,:)=nan;
+%             r2_avg(:,idx)=nan;
+            
+            %getting confidance interval 
+            temp=  movmean(model{muscle}.EMGobserved(44:150,:)',binwith,2,'omitnan');
+            aftereffects=temp(:,1) ;
+            temp=  movmean(model{muscle}.EMG_estimated(:,44:150),binwith,2,'omitnan');
+            estimated =temp(:,1) ;
+            R2 = my_Rsquared_coeff(aftereffects,estimated,1);
+            m= fitlm(model{muscle}.C,aftereffects,'VarNames',{'Reactive','Contextual', labels(muscle).Data(1:end-1)},'Intercept',false);
+             
+            
+            % Ploting the reactive time course 
+            subplot(3,4,f(counter))          
+            hold on
+            scatter(1:length(avg),avg(:,1),'filled','DisplayName',groupID{level}{g},'MarkerEdgeColor',colorEdge(i,:),'MarkerFaceColor',colors(i,:)); %"#77AC30" )%
+            legend
+            title(labels(muscle).Data)            
+            yline(0,'HandleVisibility','off')
+            ylabel({'Reactive';'(A.U)'});xlabel('strides')
+            if muscle==6
+                ylim([-.2 .7])
+            elseif muscle==20
+                ylim([-.5 .8])
+            end
+            
+            
+            % Plotting the reactive box data. Note we are plottign the mean
+            % of the first 5 strides 
+            subplot(1,4,2);hold on
+            errorbar(g+counter/10,avg(1,1),m.Coefficients.SE(1),'k')
+            plot(g+counter/10,avg(1,1),'s','MarkerEdgeColor',colorEdge(i,:),'MarkerFaceColor',colors(i,:),'MarkerSize',15)
+            
+            xlim([0.8 2.5])
+            ylabel({'Reactive';'(A.U)'})
+            
+
+            
+            if size(Wdata,2)>=2
+                % Ploting the contextual time course 
+                subplot(3,4,f(counter)+2)               
+                hold on
+                scatter(1:length(avg), avg(:,2),'filled','DisplayName',groupID{level}{g},'MarkerEdgeColor',colorEdge(i,:),'MarkerFaceColor',colors(i,:));
+                legend
+                yline(0,'HandleVisibility','off')
+                ylabel({'Contextual';'(A.U)'})
+                xlabel('strides')
+                title(labels(muscle).Data)
+                if muscle==6
+                    ylim([-.2 .7])
+                elseif muscle==20
+                    ylim([-1 .8])
+                    
+                end
+            % Plotting the contextual box data. Note we are plottign the mean
+            % of the first 5 strides                 
+                subplot(1,4,4);hold on
+                errorbar(g+counter/10,avg(1,2),m.Coefficients.SE(2),'k')
+                plot(g+counter/10,avg(1,2),'s','MarkerEdgeColor',colorEdge(i,:),'MarkerFaceColor',colors(i,:),'MarkerSize',15)
+                xlim([0.8 2.5])
+                ylabel({'Contextual';'(A.U)'})
+                
+            end
+               
+        end
+        
+    end
+    set(gcf,'color','w') %setting figure background as white 
+    
+    % Hard code x-labels and y-limits for the box plot figures 
+    subplot(1,4,2);hold on
+    set(gca,'XTick',1:2,'XTickLabel',{'W Device','W/O Device'},'FontSize',10)
+    title('Early Post-adaptation')
+    if muscle==6
+        ylim([-.2 .7])
+    elseif muscle==20
+        ylim([-.2 .8])
+    end
+    
+    
+    subplot(1,4,4);hold on
+    set(gca,'XTick',1:2,'XTickLabel',{'W Device','W/O Device'},'FontSize',10)
+    title('Early Post-adaptation')
+    if muscle==6
+        ylim([-.2 .8])
+    elseif muscle==20
+        ylim([-1 .8])
+        
+    end
+    
+    set(gcf,'renderer','painters') % Rendering data to make it editable in illustraitor 
+end
+
+
+
+
+
+
+
