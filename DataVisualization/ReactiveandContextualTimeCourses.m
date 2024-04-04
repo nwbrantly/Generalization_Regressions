@@ -1,29 +1,29 @@
+%% Script to plot the reactive and contexutal recruitment time courses and the model R2 
+%% This script needs the input that it is save from model_fit_individual_muscle_PerSubject.m 
 
-%% Time courses and R2
-
-binwith=5
-analysis=0;isF=0;
+binwith=5; % Running windown length 
+analysis=0;isF=0; 
 
 % Define which group you want to plot
 % groupID={'VATR','VATS'};
 % groupID={'NTR','NTS'};
 %  groupID={'CTR','CTS'};
-groupID={'BATR','BATS'};
-f=[1:14 1:14;1:14 1:14];
+groupID={'BATR','BATS'}; 
+f=[1:14 1:14;1:14 1:14]; %Hard coded to make it look cute! 
 
-for g=1:2 %Group loop (Device or W/O device)
+for g=1:length(groupID) %Group loop (Device or W/O device)
     
-    %Load data
+    % Load data
     if strncmpi(groupID{g},'BAT',3) %See if the first letters of the group are BAT
-        load([groupID{g},'_post-adaptation_Indv_0_13-March-2024.mat'])
+        load([groupID{g},'_post-adaptation_Indv_0_04-April-2024'])
     else
         load([groupID{g},'_post-adaptation_Indv_0_08-March-2024.mat'])
     end
     
     
-    for muscle=1length(labels) %Define muscles to plot (This data set has a total of 28 muscles)
+    for muscle=1:length(labels) %% Define muscles to plot (This data set has a total of 28 muscles)
         
-        r2 = my_Rsquared_coeff(model{muscle}.EMGobserved', model{muscle}.EMG_estimated,1); % Compute the R2 throuhgtout the data
+        r2 = my_Rsquared_coeff(model{muscle}.EMGobserved', model{muscle}.EMGestimated',1); % Compute the R2 throuhgtout the data
         figure(f(g,muscle))
         
         % Pick the data that you want to plot
@@ -31,11 +31,11 @@ for g=1:2 %Group loop (Device or W/O device)
         Wdata(:,2)=[contextual_trace(41:end,muscle)]'; %Data organization and selecting only the postadaptation data
         r2=[r2(:,41:end)];
         
-        % Making indeces where r2 is negative nana
+        % Making indeces where r2 is negative NaN
         idx= find(r2<0); % finding when the r2 is negative
         Wdata(idx,1)=nan; %reactive
         Wdata(idx,2)=nan; %contextual
-        r2(:,idx)=nan;
+        r2(:,idx)=nan; %r2 
         
         % Getting the average of the data while ignoting nan. Note that
         % overrepresentation of data can happen
@@ -64,8 +64,7 @@ for g=1:2 %Group loop (Device or W/O device)
         yline(0,'HandleVisibility','off')
         ylabel({'Reactive';'(A.U)'})
         xlabel('strides')
-        
-        
+              
         %Plot  contextual time course 
         if size(Wdata,2)>=2
             if muscle<15
@@ -80,8 +79,6 @@ for g=1:2 %Group loop (Device or W/O device)
             ylabel({'Contextual';'(A.U)'})
             xlabel('strides')
         end
-        
-
         
         % Plot the time course of the R2
         if muscle<15
@@ -98,8 +95,37 @@ for g=1:2 %Group loop (Device or W/O device)
         xlabel('strides')
         ylabel('R^2')
         set(gcf,'color','w')        
-        
-        
+       
+    end
+   
+end
+
+%% Plot of the data and reconstruction per muscle 
+
+% Define which group you want to plot
+groupID={'BATR'};
+
+
+analysis=0;
+isF=0;
+
+% Load data
+if strncmpi(groupID{g},'BAT',3) %See if the first letters of the group are BAT
+    load([groupID{g},'_post-adaptation_Indv_0_04-April-2024'])
+else
+    load([groupID{g},'_post-adaptation_Indv_0_08-March-2024.mat'])
+end
+
+for muscle=1  %% Define muscles to plot (This data set has a total of 28 muscles)
+    
+    if muscle<=14
+        isF=0;
+    else
+        isF=1;
     end
     
+    % Plot the time course plus the regressors
+    legacy_vizSingleModel_FreeModel_ShortAdaptation_IndvLeg(model{muscle},model{muscle}.EMGobserved',Uf,analysis,{labels(muscle).Data(1:end-1)},isF)
+    
 end
+
