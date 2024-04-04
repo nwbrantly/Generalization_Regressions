@@ -14,10 +14,10 @@ addpath(genpath([main,'matlab-linsys']))
 % rmpath(genpath([main,'PittSMLlab']))
 
 %% Load data and Plot checkerboard for all conditions.
-clear all; close all; clc;
+clear all; clc;
 % clear all; clc;
 
-adaptationonly=0; 
+adaptationonly=1; 
 removeMuscles=1;
 
 if adaptationonly==1
@@ -47,7 +47,7 @@ for id=1:length(groupID)
 %% Getting the regressors values
 %% 
 ep=defineRegressorsDynamicsFeedback('nanmean');
-epochOfInterest={'TM base','NegShort_{late}','Ramp','Optimal'};
+epochOfInterest={'TM base','NegShort_{late}','PosShort_{late}','Ramp','Optimal'};
 
 padWithNaNFlag=true; %If no enough steps fill with nan, let this on
 
@@ -117,11 +117,13 @@ end
 
 %%
 muscPhaseIdx=1:size(EMGdata,2); %
-epochOfInterest={'TM base','NegShort_{late}','Ramp','Optimal'};
+epochOfInterest={'TM base','NegShort_{late}','PosShort_{late}','Ramp','Optimal'};
 context= find(strcmp(epochOfInterest,'Optimal')==1);
 
 if adaptationonly==1
-    reactive=find(strcmp(epochOfInterest,'Ramp')==1);
+%     reactive=find(strcmp(epochOfInterest,'Ramp')==1);
+ reactive=find(strcmp(epochOfInterest,'PosShort_{late}')==1);
+
 else
     reactive=find(strcmp(epochOfInterest,'NegShort_{late}')==1);
 end
@@ -141,7 +143,7 @@ end
 bootstrap=1; %Do you want to run the loop (1 yes 0 No)
 X1=[];
 X2=[];
-replacement=0; %do you want to do it with replacement (1 yes 0 No)
+replacement=1; %do you want to do it with replacement (1 yes 0 No)
 regre_Const=1; % To keep the regressors constants for both groups
 
 if bootstrap
@@ -330,10 +332,12 @@ subplot(1,2,1)
 imagesc((reshape(matrix(:,1),12,28)'))
 set(gca,'XTick',[],'YTick',yt,'YTickLabel',ytl,'FontSize',fs)
 set(gca,'CLim',[-1 1]*1,'FontSize',fs); %making sure that the first plot color scheme goes [-1 1] and making the name of the labels larger
+title(epochOfInterest{reactive})
 
 
 subplot(1,2,2)
 imagesc((reshape(matrix(:,2),12,28)'))
+title(epochOfInterest{context})
 
 color4checkerboards
 
