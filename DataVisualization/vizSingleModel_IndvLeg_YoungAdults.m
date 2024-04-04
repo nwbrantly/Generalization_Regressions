@@ -116,15 +116,18 @@ map=[flipud(mid+ (ex1-mid).*([1:N]'/N).^gamma); mid; (mid+ (ex2-mid).*([1:N]'/N)
 % ytl={'HIP','GLU','TFL','RF','VL','VM','SEMT','SEMB','BF','MG','LG','SOL','PER','TA'};
 %
 if ~isempty(labels)
-  muscleOrder=  labels;
+    muscleOrder=  labels;
+    ytl=labels;
 else
-muscleOrder={'TA', 'PER', 'SOL', 'LG', 'MG', 'BF', 'SEMB', 'SEMT', 'VM', 'VL', 'RF', 'HIP','TFL', 'GLU'};
-% muscleOrder={ 'SOL', 'LG', 'MG', 'BF', 'SEMB', 'SEMT'};
+    muscleOrder={'TA', 'PER', 'SOL', 'LG', 'MG', 'BF', 'SEMB', 'SEMT', 'VM', 'VL', 'RF', 'HIP','TFL', 'GLU'};
+    ytl= ([strcat('f',muscleOrder) strcat('s',muscleOrder)]); %To display fast and slow
+    ytl(end:-1:1) = ytl(:);
+    % muscleOrder={ 'SOL', 'LG', 'MG', 'BF', 'SEMB', 'SEMT'};
 end
 % muscleOrder={'MG'};
-ytl= ([strcat('f',muscleOrder) strcat('s',muscleOrder)]); %To display fast and slow
+
 % ytl={'TA', 'PER', 'SOL', 'LG', 'MG', 'BF', 'SEMB', 'SEMT', 'VM', 'VL', 'RF', 'HIP','TFL', 'GLU'};
-ytl(end:-1:1) = ytl(:);
+
 if isf==1
 ytl=ytl(length(ytl(:))\2+1:end); %fast
 end
@@ -173,7 +176,10 @@ for i=1:size(CD,2)-1
     end
    
     subplot(Nx,Ny,Ny+i+[0,Ny])% Second row: checkerboards
+
     try
+        figure
+        subplot(1,2,i)
         imagesc((reshape(CDrot(:,i),12,Nc/12)'))
     catch
         imagesc((CDrot(:,i)))
@@ -360,7 +366,7 @@ Y2=Y;
 % Wasym_NNMF = Cinv'*data2; %x= y/C
 % % Wasym_NNMF_noshift = Cinv'*Y; %x= y/C
 % NNMF= ( Casym' * Wasym_NNMF) - swift; %yhat = C 
-ResNNMF= Y- singleModel.NNMF;
+% ResNNMF= Y- singleModel.NNMF;
 
 % Res=PC- movmean(Y,k);
 
@@ -395,9 +401,9 @@ plot(aux1,'LineWidth',2,'DisplayName',[num2str(size(C,2)), 'states'],'Color','r'
 % aux2=conv(aux2,ones(1,binw)/binw,'valid'); %Smoothing
 % plot(aux2,'LineWidth',2,'DisplayName','PCA ','Color','k');
 
-aux2=sqrt(mean(ResNNMF.^2))/sqrt(meanVar);
-aux2=conv(aux2,ones(1,binw)/binw,'valid'); %Smoothing
-plot(aux2,'LineWidth',2,'DisplayName','NNMF','Color','k');%,"#A2142F");
+% aux2=sqrt(mean(ResNNMF.^2))/sqrt(meanVar);
+% aux2=conv(aux2,ones(1,binw)/binw,'valid'); %Smoothing
+% plot(aux2,'LineWidth',2,'DisplayName','NNMF','Color','k');%,"#A2142F");
 % 
 % aux3=sqrt(sum(Res_2.^2))/sqrt(meanVar);
 % aux3=conv(aux3,ones(1,binw)/binw,'valid'); %Smoothing
@@ -461,7 +467,7 @@ grid on
 % ylim([0 1])
 % set(gca,'YScale','log')
 
-% subplot(Nx,5,51:54)
+subplot(Nx,5,51:54)
 figure
 hold on
 
@@ -472,21 +478,21 @@ aux1=conv(aux1,ones(1,binw)/binw,'valid'); %Smoothing
 plot(aux1,'LineWidth',2,'DisplayName',[num2str(size(C,2)), 'states'],'Color','r') ;
 
 
-aux2= 1 - sum((ResNNMF).^2)./sum((Y2- mean(Y2)).^2);
-aux2=conv(aux2,ones(1,binw)/binw,'valid'); %Smoothing
-plot(aux2,'LineWidth',2,'DisplayName','NNMF upper','Color','k') ;
+% aux2= 1 - sum((ResNNMF).^2)./sum((Y2- mean(Y2)).^2);
+% aux2=conv(aux2,ones(1,binw)/binw,'valid'); %Smoothing
+% plot(aux2,'LineWidth',2,'DisplayName','NNMF upper','Color','k') ;
 
-ResNNMF_lower= Y- singleModel.NNMF_lower;
-aux3= 1 - sum((ResNNMF_lower).^2)./sum((Y2- mean(Y2)).^2);
-aux3=conv(aux3,ones(1,binw)/binw,'valid'); %Smoothing
-plot(aux3,'-.','LineWidth',2,'DisplayName','NNMF lower','Color','b') ;
+% ResNNMF_lower= Y- singleModel.NNMF_lower;
+% aux3= 1 - sum((ResNNMF_lower).^2)./sum((Y2- mean(Y2)).^2);
+% aux3=conv(aux3,ones(1,binw)/binw,'valid'); %Smoothing
+% plot(aux3,'-.','LineWidth',2,'DisplayName','NNMF lower','Color','b') ;
 
 
 ylabel({'R^{2}'})
 grid on
 ax.YAxis.Label.FontSize=12;
 legend('Location','NorthEastOutside','AutoUpdate','off')
-pp=patch([40 390 390 40],[0 0 1 1],.7*ones(1,3),'FaceAlpha',.5,'EdgeColor','none'); %PATR - PATS 
+pp=patch([40 500 500 40],[0 0 1 1],.7*ones(1,3),'FaceAlpha',.5,'EdgeColor','none'); %PATR - PATS 
 uistack(pp,'bottom')
 % axis tight
 % ylim([0.8 1.05])
