@@ -1,9 +1,11 @@
-%getting Cs
+%%Plot of heatmap for epochs of interest
+% This code is not longer needed to do the linear regresssion. The script
+% preProcessingLinearModel.m contain this information.
 %% Load data and Plot checkerboard for all conditions.
 % clear; close all; clc;
 
-groupID ='BATR';
-[normalizedGroupData, newLabelPrefix,n_subjects]=creatingGroupdataWnormalizedEMG(groupID);
+groupID ='BAT';
+[normalizedGroupData, newLabelPrefix,n_subjects]=creatingGroupdataWnormalizedEMG(groupID,0,[]);
 
 Data=cell(7,1);
 Data2=cell(5,1);
@@ -11,7 +13,7 @@ group=cell(5,1);
 summFlag='nanmedian';
 n_muscles =14; %number fo muscle in the experiment
 %% Remove aftereffects
-removeBadmuscles=1;
+removeBadmuscles=0;
 if removeBadmuscles==1
     
     normalizedGroupData= RemovingBadMuscleToSubj(normalizedGroupData);
@@ -42,7 +44,7 @@ epochOfInterest={'TM base','TM mid 1','PosShort_{early}',...
 
 
 % epochOfInterest={'Post1_{Early}','TiedPostPos','TMmid2','Tied post ramp','Ramp','Tied post Neg'};
-epochOfInterest={'Ramp','PosShort_{early}','Adaptation_{early}','Optimal','NegShort_{early}'};
+epochOfInterest={'Ramp','PosShort_{late}','Adaptation_{early}','Optimal','NegShort_{late}'};
 % epochOfInterest={'TM base','Ramp','Optimal','Tied post ramp'}; % This line chooses the epochs that want to get data from
 
 fh=figure('Units','Normalized','OuterPosition',[0 0 1 1]);
@@ -79,7 +81,7 @@ end
 
 %% Saving the data
 resDir = [cd];% '/LTI models/'];
-% save([resDir '/'  groupID,'_',num2str(n_subjects), '_',method,'C',num2str(length(epochOfInterest)) ,'_ShortPertubations_RemovedBadMuscle_',num2str(removeBadmuscles), 'RemoveBias_',num2str(removeBias),'_PosteriorMuscles'], 'C','epochOfInterest')
+% save([resDir '/'  groupID,'_',num2str(n_subjects), '_',method,'C',num2str(length(epochOfInterest)) ,'_RemovedBadMuscle_',num2str(removeBadmuscles), 'RemoveBias_',num2str(removeBias)], 'C','epochOfInterest')
 
 %% redefining the colors for plots 
 color4checkerboards
