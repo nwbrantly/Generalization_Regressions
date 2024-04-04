@@ -102,8 +102,13 @@ end
 %% Plot of the data and reconstruction per muscle 
 
 groupID={'BATR'}; % Define which group you want to plot
-analysis=0; %Define type analysis: 0 linear regression 
+%Define type analysis: 
+%0 or else: Linear regression with input regressors 
+%1:Reactive and adaptation without dynamics 
+%2:Analysis using PCA in all the data 
+%3: removing the mean on the data. similar analysis as PCA     
 
+analysis=0; 
 
 % Load data
 if strncmpi(groupID{g},'BAT',3) %See if the first letters of the group are BAT
