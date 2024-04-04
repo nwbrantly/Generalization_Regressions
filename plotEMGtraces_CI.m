@@ -1,5 +1,5 @@
 function fh=plotEMGtraces_CI(expData,conds,muscle,late,strides,normalize,normCond,IgnoreStridesEarly)
-%% Plot the EMG ttraces for the Nimbus generalization project
+%% Plot the EMG traces for the Nimbus generalization project
 %
 %INPUTS:
 %expData - experimentData file, we are going to
@@ -103,7 +103,7 @@ for m=1:length(muscle)
             end
             ph=subplot(row,colum,loc(i));
             data.plot(fh,ph,condColors(m,:),[],0,[-49:0],prc,false);
-%             ylim([-.5 2.2])
+
             grid on
             ylabel('')
             ylabel(tit)
