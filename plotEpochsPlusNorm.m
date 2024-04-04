@@ -1,4 +1,4 @@
-function plotEpochsPlusNorm(EpochsOfInteres,GroupData, Labels,plotIndSubjects,plotGroup,removebias,ref)
+function [Data] = plotEpochsPlusNorm(EpochsOfInteres,GroupData, Labels,plotIndSubjects,plotGroup,removebias,ref)
 
 if plotIndSubjects
     for i = 1:length(GroupData.ID)
@@ -51,8 +51,8 @@ if plotGroup
         else
             [~,~,~,Data{eps},~] = GroupData.plotCheckerboards(Labels,EpochsOfInteres{eps},fh,ph(1,eps),[],flip,summFlag);
         end
-        Data{eps} = nanmedian(Data{eps}, 4);
-        title({[EpochsOfInteres{eps}.Condition{1}] ['Norm=', num2str(norm(reshape(Data{eps},[],1)))]});
+%         Data{eps} = nanmedian(Data{eps}, 4);
+%         title({[EpochsOfInteres{eps}.Condition{1}] ['Norm=', num2str(norm(reshape(Data{eps},[],1)))]});
         
         
         
