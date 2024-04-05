@@ -1,4 +1,4 @@
-function [fh,model] = legacy_vizSingleModel_FreeModel_ShortAdaptation_IndvLeg(singleModel,Y,U,lower,labels,isf)
+function [fh,model] = vizSingleModel_LinearRegression_IndvLeg(singleModel,Y,U,lower,labels,isf)
 
 %Funtion to plot the time courses of the hidden states, data, fit and the
 %residual of the model
