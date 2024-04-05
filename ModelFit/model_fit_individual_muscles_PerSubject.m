@@ -37,10 +37,7 @@ savedata=1
 unitvector=0
 session=1
 negative=0
-% early=1;
-
-
-    
+% early=1;    
 
 if contains(groupID,'BAT')
     
@@ -117,6 +114,7 @@ else
 end
 
 %% %Defining color for the plots
+
 poster_colors;
 colorOrder=[ p_orange; p_fade_green; p_fade_blue; p_plum; p_green; p_blue; p_fade_red; p_lime;...
     p_yellow; [0 0 0];[0 1 1];p_red; p_orange; p_fade_green; p_fade_blue; p_plum; p_green; p_blue;...
@@ -128,12 +126,12 @@ color=[ colorOrder; colorOrder;colorOrder];
 
 invEMG_m= zeros(12,2,28,'double');
 EMG_coef= zeros(12,2,28,'double');
-EMG_estimated =zeros(12,size(indvEMGdata,1),28,'double');
+EMGestimated =zeros(12,size(indvEMGdata,1),28,'double');
 W=zeros(2,size(indvEMGdata,1),28,'double');
 W_transpose=zeros(size(indvEMGdata,1),2,28,'double');
 reactive_trace= zeros(size(indvEMGdata,1),28,n_sub,'double');
 contextual_trace= zeros(size(indvEMGdata,1),28,n_sub,'double');
-baseline_trace= zeros(size(indvEMGdata,1),28,n_sub,'double');
+% baseline_trace= zeros(size(indvEMGdata,1),28,n_sub,'double');
 VIF_F= zeros(28,1,'double');
 correlation= zeros(28,1,'double');
 
@@ -249,7 +247,8 @@ for subj=1:n_sub
     if adapt==1 %Choosing the regressors for the analysis
         C_regressors=[Coefficients(:,reactive) Coefficients(:,context)]; % EMGreactive and EMGcontext
     else
-%         C_regressors=[Coefficients(:,reactive2) Coefficients(:,context) Coefficients(:,OGbase)]; % EMGreactive and EMGcontext
+%         C_regressors=[Coefficients(:,reactive2) Coefficients(:,context) % Coefficients(:,OGbase)]; % EMGreactive, EMGcontext and EMGbaseline 
+  
         C_regressors=[Coefficients(:,reactive2) Coefficients(:,context)]; % EMGreactive and EMGcontext
         
     end
@@ -438,9 +437,7 @@ for subj=1:n_sub
         
         if VIF_F(muscle,subj) < 5
             
-            if plot_visual==1
-                
-                
+            if plot_visual==1        
 %                             figure()
                 subplot 311
                 hold on
@@ -664,18 +661,15 @@ for muscle=1:28
         isF=1;
     end
     set(gcf,'color','w')
-    % Plot the time course plus the regressors 
-%     legacy_vizSingleModel_FreeModel_ShortAdaptation_IndvLeg(model{muscle},Ymuscles(:,:,muscle)',Uf,analysis,{labels(muscle).Data(2:end-1)},isF)
-% legacy_vizSingleModel_FreeModel_ShortAdaptation_IndvLeg(model{muscle},model{muscle}.EMGobserved',Uf,analysis,{labels(muscle).Data(2:end-1)},isF)
-
+    
+    % Plot the time course plus the regressors
+    vizSingleModel_LinearRegression_IndvLeg(model{muscle},model{muscle}.EMGobserved',analysis,{labels(muscle).Data(1:end-1)},isF)
     set(gcf,'color','w')
     
     
 end
 
 %% Plot group mean and standart error of the recruitment of the reactive and contextual patterns
-
-
 
 steps=41:45;
 reconstruction_contextual=squeeze(mean(contextual_trace(steps,:,:),'omitnan')); %contextual
