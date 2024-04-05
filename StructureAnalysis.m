@@ -1,4 +1,4 @@
- hclear all
+clear all
 poster_colors;
 colorOrder=[p_red; p_orange; p_fade_green; p_fade_blue; p_plum; p_green; p_blue; p_fade_red; p_lime; p_yellow; [0 0 0]];
 
@@ -9,7 +9,7 @@ Li=[];
 labels={'YA_{TR}','YA_{TS}','YA'};
 groups=[2];
 plotindv=1;
-timeCourse=0;
+timeCourse=1;
 binwith=5;
 
 %  figure(1)
@@ -74,9 +74,9 @@ for group= groups
         X2asym = Yasym*Cinv; %x= y/C
         Y2asym= C * X2asym' ; %yhat = C
         
-        for xl=1:size(X2asym,2)
+        for i=1:size(X2asym,2)
            
-            X.
+           
             X1(:,i)=X2asym(:,1);
             
             
