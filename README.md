@@ -11,8 +11,14 @@ Our analysis showed that the reactive and contextual processes contribute to the
 
 
 # **How to process the data (step-by-step)**
-1. To plot the EMGnorm, please refer to AddingNormToAdaptData.m
-2. To compute the EMG dynamics, you need:
-3. Use preProcessingLinearModel.m to extract the data from the param file.
-* Then you can estimate the dynamics using model_fit_individual_muscles_PerSubject.m
+This repository depends on labtools. Thus, the functions and scripts assume they work with an AdaptationData object. Ensure that your data is in the correct format. 
+
+To view the quality of the data, you can check the EMGnorm of all the muscles or individual muscles. For this: 
+* To plot the EMGnorm, please refer to AddingNormToAdaptData.m
+
+Once you confirm that the quality of your data is good and select muscles that need to be removed (if necessary), you can start to estimate the dynamics of the regressors. 
+
+1. To compute the EMG dynamics, you need:
+2. Use preProcessingLinearModel.m to extract the data from the param file.
+* Then you can estimate the dynamics using RegressionByMuscle.m
 * To Plot the time courses for the reactive and contextual, please refer to ReactiveandContextualTimeCourses.m 
