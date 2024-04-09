@@ -493,6 +493,7 @@ else
         
         save([groupID, '_adaptation','_',datestr(now,'dd-mmmm-yyyy'),'.mat'], 'reactive_trace','contextual_trace','R2','fname','subID','mdl','VIF_F','model','labels')
     else
+        save([groupID, '_post-adaptation','_',datestr(now,'dd-mmmm-yyyy'),'.mat'], 'reactive_trace','contextual_trace','R2','fname','subID','mdl','VIF_F','model','labels')
         
     end
 end
