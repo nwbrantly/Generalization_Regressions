@@ -472,18 +472,18 @@ end
 if unitvector==1
     if adapt==1 && savedata==1
         
-        save([groupID, '_adaptation_unitvector','_',datestr(now,'dd-mmmm-yyyy'),'.mat'], 'reactive_trace','contextual_trace','baseline_trace','R2','fname','subID','mdl','VIF_F','model','labels')
+        save([groupID, '_adaptation_unitvector','_',datestr(now,'dd-mmmm-yyyy'),'.mat'], 'reactive_trace','contextual_trace','R2','fname','subID','mdl','VIF_F','model','labels')
     else
-        save([groupID, '_post-adaptation_unitvector','_',datestr(now,'dd-mmmm-yyyy'),'.mat'], 'reactive_trace','contextual_trace','baseline_trace','R2','fname','subID','mdl','VIF_F','model','labels')
+        save([groupID, '_post-adaptation_unitvector','_',datestr(now,'dd-mmmm-yyyy'),'.mat'], 'reactive_trace','contextual_trace','R2','fname','subID','mdl','VIF_F','model','labels')
         
     end
 elseif indv==0
 
     if adapt==1 && savedata==1
         
-        save([groupID, '_adaptation','_','Indv_',num2str(indv),'_',datestr(now,'dd-mmmm-yyyy'),'.mat'], 'reactive_trace','contextual_trace','baseline_trace','R2','fname','subID','mdl','VIF_F','model','labels')
+        save([groupID, '_adaptation','_','Indv_',num2str(indv),'_',datestr(now,'dd-mmmm-yyyy'),'.mat'], 'reactive_trace','contextual_trace','R2','fname','subID','mdl','VIF_F','model','labels')
     else
-        save([groupID,'_post-adaptation','_','Indv_',num2str(indv),'_',datestr(now,'dd-mmmm-yyyy'),'.mat'], 'reactive_trace','contextual_trace','baseline_trace','R2','fname','subID','mdl','VIF_F','model','labels')
+        save([groupID,'_post-adaptation','_','Indv_',num2str(indv),'_',datestr(now,'dd-mmmm-yyyy'),'.mat'], 'reactive_trace','contextual_trace','R2','fname','subID','mdl','VIF_F','model','labels')
         
     end
 
@@ -491,9 +491,8 @@ else
     
     if adapt==1 && savedata==1
         
-        save([groupID, '_adaptation','_',datestr(now,'dd-mmmm-yyyy'),'.mat'], 'reactive_trace','contextual_trace','baseline_trace','R2','fname','subID','mdl','VIF_F','model','labels')
+        save([groupID, '_adaptation','_',datestr(now,'dd-mmmm-yyyy'),'.mat'], 'reactive_trace','contextual_trace','R2','fname','subID','mdl','VIF_F','model','labels')
     else
-        save([groupID, '_post-adaptation','_',datestr(now,'dd-mmmm-yyyy'),'.mat'], 'reactive_trace','contextual_trace','baseline_trace','R2','fname','subID','mdl','VIF_F','model','labels')
         
     end
 end
