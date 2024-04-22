@@ -1,4 +1,4 @@
-function [fh,model] = vizSingleModel_LinearRegression_IndvLeg(singleModel,Y,U,lower,labels,isf)
+function [fh,model] = vizSingleModel_LinearRegression_IndvLeg(singleModel,Y,lower,labels,isf)
 
 %Funtion to plot the time courses of the hidden states, data, fit and the
 %residual of the model
@@ -24,17 +24,12 @@ Nu=size(singleModel.B,2);
 Ny=M+1+Nu;
 model{1}=singleModel;
 Nu=size(model{1}.B,2);
-% Nu=size(model{1}.C,2);
 Nc=size(Y,1);
-% model{1}.D=zeros(size(model{1}.C,1),size(U,1));
- model{1}.D=zeros(size(model{1}.C,1),size(U,1));
+
 if nargin<3
     lower=false;
 end
-%% First: normalize model, compute basic parameters of interest:
-if nargin<3
-    U=[zeros(Nu,100) ones(Nu,1000)]; %Step response
-end
+%% First: Define which model you want to run 
 if lower==1 % Using reactive and adaptation without dynamics 
     
     C=model{1}.C;
@@ -81,10 +76,7 @@ elseif lower==3 %removing the mean on the data. similar analysis as PCA
 else
     C=model{1}.C; %getting C from the struture
     Cinv=pinv(C)'; %pseudoinverse of the C (C is not a squared matrix)
-%     X = Y'*Cinv(:,1:3); %x= y/C getting the dynamics of the hidden states (we are using least-sqaures seee: Penrose, Roger (1956))
-    X = Y'*Cinv;
-%     X(:,1)=ones(length(Y),1);
-%     Y2= Cs(:,1:3) * X' ; % Data reconstructed with the perdetermine dynamics
+    X = Y'*Cinv;  %x= y/C getting the dynamics of the hidden states (we are using least-sqaures seee: Penrose, Roger (1956))
     Y2= C * X' ;
     model{1}.Data=Y;
     model{1}.States=X;
@@ -112,60 +104,55 @@ gamma=1.5; %gamma > 1 expands the white (mid) part of the map, 'hiding' low valu
 gamma=1;
 map=[flipud(mid+ (ex1-mid).*([1:N]'/N).^gamma); mid; (mid+ (ex2-mid).*([1:N]'/N).^gamma)];
 
-%% Plot
+%% Plot dynamics and heatmaps
 % ytl={'HIP','GLU','TFL','RF','VL','VM','SEMT','SEMB','BF','MG','LG','SOL','PER','TA'};
 %
 if ~isempty(labels)
   muscleOrder=  labels;
 else
 muscleOrder={'TA', 'PER', 'SOL', 'LG', 'MG', 'BF', 'SEMB', 'SEMT', 'VM', 'VL', 'RF', 'HIP','TFL', 'GLU'};
-% muscleOrder={ 'SOL', 'LG', 'MG', 'BF', 'SEMB', 'SEMT'};
 end
-% muscleOrder={'MG'};
-% ytl= defineMuscleListV2(muscleOrder); %List of muscle 
+
 ytl=([strcat('f',muscleOrder) strcat('s',muscleOrder)]);  %List of muscle 
-% ytl={'TA', 'PER', 'SOL', 'LG', 'MG', 'BF', 'SEMB', 'SEMT', 'VM', 'VL', 'RF', 'HIP','TFL', 'GLU'};
+
 ytl(end:-1:1) = ytl(:);
 if isf==1
 ytl=ytl(length(ytl(:))\2+1:end); %fast
 end
-% ytl=ytl(15:end); %fast
-% muscleOrder={'TA', 'PER', 'SOL', 'LG', 'MG', 'BF', 'SEMB', 'SEMT', 'VM', 'VL', 'RF', 'TFL', 'GLU', 'HIP'};
-% ytl={'TA', 'PER', 'SOL', 'LG', 'MG', 'BF', 'SEMB', 'SEMT', 'VM', 'VL', 'RF', 'TFL','HIP', 'GLU'}
+
 yt=1:length(ytl);
 fs=7;
 % STATES
-% CD=[model{1}.C(:,1:3) model{1}.D];
-CD=[model{1}.C model{1}.D];
-XU=[X';U];
+C=[model{1}.C];
+X=[X'];
+
 
 rotMed='none'; % I am not rotating the data 
-% 
 % [CDrot,XUrot]=rotateFac(CD,XU,rotMed);
-CDrot=CD;
-XUrot=XU;
+Crot=C;
+XUrot=X;
 
 if strcmp(rotMed,'none')
-    factorName=[strcat('C_',num2str([1:size(model{1}.C,2)]'));strcat('D_',num2str([1:size(model{1}.D,2)]'))];
-    latentName=[strcat('State ',' ', num2str([1:size(model{1}.C,2)]'));strcat('Input ',' ', num2str([1:size(model{1}.D,2)]'))];
+%     factorName=[strcat('C_',num2str([1:size(model{1}.C,2)]'));strcat('D_',num2str([1:size(model{1}.D,2)]'))];
+    factorName=[strcat('C_',num2str([1:size(model{1}.C,2)]'))];
+%     latentName=[strcat('State ',' ', num2str([1:size(model{1}.C,2)]'));strcat('Input ',' ', num2str([1:size(model{1}.D,2)]'))];
+    latentName=[strcat('State ',' ', num2str([1:size(model{1}.C,2)]'))];
 else
-    factorName=strcat('Factor ',num2str([1:size(CD,2)]'));
-    latentName=strcat('Latent ',num2str([1:size(CD,2)]'));
+    factorName=strcat('Factor ',num2str([1:size(C,2)]'));
+    latentName=strcat('Latent ',num2str([1:size(C,2)]'));
 end
+
 aC=prctile(abs(Y(:)),98);
-% CDiR=CDrot'*inv(model{1}.R);
-% CDiR=CDrot';
-% CDiRCD=CDiR*CDrot;
-% projY=CDiRCD\CDiR*Y;
-projY=XU;
-for i=1:size(CD,2)-1
+
+projY=X;
+for i=1:size(C,2)
    
     hold on
-    if i<size(CD,2)-1
-        ph(i)=subplot(Nx,size(CD,2)-2,i); %TOP row: states temporal evolution and data projection
+    if i<=size(C,2)
+        ph(i)=subplot(Nx,size(C,2),i); %TOP row: states temporal evolution and data projection
         scatter(1:size(Y,2),projY(i,:),5,.7*ones(1,3),'filled')
         title(latentName(i,:))
-%         p(i)=plot(XUrot(i,:),'LineWidth',2,'Color','k');
+        p(i)=plot(XUrot(i,:),'LineWidth',2,'Color','k');
         ax=gca;
         ax.Position=ax.Position+[0 .045 0 0];
         axis tight
@@ -175,9 +162,9 @@ for i=1:size(CD,2)-1
    
     subplot(Nx,Ny,Ny+i+[0,Ny])% Second row: checkerboards
     try
-        imagesc((reshape(CDrot(:,i),12,Nc/12)'))
+        imagesc((reshape(Crot(:,i),12,Nc/12)'))
     catch
-        imagesc((CDrot(:,i)))
+        imagesc((Crot(:,i)))
     end
     set(gca,'XTick',[],'YTick',yt,'YTickLabel',ytl,'FontSize',fs)
     ax=gca;
@@ -192,19 +179,19 @@ for i=1:size(CD,2)-1
     ax.Position=ax.Position+[0 .03 0 0];
     hold on
     aa=axis;
-%     plot([0.1 1.9]+.5, [15 15],'k','LineWidth',2,'Clipping','off')
-%     text(.8,17,'DS','FontSize',6)
-%     plot([2.1 5.9]+.5, [15 15],'k','LineWidth',2,'Clipping','off')
-%     text(2.8,17,'SINGLE','FontSize',6)
-%     plot([6.1 7.9]+.5, [15 15],'k','LineWidth',2,'Clipping','off')
-%     text(6.9,17,'DS','FontSize',6)
-%     plot([8.1 11.9]+.5, [15 15],'k','LineWidth',2,'Clipping','off')
-%     text(9,17,'SWING','FontSize',6)
+    plot([0.1 1.9]+.5, [1.8 1.8],'k','LineWidth',2,'Clipping','off')
+    text(.8,1.6,'DS','FontSize',6)
+    plot([2.1 5.9]+.5, [1.55 1.55],'k','LineWidth',2,'Clipping','off')
+    text(2.8,1.6,'SINGLE','FontSize',6)
+    plot([6.1 7.9]+.5, [1.55 1.55],'k','LineWidth',2,'Clipping','off')
+    text(6.9,1.6,'DS','FontSize',6)
+    plot([8.1 11.9]+.5, [1.55 1.55],'k','LineWidth',2,'Clipping','off')
+    text(9,1.6,'SWING','FontSize',6)
     axis(aa)
     
 
 end
-subplot(Nx,Ny,Ny+i+[0,Ny])% Second row: checkerboards
+subplot(Nx,Ny,Ny+i+1+[0,Ny])% This one is display just for the colorbar 
 caxis([-1 1])
 colorbar
 colorbar('Ticks',[0,1],'TickLabels',{'0','100%'})
@@ -212,14 +199,6 @@ ax=gca;
 ax.Position=ax.Position+[0 .03 0 0];
 hold on
 aa=axis;
-% plot([0.1 1.9]+.5, [15 15],'k','LineWidth',2,'Clipping','off')
-% text(.8,17,'DS','FontSize',6)
-% plot([2.1 5.9]+.5, [15 15],'k','LineWidth',2,'Clipping','off')
-% text(2.8,17,'SINGLE','FontSize',6)
-% plot([6.1 7.9]+.5, [15 15],'k','LineWidth',2,'Clipping','off')
-% text(6.9,17,'DS','FontSize',6)
-% plot([8.1 11.9]+.5, [15 15],'k','LineWidth',2,'Clipping','off')
-% text(9,17,'SWING','FontSize',6)
 axis(aa)
 
 % linkaxes(ph,'y')
@@ -245,7 +224,7 @@ if nargin<2
 
 else %IF DATA PRESENT:
 N=size(Y,2);
-viewPoints=[3,35,44,470,483,675,682]; %PATR - PATS 
+viewPoints=[3,35,44,450,483,675,682]; %PATR - PATS 
 % viewPoints=[3,437,443,635]; %PATR - PATS 
 binw=4; %Plus minus 2
 viewPoints(viewPoints>N-binw/2)=[];
@@ -313,8 +292,9 @@ for k=1:3
     end
 end
 
+
 % PCA analysis for upper bound 
-Y2=Y;
+% Y2=Y;
 % adapt=Y(:,41:480);
 % post=Y(:,481:491);
 % [pp,cc,aa]=pca(adapt','Centered','off');
@@ -340,19 +320,19 @@ Y2=Y;
 
 % NNMF
 % YA=[model{1}.Data(:,1:70) model{1}.Data(:,450:481+60)];
-YA=[model{1}.Data(:,1:70) model{1}.Data(:,450:480)];
-% swift=abs(min(model{1}.Data',[],'all'));
-% data=YA+swift;
-data=YA;
-% data2=model{1}.Data+swift;
-data2=model{1}.Data;
-[W,H] = nnmf(data,4);
-Casym = W';
-Cinv=pinv(Casym); %Gettign the pseudoinverse of the EMGreactive and EMGcontext
-% Wasym_NNMF = Cinv*Y'; %x= y/C
-Wasym_NNMF_noshift = Cinv'*Y; %x= y/C
-NNMF=  (Casym'* Wasym_NNMF_noshift); %yhat = C 
-ResNNMF= Y- NNMF;
+% YA=[model{1}.Data(:,1:70) model{1}.Data(:,450:480)];
+% % swift=abs(min(model{1}.Data',[],'all'));
+% % data=YA+swift;
+% data=YA;
+% % data2=model{1}.Data+swift;
+% data2=model{1}.Data;
+% [W,H] = nnmf(data,4);
+% Casym = W';
+% Cinv=pinv(Casym); %Gettign the pseudoinverse of the EMGreactive and EMGcontext
+% % Wasym_NNMF = Cinv*Y'; %x= y/C
+% Wasym_NNMF_noshift = Cinv'*Y; %x= y/C
+% NNMF=  (Casym'* Wasym_NNMF_noshift); %yhat = C 
+% ResNNMF= Y- NNMF;
 
 % Res=PC- movmean(Y,k);
 
@@ -363,23 +343,17 @@ ResNNMF= Y- NNMF;
 % Y_2= C* X' ; % Data reconstructed with the perdetermine dynamics
 % Res_2=Y-Y_2;
 % 
-% % Instantaneous SD
-Res_3= conv2(Y,[0,1,-1],'valid'); %Y(k)-.5*(y(k+1)+y(k-1));
-% Res_3= conv2(Yasym,[0,1,-1],'valid'); %Y(k)-.5*(y(k+1)+y(k-1));
 
-% Sixth row: residual RMSE, Smoothed, first PC of residual, variance by itself
-% RMES
+
+%% RMSE and R2
+%% RMES plot
 Ny=1;
 subplot(Nx,Ny,1+9*Ny)
 hold on
-dd=model{1}.Res;
-%dd=Y-CD*projY;
-aux1=sqrt(mean(dd.^2))/sqrt(meanVar);
-
-
 binw=5;
-% figure
-hold on 
+
+dd=model{1}.Res;
+aux1=sqrt(mean(dd.^2))/sqrt(meanVar);
 aux1=conv(aux1,ones(1,binw)/binw,'valid'); %Smoothing
 plot(aux1,'LineWidth',2,'DisplayName',[num2str(size(C,2)), 'states'],'Color','r');
  
@@ -387,14 +361,17 @@ plot(aux1,'LineWidth',2,'DisplayName',[num2str(size(C,2)), 'states'],'Color','r'
 % aux2=conv(aux2,ones(1,binw)/binw,'valid'); %Smoothing
 % plot(aux2,'LineWidth',2,'DisplayName','PCA ','Color','k');
 
-aux2=sqrt(mean(ResNNMF.^2))/sqrt(meanVar);
-aux2=conv(aux2,ones(1,binw)/binw,'valid'); %Smoothing
-plot(aux2,'LineWidth',2,'DisplayName','NNMF','Color','k');%,"#A2142F");
+% aux2=sqrt(mean(ResNNMF.^2))/sqrt(meanVar);
+% aux2=conv(aux2,ones(1,binw)/binw,'valid'); %Smoothing
+% plot(aux2,'LineWidth',2,'DisplayName','NNMF','Color','k');%,"#A2142F");
 % 
 % aux3=sqrt(sum(Res_2.^2))/sqrt(meanVar);
 % aux3=conv(aux3,ones(1,binw)/binw,'valid'); %Smoothing
 % plot(aux3,'-.','LineWidth',2,'DisplayName','2 states','Color','b');
 % 
+% % Instantaneous SD
+Res_3= conv2(Y,[0,1,-1],'valid'); %Y(k)-.5*(y(k+1)+y(k-1));
+% Res_3= conv2(Yasym,[0,1,-1],'valid'); %Y(k)-.5*(y(k+1)+y(k-1));
 aux3=sqrt(mean(Res_3.^2))/sqrt(2);
 aux3=conv(aux3,ones(1,binw)/binw,'valid'); %Smoothing
 plot([nan nan aux3],'-','LineWidth',2,'DisplayName','Instantaneous SD','Color',"#0072BD");
@@ -428,23 +405,15 @@ ylabel({'residual';' RMSE'})
 
 
 %Add data reproduce (05/03/2022)
-if lower==1
-    yhat=model{1}.Out;
-else
-    yhat= model{1}.Out; %C * xhat' ; %yhat = C
+% if lower==1
+%     yhat=model{1}.Out;
+% else
+
     
-end
-
-% for step= 1:size(Y2,2)
-% 
-%     cross(step,1) = corr(Y2(:,step),yhat(:,step));
-%     cross2(step,1) = corr(Y2(:,step),PC(:,step));
-%     cross3(step,1) = corr(Y2(:,step),Y_2(:,step));
 % end
-
 legend('Location','NorthEastOutside','AutoUpdate','off')
 yl=ax.YAxis.Limits;
-pp=patch([40 480 480 40],[0 0 max(aux1) max(aux1)],.7*ones(1,3),'FaceAlpha',.5,'EdgeColor','none'); %PATR - PATS 
+pp=patch([40 350 350 40],[0 0 max(aux1) max(aux1)],.7*ones(1,3),'FaceAlpha',.5,'EdgeColor','none'); %PATR - PATS 
 uistack(pp,'bottom')
 ax.YAxis.Limits=yl;
 axis tight
@@ -453,19 +422,21 @@ grid on
 % ylim([0 1])
 % set(gca,'YScale','log')
 
+%% R^2 plot 
+
 subplot(Nx,5,51:54)
 hold on
-
+yhat= model{1}.Out; %C * xhat' ; %yhat = C
 % aux1 = 1 - sum((Y2- yhat).^2)./sum((Y2- mean(Y2)).^2);
 aux1 = 1 - sum((dd).^2)./sum((Y- mean(Y)).^2);
-aux2 = my_Rsquared_coeff(Y,yhat);
+aux2 = my_Rsquared_coeff(Y,yhat,1);
 aux1=conv(aux1,ones(1,binw)/binw,'valid'); %Smoothing
 plot(aux1,'LineWidth',2,'DisplayName',[num2str(size(C,2)), 'states'],'Color','r') ;
 
 
-aux2= 1 - sum((Y2- NNMF).^2)./sum((Y2- mean(Y2)).^2);
-aux2=conv(aux2,ones(1,binw)/binw,'valid'); %Smoothing
-plot(aux2,'LineWidth',2,'DisplayName','NNMF','Color','k') ;
+% aux2= 1 - sum((Y2- NNMF).^2)./sum((Y2- mean(Y2)).^2);
+% aux2=conv(aux2,ones(1,binw)/binw,'valid'); %Smoothing
+% plot(aux2,'LineWidth',2,'DisplayName','NNMF','Color','k') ;
 
 % aux3= 1 - sum((Y2- Y_2).^2)./sum((Y2- mean(Y2)).^2);
 % aux3=conv(aux3,ones(1,binw)/binw,'valid'); %Smoothing
@@ -474,7 +445,7 @@ ylabel({'R^{2}'})
 grid on
 ax.YAxis.Label.FontSize=12;
 legend('Location','NorthEastOutside','AutoUpdate','off')
-pp=patch([40 480 480 40],[0 0 1 1],.7*ones(1,3),'FaceAlpha',.5,'EdgeColor','none'); %PATR - PATS 
+pp=patch([40 350 350  40],[0 0 1 1],.7*ones(1,3),'FaceAlpha',.5,'EdgeColor','none'); %PATR - PATS 
 uistack(pp,'bottom')
 % axis tight
 % ylim([0.8 1.05])
@@ -503,8 +474,7 @@ yticks('auto')
 % axis tight
 % yticks('auto')
 
-%%
-%TURN ON FOR AFTEREEFECTS 
+%% %TURN ON FOR AFTEREEFECTS 
 % subplot(Nx,5,56:59)
 % % [pp,cc,aa]=pca(dd');%,'Centered','off');
 % [pp,cc,aa]=pca((dd(:,481:681)'),'Centered','off');
