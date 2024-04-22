@@ -458,15 +458,15 @@ set(gcf,'color','w')
 
 %% Time courses and R2 
 %%
-
+clear all
 binwith=5
 analysis=0;isF=0;
 
 % Define which group you want to plot
 % groupID={'VATR','VATS'};
 % groupID={'NTR','NTS'};
-%  groupID={'CTR','CTS'};
-groupID={'BATR','BATS'};
+ groupID={'CTR','CTS'};
+% groupID={'BATR','BATS'};
 f=[1:14 1:14;1:14 1:14];
 
 for g=1:2 %Group loop (Device or W/O device)
@@ -479,7 +479,7 @@ for g=1:2 %Group loop (Device or W/O device)
     end
     
     
-    for muscle=1length(labels) %Define muscles to plot (This data set has a total of 28 muscles)
+    for muscle=1:length(labels) %Define muscles to plot (This data set has a total of 28 muscles)
         
         r2 = my_Rsquared_coeff(model{muscle}.EMGobserved', model{muscle}.EMG_estimated,1); % Compute the R2 throuhgtout the data
         figure(f(g,muscle))
@@ -591,7 +591,7 @@ i=0;
 
  f=[1 5 9]; % hard code position of the plots 
 
-for muscle=[6 20]
+for muscle=[20]
     counter=0; % This counter is use to determine the location of the plot 
     i=0; % this counter is use for calling the color to be use 
    
@@ -729,6 +729,36 @@ for muscle=[6 20]
     
     set(gcf,'renderer','painters') % Rendering data to make it editable in illustraitor 
 end
+
+
+%% EMG TRACES - DATA FROMG YOUNG ADULTS BATR03
+
+% Set muscle to plot
+% muscle={ 'TFL', 'GLU','HIP', 'SEMB', 'SEMT','BF', 'VM', 'VL', 'RF','SOL', 'LG', 'MG','TA', 'PER'}; %muscles that you want to plot 
+
+muscle={ 'TFL'}; %muscles that you want to plot 
+normalize = 1;  % 1 to normalize data
+normCond = {'TM mid 1'}; % Condition that you want to use to normalize the data 
+
+conds={'TM mid 1','Pos Short'};
+late=[1 0];  %0 average of initial strides 1 average of the last strides
+strides=[10 30]; % Number of strides that you are going to average 
+IgnoreStridesEarly=[1 30]; %number of strides that you are going to ignore at the beginning
+plotEMGtraces(expData,conds,muscle,late,strides,normalize,normCond,IgnoreStridesEarly); 
+
+
+conds={'TM mid 1','Multiple Pos Shorts Splits'};
+late=[1 1];  %0 average of initial strides 1 average of the last strides
+strides=[10 40]; % Number of strides that you are going to average 
+IgnoreStridesEarly=[1 0]; %number of strides that you are going to ignore at the beginning
+plotEMGtraces(expData,conds,muscle,late,strides,normalize,normCond,IgnoreStridesEarly); 
+
+
+conds={'TM mid 1','Adaptation'};
+late=[1 1];  %0 average of initial strides 1 average of the last strides
+strides=[10 40]; % Number of strides that you are going to average 
+IgnoreStridesEarly=[1 0]; %number of strides that you are going to ignore at the beginning
+plotEMGtraces(expData,conds,muscle,late,strides,normalize,normCond,IgnoreStridesEarly);
 
 
 
