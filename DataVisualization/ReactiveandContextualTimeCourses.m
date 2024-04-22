@@ -1,6 +1,6 @@
 %% Script to plot the reactive and contexutal recruitment time courses and the model R2 
 %% This script needs the input that it is save from model_fit_individual_muscle_PerSubject.m 
-
+% clear all
 % Define which group you want to plot
 % groupID={'VATR','VATS'};
 % groupID={'NTR','NTS'};
@@ -13,14 +13,14 @@ binwith=5; % Running windown length
 
 for g=1:length(groupID) %Group loop (Device or W/O device)
     
-    % Load data
-    if strncmpi(groupID{g},'BAT',3) %See if the first letters of the group are BAT
-        load([groupID{g},'_post-adaptation_Indv_0_04-April-2024'])
-    else
-        load([groupID{g},'_post-adaptation_Indv_0_08-March-2024.mat'])
-    end
+%     % Load data
+%     if strncmpi(groupID{g},'BAT',3) %See if the first letters of the group are BAT
+%         load([groupID{g},'_post-adaptation_Indv_0_04-April-2024'])
+%     else
+%         load([groupID{g},'_post-adaptation_Indv_0_08-March-2024.mat'])
+%     end
         
-    for muscle=1:length(labels) %% Define muscles to plot (This data set has a total of 28 muscles)
+    for muscle=2%:length(labels) %% Define muscles to plot (This data set has a total of 28 muscles)
         
         r2 = my_Rsquared_coeff(model{muscle}.EMGobserved', model{muscle}.EMGestimated',1); % Compute the R2 throuhgtout the data
         figure(f(g,muscle))
@@ -99,25 +99,24 @@ for g=1:length(groupID) %Group loop (Device or W/O device)
    
 end
 
-%% Plot of the data and reconstruction per muscle 
+%% Plot of the data and reconstruction per muscle (Heatmaps) 
 
-groupID={'BATR'}; % Define which group you want to plot
+groupID='BATR'; % Define which group you want to plot
 %Define type analysis: 
 %0 or else: Linear regression with input regressors 
 %1:Reactive and adaptation without dynamics 
 %2:Analysis using PCA in all the data 
 %3: removing the mean on the data. similar analysis as PCA     
-
 analysis=0; 
 
 % Load data
-if strncmpi(groupID{g},'BAT',3) %See if the first letters of the group are BAT
-    load([groupID{g},'_post-adaptation_Indv_0_04-April-2024'])
+if strncmpi(groupID,'BAT',3) %See if the first letters of the group are BAT
+    load([groupID,'_post-adaptation_Indv_0_04-April-2024'])
 else
-    load([groupID{g},'_post-adaptation_Indv_0_08-March-2024.mat'])
+    load([groupID,'_post-adaptation_Indv_0_08-March-2024.mat'])
 end
 
-for muscle=1  %% Define muscles to plot (This data set has a total of 28 muscles)
+for muscle=2  %% Define muscles to plot (This data set has a total of 28 muscles)
     
     if muscle<=14
         isF=0; % Slow leg
@@ -126,7 +125,7 @@ for muscle=1  %% Define muscles to plot (This data set has a total of 28 muscles
     end
     
     % Plot the time course plus the regressors
-    legacy_vizSingleModel_FreeModel_ShortAdaptation_IndvLeg(model{muscle},model{muscle}.EMGobserved',Uf,analysis,{labels(muscle).Data(1:end-1)},isF)
+    vizSingleModel_LinearRegression_IndvLeg(model{muscle},model{muscle}.EMGobserved',analysis,{labels(muscle).Data(1:end-1)},isF)
     
 end
 
