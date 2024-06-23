@@ -3,7 +3,7 @@ function [GroupData, newLabelPrefix,n_subjects,subID]=creatingGroupdataWnormaliz
 %this version I am normalizing to TM base (tied belt right before
 %adpatation). We are normalizing everthing by TM base for consistance
 
-files = dir ([groupID '*params.mat']);
+files = dir([groupID '*params.mat']);
 
 
 n_subjects = size(files,1);
@@ -19,8 +19,14 @@ subID % This display what are the ID of the participants that you are using.
 
 %% load and prep data
 
-muscleOrder={'TA', 'PER', 'SOL', 'LG', 'MG', 'BF', 'SEMB', 'SEMT', 'VM', 'VL', 'RF', 'HIP','TFL', 'GLU'};
-%%%% load and prep data Posterior muscles
+if strncmpi(groupID,'SA',2)
+    muscleOrder = {'TAP', 'TAD', 'PER', 'MG', 'LG', 'SOL'};
+    % muscleOrder = {'TAP', 'TAD', 'SOL', 'MG'}; % SAH_Pilot02
+else
+    muscleOrder={'TA', 'PER', 'SOL', 'LG', 'MG', 'BF', 'SEMB', 'SEMT', 'VM', 'VL', 'RF', 'HIP','TFL', 'GLU'};
+end
+
+%% load and prep data Posterior muscles
 % muscleOrder={ 'SOL', 'LG', 'MG', 'BF', 'SEMB', 'SEMT'};
 newLabelPrefix = defineMuscleList(muscleOrder); %List of muscle
 n_muscles=length(muscleOrder)*2;

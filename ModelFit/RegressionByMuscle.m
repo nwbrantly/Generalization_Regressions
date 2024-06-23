@@ -17,25 +17,27 @@
 %% Adding path
 
 % upload your path
-main='/Users/dulcemariscal/Documents/GitHub/'; %Choose your path
+main='C:\Users\nwb18\Documents\Src'; %Choose your path
 addpath(genpath([main, 'Generalization_Regressions'])) % code for the muscle activity regression
 addpath(genpath([main,'labTools'])) % Labtools code - this is the spinal cord of the enitre analysis
-addpath(genpath([main,'splitbelt-EMG-adaptation']))
-addpath(genpath([main,'EMG-LTI-SSM']))
-addpath(genpath([main,'matlab-linsys']))
+% addpath(genpath([main,'splitbelt-EMG-adaptation']))
+% addpath(genpath([main,'EMG-LTI-SSM']))
+% addpath(genpath([main,'matlab-linsys']))
 %% Load real data:
 clear all;clc;close all
 
 %% This is just the saved data - Update accrodingly
 
-c_constant=1; %1 if you want to use the same regressors for all the participants
+c_constant=0; %1 if you want to use the same regressors for all the participants
 plot_visual=1; % 1 if you want to see the results
 plotindv=0; % 1 plot individual subjects
 indv=0; % 1 individual subjects analsyis; 0 group analysis
 adapt=0 % 1 you are looking at data during adaptation; 0 post-adaptation
-groupID='BATS' %ID of the group of interest
+%%%%%%%%%%%%%%% UPDATE THIS %%%%%%%%%%%%%
+groupID='C3S10' %ID of the group of interest
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 savedata=1
-unitvector=0
+unitvector=0    % if 1, get the unit vector of the data itself (rather than the regressors only)
 session=1
 negative=0
 % early=1;    
@@ -61,7 +63,7 @@ elseif contains(groupID,'CTR') ||  contains(groupID,'NTR')  || contains(groupID,
 elseif contains(groupID,'C3')
     %     fname= 'dynamicsData_C3_subj_7_Session_1_RemoveBadMuscles_1_17-November-2023_Post-Adaptation.h5'
     if session==1
-    fname= 'dynamicsData_C3_subj_1_Session_1_RemoveBadMuscles_1_23-February-2024_Post-Adaptation.h5'
+    fname= 'dynamicsData_C3S10_subj_1_Session_1_RemoveBadMuscles_1_22-April-2024_Post-Adaptation.h5'
     else
         
       fname= 'dynamicsData_C3_subj_1_Session_2_RemoveBadMuscles_1_23-February-2024_Post-Adaptation.h5' 
@@ -123,7 +125,7 @@ colorOrder=[ p_orange; p_fade_green; p_fade_blue; p_plum; p_green; p_blue; p_fad
 color=[ colorOrder; colorOrder;colorOrder];
 % color=colormap(jet(size(Yindv,3)));
 
-%% prealoccating variable for speed
+%% preallocating variable for speed
 
 invEMG_m= zeros(12,2,28,'double');
 EMG_coef= zeros(12,2,28,'double');
@@ -153,7 +155,7 @@ for subj=1:n_sub
     
     EMGmodel=EMGdata';  % Transpose the EMG data to match equations
     
-    if c_constant==1
+    if c_constant==1    % to use the same regressors across groups
         
         %Pick the conditions that we are going to use for the regression
         epochOfInterest=h5read(fname,'/Epochs')';

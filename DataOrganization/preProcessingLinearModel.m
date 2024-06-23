@@ -3,6 +3,8 @@
 clear; close all; clc;
 
 %% Defining the epoch that we are going to use for data normalization
+% navigate to the participant data folder since data files are saved to the
+% local directory
 epochNames={'TM base'};
 condition= {'TM base'}; %Change conditions names to your own!
 strideNo=[-40]; %Positive vaues define inital; negative values define # strides at end of that condition
@@ -12,15 +14,17 @@ summaryMethod={'nanmean'}; %Method to analyze bar plots
 shortName=[];
 [refEpForNormalization] = defineEpochs(epochNames,condition,strideNo,exemptFirst,exemptLast,summaryMethod,shortName);
 
-%% Normalizing data 
-groupID ='C3S01'; %Group of interest
+%% Normalizing data
+%%%%%%%%%%%%%%% UPDATE THIS %%%%%%%%%%%%%%%
+groupID ='C3S10'; %Group of interest
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 [group, newLabelPrefix,n,subID]=creatingGroupdataWnormalizedEMG(groupID,1,refEpForNormalization); % Creating the groupData normalized
 sesion1=1;
-adaptation=0;
+adaptation=0;   % would you like to examine Adaptation or Post-Adaptation?
 negative=0;
 
 %% This is important for the C3 stroke study to identify the correct session 
-if strcmp(groupID,'C3')
+if contains(groupID,'C3')
     sesion1  = questdlg('Is this session 1?', ...
         'Session of interest', ...
         'Yes','No','None');

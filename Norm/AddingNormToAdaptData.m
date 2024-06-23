@@ -12,13 +12,13 @@
 % 6) Saving params file 
 clear; clc; close all
 %% Define conditions
-saveData=0 %if you want to save your data 
+saveData=1 %if you want to save your data 
 
 %% load subjects  and prep data (Step 1 and 2)
 
 
-epochNames={'TR base'};
-condition= {'TR base'}; %Change conditions names to your own! 
+epochNames={'TM Base'};
+condition= {'TM Base'}; %Change conditions names to your own! 
 strideNo=[-40]; %Positive vaues define inital; negative values define # strides at end of that condition
 exemptFirst=0; %Number of strides you want to ignore at the beginning of the condition
 exemptLast=5; %Number of strides you want to ignore at the end of the condition
@@ -26,7 +26,7 @@ summaryMethod={'nanmean'}; %Method to analyze bar plots
 shortName=[];
 [refEpForNormalization] = defineEpochs(epochNames,condition,strideNo,exemptFirst,exemptLast,summaryMethod,shortName);
 
-groupID = {'BATR03'};
+groupID = {'SAH12'};
 scriptDir = cd;
 [normalizedGroupData, newLabelPrefix,n_subjects,subID]=creatingGroupdataWnormalizedEMG(groupID{1},0,refEpForNormalization);
 removeMuscles=1;
@@ -41,6 +41,7 @@ if removeMuscles==1
 end
 
 %% Compute bias, unbias and individual muscle stride by stride norm (Step 4 and 5)
+newLabelPrefix = newLabelPrefix(8); % SAH_Pilot02: 8 = sMG, others: 12 = sMG
 [normalizedGroupData]=AddingNorm(normalizedGroupData,subID,newLabelPrefix,groupID);
 
 %% SAVE GROUP DATA (Step 6)
@@ -48,7 +49,7 @@ end
     group= normalizedGroupData;
 
 if saveData==1
-    save([groupID{1}, '_EMGnorm.mat'], 'group')
+    save([groupID{1}, '_NormEMG.mat'],'group')
 end
 
 %%  This section is to plot the results
@@ -57,11 +58,11 @@ group2=[];
 group2{1}=group;
 
 
-conditions = {'OG base','TM base','Adaptation',...
-    'Post 1','Post 2'};
+conditions = group.adaptData{1}.metaData.conditionName; % {'OG base','TM base','Adaptation',...
+    % 'Post 1','Post 2'};
 
 
-params={'netContributionNorm2','NormEMG','sMGsNorm'};
+params={'NormEMG','sMGsNorm'}; % 'netContributionNorm2',
 poster_colors;
      
 binwidth=5; %Window of the running average
